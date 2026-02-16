@@ -362,6 +362,17 @@ jobs:
           done
 
       # ================================================================
+      # LANDING PAGE
+      # ================================================================
+      - name: Generate landing page
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          pandoc README.md --from gfm --to html5 \
+            --template pages/template.html \
+            --metadata title="AstralEmu Packages" \
+            -o gh-pages-dir/index.html
+
+      # ================================================================
       # DEPLOY
       # ================================================================
       - name: Deploy to gh-pages
