@@ -1,0 +1,547 @@
+#!/bin/bash
+# setperf - Nintendo Switch performance tuning wrapper
+# Usage: setperf [options] <command>
+
+VERSION="1.0.0"
+
+# Governor settings
+CPU_GOV=""
+GPU_GOV=""
+RAM_GOV=""
+CPU_PIN=""
+
+# Overclock settings
+CPU_OC=""
+GPU_OC=""
+RAM_OC=""
+
+# Init system mode
+INIT_SYSTEM=""
+
+# Switch model detection cache
+SWITCH_MODEL=""
+IS_DOCKED=""
+
+# Check if overclocking is enabled
+is_overclock_enabled() {
+    [[ -f "${HOME}/.enable-overclock" ]]
+}
+
+usage() {
+    cat << EOF
+Usage: setperf [options] [command]
+
+Nintendo Switch performance tuning wrapper.
+Applies performance settings before launching a command and restores them after.
+
+Options:
+  -h, --help              Show this help message
+  -v, --version           Show version
+  -c, --cpu <mode>        CPU governor (battery, balanced, performance)
+  -g, --gpu <mode>        GPU governor (battery, balanced, performance)
+  -r, --ram <mode>        RAM governor (battery, balanced, performance)
+  -p, --profile <mode>    Set all governors (battery, balanced, performance)
+  -n, --cpupin <1-4>      Pin process to N CPU cores (1-4)
+  --oc-cpu <mode>         CPU overclock (battery, off, oc)
+  --oc-gpu <mode>         GPU overclock (battery, off, oc)
+  --oc-ram <mode>         RAM overclock (battery, off, oc)
+  --oc <mode>             Set all overclocks (battery, off, oc)
+  --init-system           Set system defaults and exit (no command needed)
+
+Overclock modes auto-detect Switch model (Erista/Mariko) and dock status.
+  battery = underclock for low-demand emulation
+  off     = stock frequencies
+  oc      = overclock (handheld safe / docked max)
+
+Note: Overclock 'oc' mode requires ~/.enable-overclock file to exist.
+      Without it, 'oc' falls back to 'off' (stock frequencies).
+
+Examples:
+  setperf -p performance dolphin-emu game.iso
+  setperf --cpu performance --gpu balanced retroarch
+  setperf -c battery -g battery -r battery ppsspp
+  setperf -p performance -n 4 dolphin-emu game.iso
+  setperf -p performance --oc oc dolphin-emu game.iso
+  setperf --oc battery retroarch  # For light emulation
+  setperf --init-system           # Set system defaults at boot
+
+EOF
+    exit 0
+}
+
+version() {
+    echo "setperf $VERSION"
+    exit 0
+}
+
+set_cpu_governor() {
+    local mode="$1"
+    local governor
+    case "$mode" in
+        battery)
+            governor="powersave"
+            ;;
+        balanced)
+            governor="schedutil"
+            ;;
+        performance)
+            governor="performance"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo "$governor" > "$cpu" 2>/dev/null
+    done
+}
+
+set_gpu_governor() {
+    local mode="$1"
+    local governor
+    case "$mode" in
+        battery)
+            governor="powersave"
+            ;;
+        balanced)
+            governor="simple_ondemand"
+            ;;
+        performance)
+            governor="performance"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    for gpu in /sys/class/devfreq/*/governor; do
+        [[ "$gpu" == *"gpu"* ]] && echo "$governor" > "$gpu" 2>/dev/null
+    done
+}
+
+set_ram_governor() {
+    local mode="$1"
+    local governor
+    case "$mode" in
+        battery)
+            governor="powersave"
+            ;;
+        balanced)
+            governor="simple_ondemand"
+            ;;
+        performance)
+            governor="performance"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    for emc in /sys/class/devfreq/*/governor; do
+        [[ "$emc" == *"emc"* ]] && echo "$governor" > "$emc" 2>/dev/null
+    done
+}
+
+set_default() {
+    CPU_GOV="battery"
+    GPU_GOV="battery"
+    RAM_GOV="battery"
+    apply_settings
+    # Reset clocks to battery mode
+    set_cpu_overclock "battery"
+    set_gpu_overclock "battery"
+    set_ram_overclock "battery"
+}
+
+# =============================================================================
+# SWITCH MODEL DETECTION
+# =============================================================================
+
+detect_switch_model() {
+    [[ -n "$SWITCH_MODEL" ]] && return
+
+    # Detect based on device tree compatible string
+    local compat=""
+    [[ -f /proc/device-tree/compatible ]] && compat=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n')
+
+    # Mariko models: Switch V2 (iowa), Switch Lite (hoag), Switch OLED (aula)
+    # Erista models: Switch V1 (icosa)
+    if [[ "$compat" == *"iowa"* ]] || [[ "$compat" == *"hoag"* ]] || [[ "$compat" == *"aula"* ]]; then
+        SWITCH_MODEL="mariko"
+    elif [[ "$compat" == *"icosa"* ]]; then
+        SWITCH_MODEL="erista"
+    else
+        # Fallback: check Tegra variant via soc_id or chip_id
+        local soc_id=""
+        [[ -f /sys/devices/soc0/soc_id ]] && soc_id=$(cat /sys/devices/soc0/soc_id 2>/dev/null)
+        [[ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]] && soc_id=$(cat /sys/module/tegra_fuse/parameters/tegra_chip_id 2>/dev/null)
+
+        # Tegra X1+ (Mariko) = 0x21, Tegra X1 (Erista) = 0x21 with different revision
+        # Use CPU max freq as fallback indicator
+        local max_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null || echo "0")
+        if [[ "$max_freq" -gt 1900000 ]]; then
+            SWITCH_MODEL="mariko"
+        else
+            SWITCH_MODEL="erista"
+        fi
+    fi
+}
+
+detect_dock_status() {
+    # Force refresh if called with "refresh" argument
+    [[ "$1" != "refresh" ]] && [[ -n "$IS_DOCKED" ]] && return
+
+    # Check power supply status
+    local charger_online=0
+    for psy in /sys/class/power_supply/*/online; do
+        [[ -f "$psy" ]] && [[ "$(cat "$psy" 2>/dev/null)" == "1" ]] && charger_online=1
+    done
+
+    # Check for dock-specific power delivery (>15W typically indicates dock)
+    local power_now=0
+    for psy in /sys/class/power_supply/*/power_now; do
+        [[ -f "$psy" ]] && power_now=$(cat "$psy" 2>/dev/null || echo "0")
+    done
+
+    # If charging and getting high power, assume docked
+    if [[ "$charger_online" -eq 1 ]] && [[ "$power_now" -gt 15000000 ]]; then
+        IS_DOCKED="true"
+    else
+        IS_DOCKED="false"
+    fi
+}
+
+# =============================================================================
+# OVERCLOCK FUNCTIONS
+# =============================================================================
+
+# Frequency values based on sys-clk and Switch-OC-Suite
+# Stock CPU: 1020 MHz (handheld & docked)
+# Stock GPU: 307/384 MHz (handheld), 768 MHz (docked)
+# Stock RAM: 1331 MHz (handheld), 1600 MHz (docked)
+#
+# OC mode: handheld safe limits / docked max limits
+# Erista: CPU 1785 MHz, GPU 460 MHz (handheld) / 921 MHz (docked), RAM 1862 MHz
+# Mariko: CPU 1963 MHz (handheld) / 2295 MHz (docked), GPU 614 MHz (handheld) / 1267 MHz (docked), RAM 1996 MHz
+
+get_cpu_freq() {
+    local mode="$1"
+    detect_switch_model
+    detect_dock_status
+
+    case "$mode" in
+        battery)
+            echo "816000"  # 816 MHz (light gaming)
+            ;;
+        off)
+            echo "1020000"  # 1020 MHz (stock)
+            ;;
+        oc)
+            if [[ "$IS_DOCKED" == "true" ]]; then
+                # Docked: max clock
+                if [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                    echo "2295000"  # 2295 MHz
+                else
+                    echo "2091000"  # 2091 MHz
+                fi
+            else
+                # Handheld: safe clock
+                if [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                    echo "1963000"  # 1963 MHz
+                else
+                    echo "1785000"  # 1785 MHz
+                fi
+            fi
+            ;;
+    esac
+}
+
+# GPU frequencies in Hz (devfreq uses Hz)
+get_gpu_freq() {
+    local mode="$1"
+    detect_switch_model
+    detect_dock_status
+
+    case "$mode" in
+        battery)
+            echo "307200000"  # 307 MHz (stock handheld low)
+            ;;
+        off)
+            if [[ "$IS_DOCKED" == "true" ]]; then
+                echo "768000000"  # 768 MHz (docked stock)
+            elif [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                echo "384000000"  # 384 MHz (Mariko handheld stock)
+            else
+                echo "307200000"  # 307 MHz (Erista handheld stock)
+            fi
+            ;;
+        oc)
+            if [[ "$IS_DOCKED" == "true" ]]; then
+                # Docked: max clock
+                if [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                    echo "1267200000"  # 1267 MHz
+                else
+                    echo "921600000"  # 921 MHz
+                fi
+            else
+                # Handheld: safe clock (no charger required)
+                if [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                    echo "614400000"  # 614 MHz (Mariko handheld max)
+                else
+                    echo "460800000"  # 460 MHz (Erista handheld max)
+                fi
+            fi
+            ;;
+    esac
+}
+
+# RAM/EMC frequencies in Hz
+get_ram_freq() {
+    local mode="$1"
+    detect_switch_model
+    detect_dock_status
+
+    case "$mode" in
+        battery)
+            echo "1065600000"  # 1065 MHz (lower than stock handheld)
+            ;;
+        off)
+            if [[ "$IS_DOCKED" == "true" ]]; then
+                echo "1600000000"  # 1600 MHz (docked)
+            else
+                echo "1331200000"  # 1331 MHz (handheld)
+            fi
+            ;;
+        oc)
+            # RAM OC same for handheld/docked
+            if [[ "$SWITCH_MODEL" == "mariko" ]]; then
+                echo "1996800000"  # 1996 MHz
+            else
+                echo "1862400000"  # 1862 MHz
+            fi
+            ;;
+    esac
+}
+
+set_cpu_overclock() {
+    local mode="$1"
+    local freq
+    freq=$(get_cpu_freq "$mode")
+    [[ -z "$freq" ]] && return 1
+
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; do
+        echo "$freq" > "$cpu" 2>/dev/null
+    done
+}
+
+set_gpu_overclock() {
+    local mode="$1"
+    local freq
+    freq=$(get_gpu_freq "$mode")
+    [[ -z "$freq" ]] && return 1
+
+    for gpu in /sys/class/devfreq/*/max_freq; do
+        [[ "$gpu" == *"gpu"* ]] && echo "$freq" > "$gpu" 2>/dev/null
+    done
+}
+
+set_ram_overclock() {
+    local mode="$1"
+    local freq
+    freq=$(get_ram_freq "$mode")
+    [[ -z "$freq" ]] && return 1
+
+    for emc in /sys/class/devfreq/*/max_freq; do
+        [[ "$emc" == *"emc"* ]] && echo "$freq" > "$emc" 2>/dev/null
+    done
+}
+
+reset_clocks() {
+    # Reset to stock frequencies
+    set_cpu_overclock "off"
+    set_gpu_overclock "off"
+    set_ram_overclock "off"
+}
+
+apply_overclock() {
+    # Fallback 'oc' to 'off' if overclocking is not enabled
+    if ! is_overclock_enabled; then
+        [[ "$CPU_OC" == "oc" ]] && CPU_OC="off"
+        [[ "$GPU_OC" == "oc" ]] && GPU_OC="off"
+        [[ "$RAM_OC" == "oc" ]] && RAM_OC="off"
+    fi
+
+    [[ -n "$CPU_OC" ]] && set_cpu_overclock "$CPU_OC"
+    [[ -n "$GPU_OC" ]] && set_gpu_overclock "$GPU_OC"
+    [[ -n "$RAM_OC" ]] && set_ram_overclock "$RAM_OC"
+}
+
+apply_settings() {
+    [[ -n "$CPU_GOV" ]] && set_cpu_governor "$CPU_GOV"
+    [[ -n "$GPU_GOV" ]] && set_gpu_governor "$GPU_GOV"
+    [[ -n "$RAM_GOV" ]] && set_ram_governor "$RAM_GOV"
+}
+
+# =============================================================================
+# DOCK STATUS MONITORING (for dynamic OC updates)
+# =============================================================================
+
+MONITOR_PID=""
+
+# Monitor dock status and update OC settings when it changes
+start_dock_monitor() {
+    # Monitor if OC mode is 'oc' or 'off' (dock-dependent modes)
+    # 'battery' mode uses fixed low frequencies, no monitoring needed
+    local needs_monitor=0
+    [[ "$CPU_OC" == "oc" ]] || [[ "$CPU_OC" == "off" ]] && needs_monitor=1
+    [[ "$GPU_OC" == "oc" ]] || [[ "$GPU_OC" == "off" ]] && needs_monitor=1
+    [[ "$RAM_OC" == "oc" ]] || [[ "$RAM_OC" == "off" ]] && needs_monitor=1
+
+    [[ "$needs_monitor" -eq 0 ]] && return
+
+    (
+        local last_dock_state="$IS_DOCKED"
+        while true; do
+            sleep 1
+            # Refresh dock status
+            IS_DOCKED=""
+            detect_dock_status "refresh"
+
+            if [[ "$IS_DOCKED" != "$last_dock_state" ]]; then
+                # Dock status changed, update OC settings
+                [[ -n "$CPU_OC" ]] && set_cpu_overclock "$CPU_OC"
+                [[ -n "$GPU_OC" ]] && set_gpu_overclock "$GPU_OC"
+                [[ -n "$RAM_OC" ]] && set_ram_overclock "$RAM_OC"
+                last_dock_state="$IS_DOCKED"
+            fi
+        done
+    ) &
+    MONITOR_PID=$!
+}
+
+stop_dock_monitor() {
+    [[ -n "$MONITOR_PID" ]] && kill "$MONITOR_PID" 2>/dev/null
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            usage
+            ;;
+        -v|--version)
+            version
+            ;;
+        -c|--cpu)
+            CPU_GOV="$2"
+            shift 2
+            ;;
+        -g|--gpu)
+            GPU_GOV="$2"
+            shift 2
+            ;;
+        -r|--ram)
+            RAM_GOV="$2"
+            shift 2
+            ;;
+        -p|--profile)
+            CPU_GOV="$2"
+            GPU_GOV="$2"
+            RAM_GOV="$2"
+            shift 2
+            ;;
+        -n|--cpupin)
+            if [[ "$2" =~ ^[1-4]$ ]]; then
+                CPU_PIN="$2"
+            else
+                echo "Error: cpupin must be 1-4" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --oc-cpu)
+            if [[ "$2" =~ ^(battery|off|oc)$ ]]; then
+                CPU_OC="$2"
+            else
+                echo "Error: oc-cpu must be battery, off, or oc" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --oc-gpu)
+            if [[ "$2" =~ ^(battery|off|oc)$ ]]; then
+                GPU_OC="$2"
+            else
+                echo "Error: oc-gpu must be battery, off, or oc" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --oc-ram)
+            if [[ "$2" =~ ^(battery|off|oc)$ ]]; then
+                RAM_OC="$2"
+            else
+                echo "Error: oc-ram must be battery, off, or oc" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --oc)
+            if [[ "$2" =~ ^(battery|off|oc)$ ]]; then
+                CPU_OC="$2"
+                GPU_OC="$2"
+                RAM_OC="$2"
+            else
+                echo "Error: oc must be battery, off, or oc" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --init-system)
+            INIT_SYSTEM="1"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            usage
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Handle --init-system mode
+if [[ -n "$INIT_SYSTEM" ]]; then
+    set_default
+    exit 0
+fi
+
+if [[ $# -eq 0 ]]; then
+    echo "Error: No command specified" >&2
+    usage
+fi
+
+apply_settings
+apply_overclock
+
+# Start dock monitor for dynamic OC updates
+start_dock_monitor
+
+# Execute command (with optional CPU pinning)
+if [[ -n "$CPU_PIN" ]]; then
+    # Pin to cores 0 to (CPU_PIN-1)
+    CORE_MAX=$((CPU_PIN - 1))
+    taskset -c "0-${CORE_MAX}" "$@"
+else
+    "$@"
+fi
+EXIT_CODE=$?
+
+# Stop dock monitor and restore defaults
+stop_dock_monitor
+set_default
+
+exit $EXIT_CODE
