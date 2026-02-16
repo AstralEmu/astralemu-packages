@@ -69,7 +69,7 @@ jobs:
       - name: Load device matrix
         id: load-devices
         run: |
-          DEVICES=$(yq -o=json '.devices' devices.yml)
+          DEVICES=$(yq -o=json -I=0 '.devices' devices.yml)
           echo "devices=$DEVICES" >> $GITHUB_OUTPUT
 
       - name: Compute job hashes
