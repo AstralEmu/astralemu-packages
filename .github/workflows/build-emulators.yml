@@ -523,22 +523,43 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              DESTDIR=/tmp/pkg ninja install
+              DESTDIR=/tmp/pkg/root ninja install
               VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: azahar-emu-${DEVICE_ID}
-          Version: ${VERSION_CLEAN}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libqt6widgets6, libqt6gui6, libqt6core6, libqt6multimedia6, libqt6opengl6, libsdl2-2.0-0, libssl3t64, libavcodec60, libavformat60, libswscale7, libspeexdsp1, libfmt9, libzstd1, libusb-1.0-0, libhidapi-hidraw0, libboost-serialization1.83.0, libenet7, liblz4-1
-          Provides: citra
-          Replaces: citra
-          Section: games
-          Priority: optional
-          Description: Azahar 3DS Emulator (${DEVICE_ID} build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/azahar-emu-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "azahar-emu-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "Azahar 3DS Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              echo "citra" > /tmp/pkg/meta/provides
+              echo "citra" > /tmp/pkg/meta/replaces
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libqt6widgets6
+          libqt6gui6
+          libqt6core6
+          libqt6multimedia6
+          libqt6opengl6
+          libsdl2-2.0-0
+          libssl3t64
+          libavcodec60
+          libavformat60
+          libswscale7
+          libspeexdsp1
+          libfmt9
+          libzstd1
+          libusb-1.0-0
+          libhidapi-hidraw0
+          libboost-serialization1.83.0
+          libenet7
+          liblz4-1
+          DEPS
+              tar cf /workspace/azahar-emu-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -561,8 +582,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-azahar-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-azahar-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -679,20 +700,49 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              DESTDIR=/tmp/pkg ninja install
+              DESTDIR=/tmp/pkg/root ninja install
               PKG_VERSION="0.0.0+git.${SHORT}"
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: dolphin-emu-${DEVICE_ID}
-          Version: ${PKG_VERSION}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libqt6widgets6, libqt6gui6, libqt6core6, libavcodec60, libavformat60, libswscale7, libevdev2, libminiupnpc17, libmbedtls14t64, libcurl4t64, libhidapi-hidraw0, libsystemd0, libbluetooth3, libasound2t64, libpulse0, libpugixml1v5, libbz2-1.0, libzstd1, liblzo2-2, libpng16-16t64, libusb-1.0-0, libfmt9, libsfml-system2.6, libsfml-network2.6, libxxhash0, libspng0
-          Section: games
-          Priority: optional
-          Description: Dolphin GameCube/Wii Emulator (${DEVICE_ID} build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/dolphin-emu-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "dolphin-emu-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${PKG_VERSION}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "Dolphin GameCube/Wii Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libqt6widgets6
+          libqt6gui6
+          libqt6core6
+          libavcodec60
+          libavformat60
+          libswscale7
+          libevdev2
+          libminiupnpc17
+          libmbedtls14t64
+          libcurl4t64
+          libhidapi-hidraw0
+          libsystemd0
+          libbluetooth3
+          libasound2t64
+          libpulse0
+          libpugixml1v5
+          libbz2-1.0
+          libzstd1
+          liblzo2-2
+          libpng16-16t64
+          libusb-1.0-0
+          libfmt9
+          libsfml-system2.6
+          libsfml-network2.6
+          libxxhash0
+          libspng0
+          DEPS
+              tar cf /workspace/dolphin-emu-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -715,8 +765,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-dolphin-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-dolphin-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -937,18 +987,18 @@ jobs:
               }
 
               # DuckStation has no install target, copy manually
-              mkdir -p /tmp/pkg/usr/bin /tmp/pkg/usr/lib/duckstation /tmp/pkg/usr/share/applications
+              mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/lib/duckstation /tmp/pkg/root/usr/share/applications
 
-              cp bin/duckstation-qt /tmp/pkg/usr/bin/
-              cp -r bin/resources /tmp/pkg/usr/lib/duckstation/ 2>/dev/null || true
+              cp bin/duckstation-qt /tmp/pkg/root/usr/bin/
+              cp -r bin/resources /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
 
               # Bundle the custom-built libraries
-              cp /deps/lib/*.so* /tmp/pkg/usr/lib/duckstation/ 2>/dev/null || true
+              cp /deps/lib/*.so* /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
 
               # Set rpath for bundled libs
-              patchelf --set-rpath /usr/lib/duckstation /tmp/pkg/usr/bin/duckstation-qt 2>/dev/null || true
+              patchelf --set-rpath /usr/lib/duckstation /tmp/pkg/root/usr/bin/duckstation-qt 2>/dev/null || true
 
-              cat > /tmp/pkg/usr/share/applications/duckstation.desktop << DESK
+              cat > /tmp/pkg/root/usr/share/applications/duckstation.desktop << DESK
           [Desktop Entry]
           Name=DuckStation
           Comment=PlayStation 1 Emulator
@@ -960,19 +1010,25 @@ jobs:
           DESK
 
               PKG_VERSION="0.0.0+git.${SHORT}"
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: duckstation-${DEVICE_ID}
-          Version: ${PKG_VERSION}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libdbus-1-3, libcurl4t64, libwayland-client0, libudev1
-          Section: games
-          Priority: optional
-          Description: DuckStation PS1 Emulator (${DEVICE_ID} build)
-           Includes bundled Qt6, SDL3 and other libraries.
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "duckstation-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${PKG_VERSION}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "DuckStation PS1 Emulator (${DEVICE_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libdbus-1-3
+          libcurl4t64
+          libwayland-client0
+          libudev1
+          DEPS
+              tar cf /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -995,8 +1051,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-duckstation-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-duckstation-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -1106,22 +1162,34 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              DESTDIR=/tmp/pkg ninja install
+              DESTDIR=/tmp/pkg/root ninja install
               VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: emulationstation-de-${DEVICE_ID}
-          Version: ${VERSION_CLEAN}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libsdl2-2.0-0, libavcodec60, libavformat60, libswscale7, libfreeimage3, libfreetype6, libcurl4t64, libpugixml1v5, libvlc5, libpoppler-cpp0t64
-          Provides: emulationstation
-          Conflicts: emulationstation
-          Section: games
-          Priority: optional
-          Description: EmulationStation Desktop Edition (${DEVICE_ID} build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/emulationstation-de-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "emulationstation-de-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "EmulationStation Desktop Edition (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              echo "emulationstation" > /tmp/pkg/meta/provides
+              echo "emulationstation" > /tmp/pkg/meta/conflicts
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libsdl2-2.0-0
+          libavcodec60
+          libavformat60
+          libswscale7
+          libfreeimage3
+          libfreetype6
+          libcurl4t64
+          libpugixml1v5
+          libvlc5
+          libpoppler-cpp0t64
+          DEPS
+              tar cf /workspace/emulationstation-de-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -1144,8 +1212,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-esde-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-esde-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -1255,20 +1323,31 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              DESTDIR=/tmp/pkg ninja install
+              DESTDIR=/tmp/pkg/root ninja install
               VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: melonds-${DEVICE_ID}
-          Version: ${VERSION_CLEAN}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libqt6widgets6, libqt6gui6, libqt6core6, libqt6multimedia6, libsdl2-2.0-0, libslirp0, libarchive13t64, libzstd1
-          Section: games
-          Priority: optional
-          Description: melonDS Nintendo DS Emulator (${DEVICE_ID} build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/melonds-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "melonds-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "melonDS Nintendo DS Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libqt6widgets6
+          libqt6gui6
+          libqt6core6
+          libqt6multimedia6
+          libsdl2-2.0-0
+          libslirp0
+          libarchive13t64
+          libzstd1
+          DEPS
+              tar cf /workspace/melonds-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -1291,8 +1370,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-melonds-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-melonds-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -1407,11 +1486,11 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              mkdir -p /tmp/pkg/usr/bin /tmp/pkg/usr/share/applications /tmp/pkg/usr/share/ppsspp
-              cp PPSSPPSDL /tmp/pkg/usr/bin/ppsspp
-              cp -r ../assets /tmp/pkg/usr/share/ppsspp/
+              mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/share/applications /tmp/pkg/root/usr/share/ppsspp
+              cp PPSSPPSDL /tmp/pkg/root/usr/bin/ppsspp
+              cp -r ../assets /tmp/pkg/root/usr/share/ppsspp/
 
-              cat > /tmp/pkg/usr/share/applications/ppsspp.desktop << DESK
+              cat > /tmp/pkg/root/usr/share/applications/ppsspp.desktop << DESK
           [Desktop Entry]
           Name=PPSSPP
           Comment=PlayStation Portable Emulator
@@ -1423,20 +1502,32 @@ jobs:
           DESK
 
               VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: ppsspp-${DEVICE_ID}
-          Version: ${VERSION_CLEAN}
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libsdl2-2.0-0, libsdl2-ttf-2.0-0, libglew2.2, libsnappy1v5, libavcodec60, libavformat60, libswscale7, libzip4t64, libpng16-16t64
-          Provides: ppsspp
-          Conflicts: ppsspp
-          Section: games
-          Priority: optional
-          Description: PPSSPP PlayStation Portable Emulator (${DEVICE_ID} build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/ppsspp-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.deb
+              mkdir -p /tmp/pkg/meta
+              echo "ppsspp-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "PPSSPP PlayStation Portable Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              echo "ppsspp" > /tmp/pkg/meta/provides
+              echo "ppsspp" > /tmp/pkg/meta/conflicts
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libsdl2-2.0-0
+          libsdl2-ttf-2.0-0
+          libglew2.2
+          libsnappy1v5
+          libavcodec60
+          libavformat60
+          libswscale7
+          libzip4t64
+          libpng16-16t64
+          DEPS
+              tar cf /workspace/ppsspp-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -1459,8 +1550,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-ppsspp-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-ppsspp-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -1563,10 +1654,10 @@ jobs:
                 exit $EXIT_CODE
               }
 
-              mkdir -p /tmp/pkg/usr/bin /tmp/pkg/usr/share/applications
-              cp dist/xemu /tmp/pkg/usr/bin/
+              mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/share/applications
+              cp dist/xemu /tmp/pkg/root/usr/bin/
 
-              cat > /tmp/pkg/usr/share/applications/xemu.desktop << DESK
+              cat > /tmp/pkg/root/usr/share/applications/xemu.desktop << DESK
           [Desktop Entry]
           Name=xemu
           Comment=Original Xbox Emulator
@@ -1578,18 +1669,29 @@ jobs:
           DESK
 
               VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
-              mkdir -p /tmp/pkg/DEBIAN
-              cat > /tmp/pkg/DEBIAN/control << EOF
-          Package: xemu-l4t
-          Version: ${VERSION_CLEAN}
-          Architecture: arm64
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, libjemalloc2, libsdl2-2.0-0, libepoxy0, libpixman-1-0, libgtk-3-0t64, libssl3t64, libsamplerate0, libpcap0.8t64, libslirp0
-          Section: games
-          Priority: optional
-          Description: xemu Original Xbox Emulator (ARM64 L4T build)
-          EOF
-              dpkg-deb --build /tmp/pkg /workspace/xemu-l4t_${VERSION_CLEAN}_arm64.deb
+              mkdir -p /tmp/pkg/meta
+              echo "xemu-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "xemu Original Xbox Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libsdl2-2.0-0
+          libepoxy0
+          libpixman-1-0
+          libgtk-3-0t64
+          libssl3t64
+          libsamplerate0
+          libpcap0.8t64
+          libslirp0
+          DEPS
+              tar cf /workspace/xemu-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
               echo "completed" > /workspace/build-status
@@ -1612,8 +1714,8 @@ jobs:
         if: steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-xemu-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-xemu-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -2260,34 +2362,37 @@ jobs:
           DEVICE_ARCH="${{ matrix.device.arch }}"
 
           if ls cores/*.so 1>/dev/null 2>&1; then
-            mkdir -p pkg/usr/lib/libretro pkg/DEBIAN
-            cp cores/*.so pkg/usr/lib/libretro/
+            mkdir -p pkg/root/usr/lib/libretro pkg/meta
+            cp cores/*.so pkg/root/usr/lib/libretro/
 
-            cat > pkg/DEBIAN/control << EOF
-          Package: libretro-cores-${DEVICE_ID}
-          Version: 1.0.0
-          Architecture: ${DEVICE_ARCH}
-          Maintainer: AstralEmu <noreply@astralemu.github.io>
-          Depends: libc6, zlib1g, libjemalloc2
-          Section: games
-          Priority: optional
-          Description: Libretro cores for RetroArch (${DEVICE_ID} build)
-           All standard libretro cores compiled for ${{ matrix.device.name }}.
-          EOF
+            echo "libretro-cores-${DEVICE_ID}" > pkg/meta/name
+            echo "1.0.0" > pkg/meta/version
+            echo "${DEVICE_ARCH}" > pkg/meta/arch
+            echo "Libretro cores for RetroArch (${DEVICE_ID} build) - All standard libretro cores compiled for ${{ matrix.device.name }}." > pkg/meta/description
+            echo "AstralEmu <noreply@astralemu.github.io>" > pkg/meta/maintainer
+            echo "deb" > pkg/meta/source_format
+            echo "noble" > pkg/meta/source_distro
+            echo "games" > pkg/meta/section
+            echo "optional" > pkg/meta/priority
+            cat > pkg/meta/depends << DEPS
+          libc6
+          zlib1g
+          libjemalloc2
+          DEPS
 
-            dpkg-deb --build pkg "libretro-cores-${DEVICE_ID}_1.0.0_${DEVICE_ARCH}.deb"
-            echo "has_deb=true" >> $GITHUB_OUTPUT
+            tar cf "libretro-cores-${DEVICE_ID}_1.0.0_${DEVICE_ARCH}.pkg.tar" -C pkg meta root
+            echo "has_pkg=true" >> $GITHUB_OUTPUT
           else
             echo "No cores found"
-            echo "has_deb=false" >> $GITHUB_OUTPUT
+            echo "has_pkg=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload artifact
-        if: steps.package.outputs.has_deb == 'true'
+        if: steps.package.outputs.has_pkg == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: deb-libretro-cores-${{ matrix.device.id }}
-          path: "*.deb"
+          name: pkg-libretro-cores-${{ matrix.device.id }}
+          path: "*.pkg.tar"
           retention-days: 1
 
   build-setperf:
@@ -2309,8 +2414,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deb-setperf
-          path: "packages/setperf/*.deb"
+          name: pkg-setperf
+          path: "packages/setperf/*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
@@ -2323,11 +2428,24 @@ jobs:
           key: success-setperf-${{ needs.prepare.outputs.hash_setperf }}
 
   # ===========================================================================
-  # UPDATE REPO: Collect all debs, convert to RPM/Pacman, update repositories
+  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
   # ===========================================================================
   update-repo:
     needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf]
     if: always()
+    uses: ./.github/workflows/update-repos.yml
+    with:
+      artifact_pattern: 'pkg-*'
+      source_distro: 'noble'
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+  # ===========================================================================
+  # SAVE TRACKERS: Update version trackers on main branch
+  # ===========================================================================
+  save-trackers:
+    needs: [prepare, update-repo]
+    if: always() && needs.update-repo.result == 'success'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout main
@@ -2335,166 +2453,7 @@ jobs:
         with:
           ref: main
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: deb-*
-          merge-multiple: true
-
-      - name: Check for packages
-        id: check
-        run: |
-          if ls *.deb 1> /dev/null 2>&1; then
-            echo "has_debs=true" >> $GITHUB_OUTPUT
-            ls -la *.deb
-          else
-            echo "has_debs=false" >> $GITHUB_OUTPUT
-            echo "No packages to publish"
-          fi
-
-      - name: Checkout gh-pages
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          git fetch origin gh-pages:gh-pages || true
-          git worktree add gh-pages-dir gh-pages || {
-            git worktree add --detach gh-pages-dir
-            cd gh-pages-dir
-            git checkout --orphan gh-pages
-            git rm -rf . 2>/dev/null || true
-            mkdir -p apt/pool/main apt/dists/stable/main/binary-arm64
-            mkdir -p dnf/aarch64
-            mkdir -p pacman/aarch64
-            cd ..
-          }
-
-      - name: Install tools
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev apt-utils rpm createrepo-c libarchive-tools zstd
-
-      - name: Import GPG key
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          gpg --armor --export "AstralEmu Packages" > gh-pages-dir/apt/astralemu.gpg
-          cp gh-pages-dir/apt/astralemu.gpg gh-pages-dir/dnf/astralemu.gpg
-
-      - name: Add packages to APT pool
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          mkdir -p gh-pages-dir/apt/pool/main
-          cp *.deb gh-pages-dir/apt/pool/main/
-
-      - name: Generate APT repository metadata
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          cd gh-pages-dir/apt
-
-          # Detect all architectures from the debs
-          ARCHES=$(dpkg-deb -I ../apt/pool/main/*.deb 2>/dev/null | grep '^ Architecture:' | awk '{print $2}' | sort -u || echo "arm64")
-          # Fallback: scan from filenames
-          if [[ -z "$ARCHES" ]]; then
-            ARCHES=$(ls pool/main/*.deb | sed 's/.*_\([^_]*\)\.deb/\1/' | sort -u)
-          fi
-
-          for arch in $ARCHES; do
-            mkdir -p dists/stable/main/binary-${arch}
-            dpkg-scanpackages --arch ${arch} pool/ > dists/stable/main/binary-${arch}/Packages
-            gzip -k -f dists/stable/main/binary-${arch}/Packages
-          done
-
-          cd dists/stable
-          ARCH_LIST=$(echo $ARCHES | tr '\n' ' ')
-          cat > Release << EOF
-          Origin: AstralEmu Packages
-          Label: astralemu
-          Suite: stable
-          Codename: stable
-          Architectures: ${ARCH_LIST}
-          Components: main
-          Description: AstralEmu emulator packages
-          EOF
-
-          apt-ftparchive release . >> Release
-          rm -f Release.gpg InRelease
-          gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
-          gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
-
-      - name: Convert to RPM and build DNF repository
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          chmod +x scripts/build-rpm.sh
-
-          for deb in *.deb; do
-            ARCH=$(dpkg-deb -f "$deb" Architecture)
-            case "$ARCH" in
-              arm64)  RPM_ARCH="aarch64" ;;
-              amd64)  RPM_ARCH="x86_64" ;;
-              *)      RPM_ARCH="$ARCH" ;;
-            esac
-
-            mkdir -p gh-pages-dir/dnf/${RPM_ARCH}
-            scripts/build-rpm.sh "$deb" "gh-pages-dir/dnf/${RPM_ARCH}/" || echo "WARNING: Failed to convert $deb to RPM"
-          done
-
-          # Generate repo metadata for each arch
-          for archdir in gh-pages-dir/dnf/*/; do
-            if ls "${archdir}"*.rpm 1>/dev/null 2>&1; then
-              createrepo_c "${archdir}"
-              # Sign repomd.xml
-              gpg --batch --default-key "AstralEmu Packages" -abs -o "${archdir}repodata/repomd.xml.asc" "${archdir}repodata/repomd.xml"
-            fi
-          done
-
-          # Create .repo config file
-          cat > gh-pages-dir/dnf/astralemu.repo << 'EOF'
-          [astralemu]
-          name=AstralEmu Packages
-          baseurl=https://astralemu.github.io/astralemu-packages/dnf/$basearch/
-          enabled=1
-          gpgcheck=1
-          gpgkey=https://astralemu.github.io/astralemu-packages/dnf/astralemu.gpg
-          EOF
-
-      - name: Convert to Pacman and build Pacman repository
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          chmod +x scripts/build-pacman.sh
-
-          for deb in *.deb; do
-            ARCH=$(dpkg-deb -f "$deb" Architecture)
-            case "$ARCH" in
-              arm64)  PAC_ARCH="aarch64" ;;
-              amd64)  PAC_ARCH="x86_64" ;;
-              *)      PAC_ARCH="$ARCH" ;;
-            esac
-
-            mkdir -p gh-pages-dir/pacman/${PAC_ARCH}
-            scripts/build-pacman.sh "$deb" "gh-pages-dir/pacman/${PAC_ARCH}/" || echo "WARNING: Failed to convert $deb to Pacman"
-          done
-
-          # Generate pacman database for each arch
-          for archdir in gh-pages-dir/pacman/*/; do
-            if ls "${archdir}"*.pkg.tar.zst 1>/dev/null 2>&1; then
-              cd "${archdir}"
-              repo-add astralemu.db.tar.gz *.pkg.tar.zst
-              cd -
-            fi
-          done
-
-      - name: Deploy to gh-pages
-        if: steps.check.outputs.has_debs == 'true'
-        run: |
-          cd gh-pages-dir
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Update package repositories" || echo "No changes"
-          git push origin gh-pages
-
       - name: Save version trackers
-        if: steps.check.outputs.has_debs == 'true'
         run: |
           echo "${{ needs.prepare.outputs.azahar_version }}" > .trackers/azahar-version
           echo "${{ needs.prepare.outputs.dolphin_commit }}" > .trackers/dolphin-commit

@@ -1,0 +1,375 @@
+name: Update Package Repositories
+
+on:
+  workflow_call:
+    inputs:
+      artifact_pattern:
+        type: string
+        default: 'pkg-*'
+        description: 'Pattern to download build artifacts'
+      source_distro:
+        type: string
+        default: 'noble'
+        description: 'Codename of the source distro the packages were built on'
+    secrets:
+      GPG_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.artifact_pattern }}
+          merge-multiple: true
+
+      - name: Check for packages
+        id: check
+        run: |
+          HAS_PKGS=false
+          ls *.pkg.tar 1>/dev/null 2>&1 && HAS_PKGS=true
+          ls *.deb 1>/dev/null 2>&1 && HAS_PKGS=true
+          ls *.rpm 1>/dev/null 2>&1 && HAS_PKGS=true
+          ls *.pkg.tar.zst 1>/dev/null 2>&1 && HAS_PKGS=true
+          ls *.pkg.tar.xz 1>/dev/null 2>&1 && HAS_PKGS=true
+
+          echo "has_pkgs=$HAS_PKGS" >> $GITHUB_OUTPUT
+          if [[ "$HAS_PKGS" == "true" ]]; then
+            echo "=== Downloaded packages ==="
+            ls -la *.pkg.tar *.deb *.rpm *.pkg.tar.zst *.pkg.tar.xz 2>/dev/null || true
+          else
+            echo "No packages to publish"
+          fi
+
+      - name: Set up QEMU
+        if: steps.check.outputs.has_pkgs == 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Checkout gh-pages
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          git fetch origin gh-pages:gh-pages || true
+          git worktree add gh-pages-dir gh-pages || {
+            git worktree add --detach gh-pages-dir
+            cd gh-pages-dir
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+            cd ..
+          }
+          mkdir -p gh-pages-dir/apt/pool/main
+          mkdir -p gh-pages-dir/dnf
+          mkdir -p gh-pages-dir/pacman
+
+      - name: Install tools
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils rpm createrepo-c libarchive-tools zstd
+
+      - name: Import GPG key
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          gpg --armor --export "AstralEmu Packages" > gh-pages-dir/apt/astralemu.gpg
+          mkdir -p gh-pages-dir/dnf
+          cp gh-pages-dir/apt/astralemu.gpg gh-pages-dir/dnf/astralemu.gpg
+
+      # ================================================================
+      # NORMALIZE: Convert all inputs to intermediate format
+      # ================================================================
+      - name: Normalize all packages to intermediate format
+        if: steps.check.outputs.has_pkgs == 'true'
+        id: normalize
+        run: |
+          chmod +x scripts/pkg-extract.sh scripts/pkg-build-deb.sh scripts/pkg-build-rpm.sh scripts/pkg-build-pacman.sh scripts/resolve-deps.sh
+
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          SCRIPT_DIR="$(pwd)/scripts"
+          mkdir -p intermediates
+
+          PKG_INDEX=0
+
+          # 1) .pkg.tar = already intermediate, just extract
+          for f in *.pkg.tar; do
+            [[ -f "$f" ]] || continue
+            INTDIR="intermediates/pkg-${PKG_INDEX}"
+            mkdir -p "$INTDIR"
+            tar xf "$f" -C "$INTDIR"
+            echo "  [INT] $(cat "$INTDIR/meta/name") from $f"
+            PKG_INDEX=$((PKG_INDEX + 1))
+          done
+
+          # 2) .deb = extract via pkg-extract.sh
+          for f in *.deb; do
+            [[ -f "$f" ]] || continue
+            INTDIR="intermediates/pkg-${PKG_INDEX}"
+            "$SCRIPT_DIR/pkg-extract.sh" "$f" "$INTDIR" --source-distro "$SOURCE_DISTRO"
+            PKG_INDEX=$((PKG_INDEX + 1))
+          done
+
+          # 3) .rpm = extract via pkg-extract.sh
+          for f in *.rpm; do
+            [[ -f "$f" ]] || continue
+            INTDIR="intermediates/pkg-${PKG_INDEX}"
+            "$SCRIPT_DIR/pkg-extract.sh" "$f" "$INTDIR" --source-distro "$SOURCE_DISTRO"
+            PKG_INDEX=$((PKG_INDEX + 1))
+          done
+
+          # 4) .pkg.tar.zst / .pkg.tar.xz = extract via pkg-extract.sh
+          for f in *.pkg.tar.zst *.pkg.tar.xz; do
+            [[ -f "$f" ]] || continue
+            INTDIR="intermediates/pkg-${PKG_INDEX}"
+            "$SCRIPT_DIR/pkg-extract.sh" "$f" "$INTDIR" --source-distro "$SOURCE_DISTRO"
+            PKG_INDEX=$((PKG_INDEX + 1))
+          done
+
+          echo "=== Normalized $PKG_INDEX packages ==="
+
+          # Detect architectures from intermediates
+          ARCHES=""
+          for intdir in intermediates/pkg-*; do
+            [[ -d "$intdir/meta" ]] || continue
+            A=$(cat "$intdir/meta/arch")
+            ARCHES="$ARCHES $A"
+          done
+          ARCHES=$(echo "$ARCHES" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ')
+          echo "arches=$ARCHES" >> $GITHUB_OUTPUT
+          echo "Detected architectures: $ARCHES"
+          echo "count=$PKG_INDEX" >> $GITHUB_OUTPUT
+
+      # ================================================================
+      # APT REPOSITORIES
+      # ================================================================
+      - name: Build APT repositories
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          SCRIPT_DIR="$(pwd)/scripts"
+          DEP_MAP="$SCRIPT_DIR/dep-map.conf"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          APT_IDS=$(yq -r '.distros.apt[].id' distros.yml)
+
+          for arch in ${{ steps.normalize.outputs.arches }}; do
+            DEB_ARCH="$arch"
+            case "$arch" in
+              aarch64) DEB_ARCH="arm64" ;;
+              x86_64)  DEB_ARCH="amd64" ;;
+            esac
+
+            # Build .deb from each intermediate matching this arch
+            for intdir in intermediates/pkg-*; do
+              [[ -d "$intdir/meta" ]] || continue
+              EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
+              [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
+
+              "$SCRIPT_DIR/pkg-build-deb.sh" "$intdir" "gh-pages-dir/apt/pool/main/" \
+                --dep-map "$DEP_MAP" || \
+                echo "WARNING: Failed to build deb from $(basename "$intdir")"
+            done
+
+            # Resolve deps per target distro
+            for distro_id in $APT_IDS; do
+              echo "=== APT: $distro_id / $DEB_ARCH ==="
+              mkdir -p "gh-pages-dir/apt/dists/${distro_id}/main/binary-${DEB_ARCH}"
+
+              if [[ "$distro_id" != "$SOURCE_DISTRO" ]]; then
+                mkdir -p "fetched-deps-apt-${distro_id}"
+                "$SCRIPT_DIR/resolve-deps.sh" \
+                  --source-pkgs "gh-pages-dir/apt/pool/main" \
+                  --source-distro "$SOURCE_DISTRO" \
+                  --target-distro "$distro_id" \
+                  --target-format deb \
+                  --distros-config distros.yml \
+                  --dep-map "$DEP_MAP" \
+                  --output-dir "fetched-deps-apt-${distro_id}" \
+                  --arch "$arch" || echo "WARNING: dep resolution had errors for $distro_id"
+
+                # Copy fetched deps (already prefixed with source codename)
+                for fetched in "fetched-deps-apt-${distro_id}"/*.deb; do
+                  [[ -f "$fetched" ]] || continue
+                  cp "$fetched" "gh-pages-dir/apt/pool/main/"
+                done
+              fi
+            done
+
+            # Generate Packages index per distro
+            cd gh-pages-dir/apt
+            for distro_id in $APT_IDS; do
+              mkdir -p "dists/${distro_id}/main/binary-${DEB_ARCH}"
+              dpkg-scanpackages --arch "$DEB_ARCH" pool/ > "dists/${distro_id}/main/binary-${DEB_ARCH}/Packages" 2>/dev/null || true
+              gzip -k -f "dists/${distro_id}/main/binary-${DEB_ARCH}/Packages"
+            done
+            cd ../..
+          done
+
+          # Generate Release + sign for each distro
+          for distro_id in $APT_IDS; do
+            cd "gh-pages-dir/apt/dists/${distro_id}"
+
+            ARCH_LIST=$(ls -d main/binary-* 2>/dev/null | sed 's|main/binary-||' | tr '\n' ' ')
+
+            cat > Release << RELEASE_EOF
+          Origin: AstralEmu Packages
+          Label: astralemu
+          Suite: ${distro_id}
+          Codename: ${distro_id}
+          Architectures: ${ARCH_LIST}
+          Components: main
+          Description: AstralEmu packages for ${distro_id}
+          RELEASE_EOF
+
+            apt-ftparchive release . >> Release
+            rm -f Release.gpg InRelease
+            gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
+            gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
+            cd ../../../..
+          done
+
+      # ================================================================
+      # DNF REPOSITORIES
+      # ================================================================
+      - name: Build DNF repositories
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          SCRIPT_DIR="$(pwd)/scripts"
+          DEP_MAP="$SCRIPT_DIR/dep-map.conf"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          DNF_IDS=$(yq -r '.distros.dnf[].id' distros.yml)
+
+          for arch in ${{ steps.normalize.outputs.arches }}; do
+            for distro_id in $DNF_IDS; do
+              VERSION=$(yq -r ".distros.dnf[] | select(.id == \"$distro_id\") | .version" distros.yml)
+              echo "=== DNF: $distro_id ($VERSION) / $arch ==="
+              mkdir -p "gh-pages-dir/dnf/${VERSION}/${arch}"
+
+              # Build .rpm from each intermediate matching this arch
+              for intdir in intermediates/pkg-*; do
+                [[ -d "$intdir/meta" ]] || continue
+                EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
+                [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
+
+                "$SCRIPT_DIR/pkg-build-rpm.sh" "$intdir" "gh-pages-dir/dnf/${VERSION}/${arch}/" \
+                  --dep-map "$DEP_MAP" || \
+                  echo "WARNING: Failed to build RPM from $(basename "$intdir")"
+              done
+
+              # Resolve deps
+              mkdir -p "fetched-deps-dnf-${distro_id}"
+              "$SCRIPT_DIR/resolve-deps.sh" \
+                --source-pkgs "gh-pages-dir/dnf/${VERSION}/${arch}" \
+                --source-distro "$SOURCE_DISTRO" \
+                --target-distro "$distro_id" \
+                --target-format rpm \
+                --distros-config distros.yml \
+                --dep-map "$DEP_MAP" \
+                --output-dir "fetched-deps-dnf-${distro_id}" \
+                --arch "$arch" || echo "WARNING: dep resolution had errors for $distro_id"
+
+              # Convert fetched deps to RPM
+              for fetched in "fetched-deps-dnf-${distro_id}"/*; do
+                [[ -f "$fetched" ]] || continue
+                INTDIR=$(mktemp -d)
+                "$SCRIPT_DIR/pkg-extract.sh" "$fetched" "$INTDIR" --source-distro "$SOURCE_DISTRO"
+                "$SCRIPT_DIR/pkg-build-rpm.sh" "$INTDIR" "gh-pages-dir/dnf/${VERSION}/${arch}/" \
+                  --dep-map "$DEP_MAP" || echo "WARNING: Failed to convert fetched dep $(basename "$fetched")"
+                rm -rf "$INTDIR"
+              done
+
+              # Generate repodata
+              if ls "gh-pages-dir/dnf/${VERSION}/${arch}/"*.rpm 1>/dev/null 2>&1; then
+                createrepo_c "gh-pages-dir/dnf/${VERSION}/${arch}/"
+                gpg --batch --default-key "AstralEmu Packages" -abs \
+                  -o "gh-pages-dir/dnf/${VERSION}/${arch}/repodata/repomd.xml.asc" \
+                  "gh-pages-dir/dnf/${VERSION}/${arch}/repodata/repomd.xml"
+              fi
+            done
+          done
+
+          # Create .repo config
+          cat > gh-pages-dir/dnf/astralemu.repo << 'REPO_EOF'
+          [astralemu]
+          name=AstralEmu Packages
+          baseurl=https://astralemu.github.io/astralemu-packages/dnf/$releasever/$basearch/
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://astralemu.github.io/astralemu-packages/dnf/astralemu.gpg
+          REPO_EOF
+
+      # ================================================================
+      # PACMAN REPOSITORIES
+      # ================================================================
+      - name: Build Pacman repositories
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          SCRIPT_DIR="$(pwd)/scripts"
+          DEP_MAP="$SCRIPT_DIR/dep-map.conf"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+
+          for arch in ${{ steps.normalize.outputs.arches }}; do
+            echo "=== Pacman: $arch ==="
+            mkdir -p "gh-pages-dir/pacman/${arch}"
+
+            # Build .pkg.tar.zst from each intermediate matching this arch
+            for intdir in intermediates/pkg-*; do
+              [[ -d "$intdir/meta" ]] || continue
+              EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
+              [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
+
+              "$SCRIPT_DIR/pkg-build-pacman.sh" "$intdir" "gh-pages-dir/pacman/${arch}/" \
+                --dep-map "$DEP_MAP" || \
+                echo "WARNING: Failed to build pacman pkg from $(basename "$intdir")"
+            done
+
+            # Resolve deps
+            mkdir -p "fetched-deps-pacman-${arch}"
+            "$SCRIPT_DIR/resolve-deps.sh" \
+              --source-pkgs "gh-pages-dir/pacman/${arch}" \
+              --source-distro "$SOURCE_DISTRO" \
+              --target-distro arch \
+              --target-format pacman \
+              --distros-config distros.yml \
+              --dep-map "$DEP_MAP" \
+              --output-dir "fetched-deps-pacman-${arch}" \
+              --arch "$arch" || echo "WARNING: dep resolution had errors for pacman"
+
+            # Convert fetched deps to pacman
+            for fetched in "fetched-deps-pacman-${arch}"/*; do
+              [[ -f "$fetched" ]] || continue
+              INTDIR=$(mktemp -d)
+              "$SCRIPT_DIR/pkg-extract.sh" "$fetched" "$INTDIR" --source-distro "$SOURCE_DISTRO"
+              "$SCRIPT_DIR/pkg-build-pacman.sh" "$INTDIR" "gh-pages-dir/pacman/${arch}/" \
+                --dep-map "$DEP_MAP" || echo "WARNING: Failed to convert fetched dep $(basename "$fetched")"
+              rm -rf "$INTDIR"
+            done
+
+            # Generate pacman database
+            if ls "gh-pages-dir/pacman/${arch}/"*.pkg.tar.zst 1>/dev/null 2>&1; then
+              cd "gh-pages-dir/pacman/${arch}"
+              repo-add astralemu.db.tar.gz *.pkg.tar.zst
+              cd ../../..
+            fi
+          done
+
+      # ================================================================
+      # DEPLOY
+      # ================================================================
+      - name: Deploy to gh-pages
+        if: steps.check.outputs.has_pkgs == 'true'
+        run: |
+          cd gh-pages-dir
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update package repositories" || echo "No changes"
+          git push origin gh-pages

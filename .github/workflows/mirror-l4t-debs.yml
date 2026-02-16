@@ -17,8 +17,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ===========================================================================
+  # MIRROR: Clone l4t-debs, detect new/changed packages, upload as artifacts
+  # ===========================================================================
   mirror:
     runs-on: ubuntu-latest
+    outputs:
+      should_update: ${{ steps.check.outputs.should_update }}
+      has_new_debs: ${{ steps.list.outputs.has_new_debs }}
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v4
@@ -45,7 +51,7 @@ jobs:
             echo "No changes, skipping"
           fi
 
-          echo "$LATEST_COMMIT" > .trackers/l4t-debs-commit
+          echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
 
       - name: Clone l4t-debs and find new/changed packages
         if: steps.check.outputs.should_update == 'true'
@@ -88,74 +94,57 @@ jobs:
             echo "No new/changed packages"
           fi
 
-      - name: Checkout gh-pages
+      - name: Upload new debs as artifacts
         if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          git fetch origin gh-pages:gh-pages || true
-          git worktree add gh-pages-dir gh-pages || {
-            git worktree add --detach gh-pages-dir
-            cd gh-pages-dir
-            git checkout --orphan gh-pages
-            git rm -rf . 2>/dev/null || true
-            mkdir -p apt/pool/main apt/dists/stable/main/binary-arm64
-            cd ..
-          }
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-l4t-mirror
+          path: new-debs/*.deb
+          retention-days: 1
 
-      - name: Install tools
-        if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev apt-utils
+      - name: Upload tracker data as artifact
+        if: steps.check.outputs.should_update == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: l4t-tracker-data
+          path: |
+            .trackers/l4t-debs-commit
+            .trackers/deb-hashes
+          retention-days: 1
 
-      - name: Import GPG key
-        if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          gpg --armor --export "AstralEmu Packages" > gh-pages-dir/apt/astralemu.gpg
+  # ===========================================================================
+  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
+  # ===========================================================================
+  update-repo:
+    needs: [mirror]
+    if: needs.mirror.outputs.has_new_debs == 'true'
+    uses: ./.github/workflows/update-repos.yml
+    with:
+      artifact_pattern: 'deb-l4t-*'
+      source_distro: 'noble'
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
-      - name: Add new packages to APT pool
-        if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          mkdir -p gh-pages-dir/apt/pool/main
-          cp new-debs/*.deb gh-pages-dir/apt/pool/main/
+  # ===========================================================================
+  # SAVE TRACKERS: Update trackers on main branch
+  # ===========================================================================
+  save-trackers:
+    needs: [mirror, update-repo]
+    if: always() && needs.mirror.outputs.should_update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
-      - name: Generate APT repository metadata
-        if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          cd gh-pages-dir/apt
-          mkdir -p dists/stable/main/binary-arm64
-
-          dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
-          gzip -k -f dists/stable/main/binary-arm64/Packages
-
-          cd dists/stable
-          cat > Release << EOF
-          Origin: AstralEmu Packages
-          Label: astralemu
-          Suite: stable
-          Codename: stable
-          Architectures: arm64
-          Components: main
-          Description: AstralEmu packages — L4T kernel mirror
-          EOF
-
-          apt-ftparchive release . >> Release
-          rm -f Release.gpg InRelease
-          gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
-          gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
-
-      - name: Deploy to gh-pages
-        if: steps.list.outputs.has_new_debs == 'true'
-        run: |
-          cd gh-pages-dir
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Mirror L4T kernel packages" || echo "No changes"
-          git push origin gh-pages
+      - name: Download tracker data
+        uses: actions/download-artifact@v4
+        with:
+          name: l4t-tracker-data
+          path: .trackers/
 
       - name: Save trackers to main
-        if: steps.check.outputs.should_update == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
