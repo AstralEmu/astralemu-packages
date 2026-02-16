@@ -1,0 +1,31 @@
+# AstralEmu - Target device definitions
+#
+# Each device defines the hardware target for cross-compilation.
+# The build matrix iterates over all devices listed here.
+#
+# To add a new device:
+#   1. Add an entry below with a unique id
+#   2. Commit and push — the CI will automatically build all emulators for it
+#
+# Fields:
+#   id         — Short identifier used in package names (e.g. azahar-emu-<id>)
+#   name       — Human-readable device name
+#   arch       — Debian architecture (arm64, amd64)
+#   platform   — Docker platform string
+#   base_image — Docker base image for the build container
+#   cflags     — C compiler flags (arch targeting + optimizations, WITHOUT LTO)
+#   cxxflags   — C++ compiler flags (usually same as cflags, WITHOUT LTO)
+#
+# Note: LTO and jemalloc are added by the workflow, not here.
+#   clang builds → -flto=thin    (azahar, duckstation)
+#   gcc builds   → -flto         (dolphin, melonds, ppsspp, esde, xemu, libretro)
+#   All builds   → -ljemalloc    (hardcoded in workflow)
+
+devices:
+  - id: l4t
+    name: "Nintendo Switch (Tegra X1)"
+    arch: arm64
+    platform: linux/arm64
+    base_image: ubuntu:24.04
+    cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
+    cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
