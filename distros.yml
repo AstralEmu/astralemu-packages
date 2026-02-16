@@ -1,0 +1,29 @@
+# AstralEmu - Target distribution definitions
+#
+# Locked versions for stability. Update manually when targeting new releases.
+
+distros:
+  apt:
+    - id: noble
+      name: "Ubuntu 24.04 LTS"
+      type: ubuntu
+      version: "24.04"
+      mirror: http://ports.ubuntu.com/ubuntu-ports
+      components: "main universe"
+    - id: trixie
+      name: "Debian 13"
+      type: debian
+      version: "13"
+      mirror: http://deb.debian.org/debian
+      components: "main contrib"
+
+  dnf:
+    - id: fedora41
+      name: "Fedora 41"
+      version: "41"
+      baseurl: https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
+
+  pacman:
+    - id: arch
+      name: "Arch Linux"
+      mirror: https://geo.mirror.pkgbuild.com
