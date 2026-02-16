@@ -6,6 +6,7 @@
   <img src="https://img.shields.io/badge/rebuilt-every%2024h-f2d974?style=flat-square" alt="Daily rebuild"/>
   <img src="https://img.shields.io/badge/LTO-thin-1a1a4e?style=flat-square" alt="LTO"/>
   <img src="https://img.shields.io/badge/allocator-jemalloc-1a1a4e?style=flat-square" alt="jemalloc"/>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"/>
 </p>
 
 # AstralEmu Packages
@@ -40,10 +41,11 @@ Per-device packages that contain the dynamic tuning rules for the [Performance M
 
 Every package is compiled with:
 
-| Flag | Purpose |
-|---|---|
-| `LTO=thin` | Link-time optimization — reduces binary size and improves runtime performance |
-| `jemalloc` | Replaces glibc's allocator for lower fragmentation and better throughput |
+
+| Flag                   | Purpose                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `LTO=thin`             | Link-time optimization — reduces binary size and improves runtime performance                |
+| `jemalloc`             | Replaces glibc's allocator for lower fragmentation and better throughput                      |
 | Architecture targeting | Packages are compiled for the exact CPU features of each device (NEON, SVE, SSE4, AVX2, etc.) |
 
 Builds run on GitHub Actions and are triggered automatically every 24 hours, or on-demand when a new emulator release is tagged upstream.
@@ -67,6 +69,7 @@ sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-package
 ### Pacman (Arch Linux)
 
 Add to `/etc/pacman.conf`:
+
 ```ini
 [astralemu]
 SigLevel = Optional TrustAll
