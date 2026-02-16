@@ -20,7 +20,7 @@ This repository serves packages through **APT**, **DNF**, and **Pacman** — mat
 
 ### Emulators (standalone)
 
-Every major standalone emulator is packaged and rebuilt daily. Examples include RetroArch, PPSSPP, Dolphin, PCSX2, Duckstation, Citra, Yuzu/Suyu, RPCS3, AetherSX2, and more — the full list depends on what's supported on your target architecture.
+Every major standalone emulator is packaged and rebuilt daily. Examples include RetroArch, PPSSPP, Dolphin, PCSX2, Duckstation, Azahar, Ryujinx, Eden, RPCS3, AetherSX2, and more — the full list depends on what's supported on your target architecture.
 
 ### RetroArch Cores
 
