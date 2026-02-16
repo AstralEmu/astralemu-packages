@@ -12,7 +12,7 @@
 
 Optimized emulator packages for AstralEmu, rebuilt daily from source with performance flags and architecture-specific compilation.
 
-This repository serves packages through **APT**, **DNF**, and **Pacman** — matching whichever base distro your AstralEmu image uses.
+This repository serves packages through **APT**, **DNF**, and **Pacman** — matching whichever base distro your AstralEmu image uses. The repo is hosted via GitHub Pages at `https://astralemu.github.io/astralemu-packages/`.
 
 ---
 
@@ -53,15 +53,15 @@ Builds run on GitHub Actions and are triggered automatically every 24 hours, or 
 ### APT (Ubuntu / Debian)
 
 ```bash
-curl -fsSL https://astralemu.github.io/repo/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/repo/apt stable main" | sudo tee /etc/apt/sources.list.d/astralemu.list
+curl -fsSL https://astralemu.github.io/astralemu-packages/apt/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt stable main" | sudo tee /etc/apt/sources.list.d/astralemu.list
 sudo apt update
 ```
 
 ### DNF (Universal Blue / Fedora)
 
 ```bash
-sudo dnf config-manager --add-repo https://astralemu.github.io/repo/dnf/astralemu.repo
+sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-packages/dnf/astralemu.repo
 ```
 
 ### Pacman (Arch Linux)
@@ -70,10 +70,21 @@ Add to `/etc/pacman.conf`:
 ```ini
 [astralemu]
 SigLevel = Optional TrustAll
-Server = https://astralemu.github.io/repo/pacman/$arch
+Server = https://astralemu.github.io/astralemu-packages/pacman/$arch
 ```
 
-> **Note**: These are placeholder URLs. Update them to match your actual deployment.
+## Hosting
+
+This repo has its own GitHub Pages enabled. The built packages and repo metadata are served as static files from the `gh-pages` branch, accessible at:
+
+```
+https://astralemu.github.io/astralemu-packages/
+├── apt/
+├── dnf/
+└── pacman/
+```
+
+The CI pipeline builds the packages on `main`, then pushes the repo metadata and package files to `gh-pages` for serving.
 
 ## Build matrix
 
