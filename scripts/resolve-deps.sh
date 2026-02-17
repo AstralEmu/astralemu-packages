@@ -170,26 +170,29 @@ batch_get_versions() {
     deb)
       docker run --rm --platform "$PLATFORM" "$image" bash -c "
         apt-get update -qq >/dev/null 2>&1
+        FOUND=\$(apt-cache show $dep_list 2>/dev/null | awk '/^Package:/{pkg=\$2} /^Version:/{if(!seen[pkg]){print pkg\"=\"\$2; seen[pkg]=1}}')
+        echo \"\$FOUND\"
         for pkg in $dep_list; do
-          ver=\$(apt-cache show \"\$pkg\" 2>/dev/null | grep '^Version:' | head -1 | sed 's/^Version: //')
-          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+          echo \"\$FOUND\" | grep -q \"^\${pkg}=\" || echo \"\${pkg}=MISSING\"
         done
       " 2>/dev/null || true
       ;;
     rpm)
       docker run --rm --platform "$PLATFORM" "$image" bash -c "
+        FOUND=\$(dnf repoquery --qf '%{name}=%{version}-%{release}' $dep_list 2>/dev/null)
+        echo \"\$FOUND\"
         for pkg in $dep_list; do
-          ver=\$(dnf repoquery --qf '%{version}-%{release}' \"\$pkg\" 2>/dev/null | head -1)
-          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+          echo \"\$FOUND\" | grep -q \"^\${pkg}=\" || echo \"\${pkg}=MISSING\"
         done
       " 2>/dev/null || true
       ;;
     pacman)
       docker run --rm --platform "$PLATFORM" "$image" bash -c "
         pacman -Sy --noconfirm >/dev/null 2>&1
+        FOUND=\$(pacman -Si $dep_list 2>/dev/null | awk '/^Name/{name=\$3} /^Version/{print name\"=\"\$3}')
+        echo \"\$FOUND\"
         for pkg in $dep_list; do
-          ver=\$(pacman -Si \"\$pkg\" 2>/dev/null | grep '^Version' | head -1 | sed 's/.*: //')
-          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+          echo \"\$FOUND\" | grep -q \"^\${pkg}=\" || echo \"\${pkg}=MISSING\"
         done
       " 2>/dev/null || true
       ;;
@@ -239,10 +242,8 @@ batch_fetch() {
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
           apt-get update -qq >/dev/null 2>&1
-          for pkg in $dep_list; do
-            cd /tmp && apt-get download \"\$pkg\" 2>/dev/null
-            mv /tmp/*.deb /out/ 2>/dev/null || true
-          done
+          cd /tmp && apt-get download $dep_list 2>/dev/null || true
+          mv /tmp/*.deb /out/ 2>/dev/null || true
         " 2>/dev/null || true
       ;;
     rpm)
