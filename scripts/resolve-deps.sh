@@ -94,19 +94,39 @@ get_platform() {
   esac
 }
 
-# Extract major.minor.patch, ignore bugfix/revision
-parse_version_triple() {
+# Extract major.minor for comparison (patch ignored)
+# Returns "NONSTANDARD" for commits, dates, or non-semver formats
+parse_version_pair() {
   local ver="$1"
   ver="${ver#*:}"                          # strip epoch
   ver="${ver%%-*}"                         # strip revision
   ver=$(echo "$ver" | sed 's/[+~].*//')   # strip modifiers
   local IFS='.'
   read -ra parts <<< "$ver"
-  echo "${parts[0]:-0}.${parts[1]:-0}.${parts[2]:-0}"
+  local major="${parts[0]:-}"
+  local minor="${parts[1]:-}"
+  # Need at least major.minor with numeric parts to be standard semver
+  if ! [[ "$major" =~ ^[0-9]+$ ]] || [[ -z "$minor" ]] || ! [[ "$minor" =~ ^[0-9]+$ ]]; then
+    echo "NONSTANDARD"
+    return
+  fi
+  echo "${major}.${minor}"
 }
 
 versions_compatible() {
-  [[ "$(parse_version_triple "$1")" == "$(parse_version_triple "$2")" ]]
+  local src_pair tgt_pair
+  src_pair=$(parse_version_pair "$1")
+  tgt_pair=$(parse_version_pair "$2")
+  # Non-standard versions (commits, dates, etc.) → exact string match or mismatch
+  if [[ "$src_pair" == "NONSTANDARD" || "$tgt_pair" == "NONSTANDARD" ]]; then
+    local src_clean tgt_clean
+    src_clean="${1#*:}"; src_clean="${src_clean%%-*}"
+    tgt_clean="${2#*:}"; tgt_clean="${tgt_clean%%-*}"
+    [[ "$src_clean" == "$tgt_clean" ]]
+    return
+  fi
+  # Standard semver: major.minor must match (patch ignored)
+  [[ "$src_pair" == "$tgt_pair" ]]
 }
 
 map_dep_name() {
@@ -395,9 +415,9 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
       if [[ "$src_ver" == "MISSING" ]]; then
         echo "  [OK] $dep=$tgt_ver (not in source, using target)"
       elif versions_compatible "$src_ver" "$tgt_ver"; then
-        echo "  [OK] $dep: $(parse_version_triple "$src_ver") = $(parse_version_triple "$tgt_ver")"
+        echo "  [OK] $dep: $(parse_version_pair "$src_ver") = $(parse_version_pair "$tgt_ver")"
       else
-        echo "  [MISMATCH] $dep: source=$(parse_version_triple "$src_ver") target=$(parse_version_triple "$tgt_ver")"
+        echo "  [MISMATCH] $dep: source=$(parse_version_pair "$src_ver") target=$(parse_version_pair "$tgt_ver")"
         incompatible_deps="$incompatible_deps $dep"
       fi
     done
