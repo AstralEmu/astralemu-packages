@@ -1,7 +1,13 @@
 #!/bin/bash
 # pkg-build-pacman.sh — Build a .pkg.tar.zst from the intermediate format
 # Usage: ./pkg-build-pacman.sh <intermediate-dir> <output-dir> [--dep-map <dep-map.conf>]
+#
+# Supports any source format: deb, rpm, pacman → pacman
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=cross-pkg-helpers.sh
+source "$SCRIPT_DIR/cross-pkg-helpers.sh"
 
 INTDIR="$1"
 OUTDIR="$2"
@@ -27,6 +33,7 @@ PKG_VERSION=$(cat "$INTDIR/meta/version")
 PKG_ARCH=$(cat "$INTDIR/meta/arch")
 PKG_DESC=$(cat "$INTDIR/meta/description")
 PKG_MAINTAINER=$(cat "$INTDIR/meta/maintainer")
+SOURCE_FORMAT=$(cat "$INTDIR/meta/source_format")
 
 # Map arch
 case "$PKG_ARCH" in
@@ -42,20 +49,17 @@ PAC_VERSION=$(echo "$PKG_VERSION" | sed 's/^[0-9]*://; s/-/./g')
 # Map dependency name to pacman name
 map_dep_to_pacman() {
   local dep="$1"
-  local source_format
-  source_format=$(cat "$INTDIR/meta/source_format")
 
-  # If already pacman, keep as-is
-  if [[ "$source_format" == "pacman" ]]; then
+  if [[ "$SOURCE_FORMAT" == "pacman" ]]; then
     echo "$dep"
     return
   fi
 
   if [[ -n "$DEP_MAP" && -f "$DEP_MAP" ]]; then
     local mapped=""
-    if [[ "$source_format" == "deb" ]]; then
+    if [[ "$SOURCE_FORMAT" == "deb" ]]; then
       mapped=$(grep "^${dep} " "$DEP_MAP" | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ')
-    elif [[ "$source_format" == "rpm" ]]; then
+    elif [[ "$SOURCE_FORMAT" == "rpm" ]]; then
       mapped=$(grep "rpm:${dep}" "$DEP_MAP" | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ')
     fi
     if [[ -n "$mapped" ]]; then
@@ -66,6 +70,15 @@ map_dep_to_pacman() {
 
   echo "$dep"
 }
+
+# ========================================================================
+# Relocate library paths (deb multiarch, lib64, /lib merge)
+# ========================================================================
+if [[ "$SOURCE_FORMAT" != "pacman" ]]; then
+  relocate_lib_paths "$INTDIR/root" "/usr/lib"
+fi
+
+# ========================================================================
 
 # Build in temp dir
 BUILDDIR=$(mktemp -d)
@@ -118,28 +131,138 @@ if [[ -s "$INTDIR/meta/replaces" ]]; then
   done < "$INTDIR/meta/replaces"
 fi
 
-# Generate .INSTALL from scripts
-HAS_INSTALL=false
-INSTALL_FILE="$BUILDDIR/.INSTALL"
+# Add backup (conffiles) entries — pacman uses relative paths without leading /
+if [[ -s "$INTDIR/meta/conffiles" ]]; then
+  while IFS= read -r cf; do
+    [[ -z "$cf" ]] && continue
+    echo "backup = ${cf#/}" >> "$BUILDDIR/.PKGINFO"
+  done < "$INTDIR/meta/conffiles"
+fi
 
-write_install_func() {
-  local func_name="$1"
-  local script_file="$2"
-  if [[ -f "$script_file" ]]; then
+# ========================================================================
+# Generate .INSTALL from translated scripts + systemd handling
+# Handles all source formats: deb, rpm (with $1 splitting), pacman (direct)
+# ========================================================================
+INSTALL_FILE="$BUILDDIR/.INSTALL"
+HAS_INSTALL=false
+
+PRE_INSTALL=""
+POST_INSTALL=""
+PRE_REMOVE=""
+POST_REMOVE=""
+PRE_UPGRADE=""
+POST_UPGRADE=""
+
+# --- RPM source: split $1 conditionals into install vs upgrade ---
+# RPM %pre uses $1=1 (install) and $1=2 (upgrade)
+# RPM %preun uses $1=0 (uninstall) and $1=1 (before upgrade)
+# We call translate_script twice per script with different simulated $1 values.
+if [[ "$SOURCE_FORMAT" == "rpm" ]]; then
+  if [[ -f "$INTDIR/meta/scripts/preinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/preinst" "rpm" "pacman" 1)
+    [[ -n "$T" ]] && PRE_INSTALL+="$T"$'\n'
+    T=$(translate_script "$INTDIR/meta/scripts/preinst" "rpm" "pacman" 2)
+    [[ -n "$T" ]] && PRE_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postinst" "rpm" "pacman" 1)
+    [[ -n "$T" ]] && POST_INSTALL+="$T"$'\n'
+    T=$(translate_script "$INTDIR/meta/scripts/postinst" "rpm" "pacman" 2)
+    [[ -n "$T" ]] && POST_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/prerm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/prerm" "rpm" "pacman" 0)
+    [[ -n "$T" ]] && PRE_REMOVE+="$T"$'\n'
+    T=$(translate_script "$INTDIR/meta/scripts/prerm" "rpm" "pacman" 1)
+    [[ -n "$T" ]] && PRE_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postrm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postrm" "rpm" "pacman" 0)
+    [[ -n "$T" ]] && POST_REMOVE+="$T"$'\n'
+    T=$(translate_script "$INTDIR/meta/scripts/postrm" "rpm" "pacman" 1)
+    [[ -n "$T" ]] && POST_UPGRADE+="$T"$'\n'
+  fi
+
+# --- Deb source: same content for install and upgrade (configure runs on both) ---
+elif [[ "$SOURCE_FORMAT" == "deb" ]]; then
+  if [[ -f "$INTDIR/meta/scripts/preinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/preinst" "deb" "pacman")
+    [[ -n "$T" ]] && PRE_INSTALL+="$T"$'\n' && PRE_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postinst" "deb" "pacman")
+    [[ -n "$T" ]] && POST_INSTALL+="$T"$'\n' && POST_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/prerm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/prerm" "deb" "pacman")
+    [[ -n "$T" ]] && PRE_REMOVE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postrm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postrm" "deb" "pacman")
+    [[ -n "$T" ]] && POST_REMOVE+="$T"$'\n'
+  fi
+
+# --- Pacman source: use scripts directly + extracted upgrade functions ---
+else
+  if [[ -f "$INTDIR/meta/scripts/preinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/preinst" "pacman" "pacman")
+    [[ -n "$T" ]] && PRE_INSTALL+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postinst" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postinst" "pacman" "pacman")
+    [[ -n "$T" ]] && POST_INSTALL+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/prerm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/prerm" "pacman" "pacman")
+    [[ -n "$T" ]] && PRE_REMOVE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/postrm" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/postrm" "pacman" "pacman")
+    [[ -n "$T" ]] && POST_REMOVE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/pre_upgrade" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/pre_upgrade" "pacman" "pacman")
+    [[ -n "$T" ]] && PRE_UPGRADE+="$T"$'\n'
+  fi
+  if [[ -f "$INTDIR/meta/scripts/post_upgrade" ]]; then
+    T=$(translate_script "$INTDIR/meta/scripts/post_upgrade" "pacman" "pacman")
+    [[ -n "$T" ]] && POST_UPGRADE+="$T"$'\n'
+  fi
+fi
+
+# Detect systemd unit files and add native handling
+SYSTEMD_UNITS=$(find "$INTDIR/root" -name '*.service' -o -name '*.timer' -o -name '*.socket' -o -name '*.path' 2>/dev/null | sed 's|.*/||' | sort -u || true)
+if [[ -n "$SYSTEMD_UNITS" ]]; then
+  for unit in $SYSTEMD_UNITS; do
+    POST_INSTALL+="  systemctl daemon-reload"$'\n'
+    POST_INSTALL+="  systemctl enable $unit 2>/dev/null || :"$'\n'
+    POST_UPGRADE+="  systemctl daemon-reload"$'\n'
+    POST_UPGRADE+="  systemctl try-restart $unit 2>/dev/null || :"$'\n'
+    PRE_REMOVE+="  systemctl disable --now $unit 2>/dev/null || :"$'\n'
+    POST_REMOVE+="  systemctl daemon-reload"$'\n'
+  done
+fi
+
+# Write .INSTALL
+> "$INSTALL_FILE"
+
+write_func() {
+  local func_name="$1" body="$2"
+  if [[ -n "${body// /}" ]]; then
     HAS_INSTALL=true
     echo "${func_name}() {" >> "$INSTALL_FILE"
-    # Strip shebang if present
-    sed '/^#!\/bin\//d' "$script_file" >> "$INSTALL_FILE"
+    echo "$body" >> "$INSTALL_FILE"
     echo "}" >> "$INSTALL_FILE"
     echo "" >> "$INSTALL_FILE"
   fi
 }
 
-> "$INSTALL_FILE"
-write_install_func "pre_install"  "$INTDIR/meta/scripts/preinst"
-write_install_func "post_install" "$INTDIR/meta/scripts/postinst"
-write_install_func "pre_remove"   "$INTDIR/meta/scripts/prerm"
-write_install_func "post_remove"  "$INTDIR/meta/scripts/postrm"
+write_func "pre_install"   "$PRE_INSTALL"
+write_func "post_install"  "$POST_INSTALL"
+write_func "pre_upgrade"   "$PRE_UPGRADE"
+write_func "post_upgrade"  "$POST_UPGRADE"
+write_func "pre_remove"    "$PRE_REMOVE"
+write_func "post_remove"   "$POST_REMOVE"
 
 if [[ "$HAS_INSTALL" != "true" ]]; then
   rm -f "$INSTALL_FILE"
@@ -162,9 +285,14 @@ TAR_FILES=".PKGINFO"
 [[ -f .MTREE ]] && TAR_FILES="$TAR_FILES .MTREE"
 [[ -f .INSTALL ]] && TAR_FILES="$TAR_FILES .INSTALL"
 
-tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
-  $TAR_FILES \
-  --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO' \
-  * 2>/dev/null || tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+# Metapackage: only metadata files. Otherwise: metadata + content.
+if find . -mindepth 1 -not -name '.PKGINFO' -not -name '.MTREE' -not -name '.INSTALL' -not -name '.BUILDINFO' | grep -q .; then
+  tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
+    $TAR_FILES \
+    --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO' \
+    * 2>/dev/null || tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+else
+  tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+fi
 
 echo "Pacman package built: $OUTDIR/$PKG_FILENAME"

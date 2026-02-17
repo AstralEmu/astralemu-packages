@@ -74,6 +74,11 @@ case "$FORMAT" in
       touch "$OUTDIR/meta/depends"
     fi
 
+    # Extract conffiles
+    if [[ -f "$TMPCTL/conffiles" ]]; then
+      grep -v '^$' "$TMPCTL/conffiles" > "$OUTDIR/meta/conffiles" 2>/dev/null || true
+    fi
+
     # Copy maintainer scripts
     for script in preinst postinst prerm postrm; do
       if [[ -f "$TMPCTL/$script" ]]; then
@@ -106,6 +111,11 @@ case "$FORMAT" in
     cp -a "$TMPEXT"/* "$OUTDIR/root/" 2>/dev/null || true
     cd - >/dev/null
     rm -rf "$TMPEXT"
+
+    # Extract config files
+    rpm -qp --configfiles "$PKG" 2>/dev/null | \
+      grep -v '^(contains no files)$' | grep -v '^$' \
+      > "$OUTDIR/meta/conffiles" 2>/dev/null || true
 
     # Extract scripts
     SCRIPTS_RAW=$(rpm -qp --scripts "$PKG" 2>/dev/null || true)
@@ -141,22 +151,26 @@ case "$FORMAT" in
       grep '^depend = ' "$TMPEXT/.PKGINFO" | sed 's/^depend = //' | \
         sed 's/[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | \
         grep -v '^$' > "$OUTDIR/meta/depends" || touch "$OUTDIR/meta/depends"
+
+      # Extract backup/conffiles (pacman stores relative paths, add leading /)
+      grep '^backup = ' "$TMPEXT/.PKGINFO" | sed 's/^backup = //; s/^/\//' | \
+        grep -v '^$' > "$OUTDIR/meta/conffiles" 2>/dev/null || true
     fi
 
     # Parse .INSTALL for scripts
     if [[ -f "$TMPEXT/.INSTALL" ]]; then
       awk '
-        /^pre_install\(\)/  { fn="preinst";  capture=1; next }
-        /^post_install\(\)/ { fn="postinst"; capture=1; next }
-        /^pre_remove\(\)/   { fn="prerm";    capture=1; next }
-        /^post_remove\(\)/  { fn="postrm";   capture=1; next }
-        /^pre_upgrade\(\)/  { fn="";         capture=0; next }
-        /^post_upgrade\(\)/ { fn="";         capture=0; next }
+        /^pre_install\(\)/  { fn="preinst";       capture=1; next }
+        /^post_install\(\)/ { fn="postinst";      capture=1; next }
+        /^pre_remove\(\)/   { fn="prerm";         capture=1; next }
+        /^post_remove\(\)/  { fn="postrm";        capture=1; next }
+        /^pre_upgrade\(\)/  { fn="pre_upgrade";   capture=1; next }
+        /^post_upgrade\(\)/ { fn="post_upgrade";  capture=1; next }
         /^\}/ { if (capture) { capture=0; fn="" }; next }
         capture && fn != "" { print >> "'"$OUTDIR/meta/scripts/"'" fn }
       ' "$TMPEXT/.INSTALL"
       # Add shebang to extracted scripts
-      for s in "$OUTDIR/meta/scripts"/{preinst,postinst,prerm,postrm}; do
+      for s in "$OUTDIR/meta/scripts"/{preinst,postinst,prerm,postrm,pre_upgrade,post_upgrade}; do
         if [[ -f "$s" ]]; then
           sed -i '1i#!/bin/bash' "$s"
           chmod +x "$s"

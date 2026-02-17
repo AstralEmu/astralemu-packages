@@ -1,7 +1,13 @@
 #!/bin/bash
 # pkg-build-deb.sh — Build a .deb from the intermediate format
 # Usage: ./pkg-build-deb.sh <intermediate-dir> <output-dir> [--dep-map <dep-map.conf>] [--target-distro <codename>]
+#
+# Supports any source format: deb, rpm, pacman → deb
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=cross-pkg-helpers.sh
+source "$SCRIPT_DIR/cross-pkg-helpers.sh"
 
 INTDIR="$1"
 OUTDIR="$2"
@@ -29,6 +35,7 @@ PKG_VERSION=$(cat "$INTDIR/meta/version")
 PKG_ARCH=$(cat "$INTDIR/meta/arch")
 PKG_DESC=$(cat "$INTDIR/meta/description")
 PKG_MAINTAINER=$(cat "$INTDIR/meta/maintainer")
+SOURCE_FORMAT=$(cat "$INTDIR/meta/source_format")
 SOURCE_DISTRO=$(cat "$INTDIR/meta/source_distro" 2>/dev/null || echo "unknown")
 
 # Map arch to deb convention
@@ -40,24 +47,19 @@ case "$PKG_ARCH" in
 esac
 
 # Map dependency names: source format -> deb names
-# If source was already deb, names stay the same
-# If source was rpm/pacman, reverse-lookup from dep-map.conf
 map_dep_to_deb() {
   local dep="$1"
-  local source_format
-  source_format=$(cat "$INTDIR/meta/source_format")
 
-  if [[ "$source_format" == "deb" ]]; then
+  if [[ "$SOURCE_FORMAT" == "deb" ]]; then
     echo "$dep"
     return
   fi
 
   if [[ -n "$DEP_MAP" && -f "$DEP_MAP" ]]; then
     local mapped=""
-    if [[ "$source_format" == "rpm" ]]; then
-      # Reverse lookup: find deb name where rpm:X matches
+    if [[ "$SOURCE_FORMAT" == "rpm" ]]; then
       mapped=$(grep "rpm:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ')
-    elif [[ "$source_format" == "pacman" ]]; then
+    elif [[ "$SOURCE_FORMAT" == "pacman" ]]; then
       mapped=$(grep "pac:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ')
     fi
     if [[ -n "$mapped" ]]; then
@@ -66,9 +68,17 @@ map_dep_to_deb() {
     fi
   fi
 
-  # Fallback: use as-is
   echo "$dep"
 }
+
+# ========================================================================
+# Relocate library paths (RPM lib64 → /usr/lib for Debian)
+# ========================================================================
+if [[ "$SOURCE_FORMAT" != "deb" ]]; then
+  relocate_lib_paths "$INTDIR/root" "/usr/lib"
+fi
+
+# ========================================================================
 
 # Build depends line
 DEPENDS=""
@@ -125,13 +135,118 @@ fi
 INSTALLED_SIZE=$(du -sk "$BUILDDIR" | cut -f1)
 echo "Installed-Size: $INSTALLED_SIZE" >> "$BUILDDIR/DEBIAN/control"
 
-# Copy maintainer scripts
-for script in preinst postinst prerm postrm; do
-  if [[ -f "$INTDIR/meta/scripts/$script" ]]; then
-    cp "$INTDIR/meta/scripts/$script" "$BUILDDIR/DEBIAN/$script"
-    chmod 755 "$BUILDDIR/DEBIAN/$script"
+# ========================================================================
+# Conffiles → DEBIAN/conffiles
+# ========================================================================
+if [[ -s "$INTDIR/meta/conffiles" ]]; then
+  cp "$INTDIR/meta/conffiles" "$BUILDDIR/DEBIAN/conffiles"
+fi
+
+# ========================================================================
+# Translate and install maintainer scripts
+# For deb source: copy as-is (same format)
+# For rpm/pacman source: translate commands to Debian equivalents
+# ========================================================================
+if [[ "$SOURCE_FORMAT" == "deb" ]]; then
+  # Same format: copy scripts directly
+  for script in preinst postinst prerm postrm; do
+    if [[ -f "$INTDIR/meta/scripts/$script" ]]; then
+      cp "$INTDIR/meta/scripts/$script" "$BUILDDIR/DEBIAN/$script"
+      chmod 755 "$BUILDDIR/DEBIAN/$script"
+    fi
+  done
+else
+  if [[ "$SOURCE_FORMAT" == "rpm" ]]; then
+    # ---- RPM → deb: translate with runtime $_RPM_ARG ----
+    # RPM scripts use numeric $1 to distinguish install ($1=1) vs upgrade ($1=2)
+    # and uninstall ($1=0) vs before-upgrade ($1=1).
+    # Deb scripts receive text arguments ($1=configure/install/upgrade/remove).
+    # We replace $1→$_RPM_ARG and prepend a preamble that maps deb args → RPM numeric.
+    for script in preinst postinst prerm postrm; do
+      if [[ -f "$INTDIR/meta/scripts/$script" ]]; then
+        RPM_PREAMBLE=""
+        case "$script" in
+          preinst)  RPM_PREAMBLE='case "$1" in install) _RPM_ARG=1 ;; upgrade) _RPM_ARG=2 ;; *) _RPM_ARG=1 ;; esac' ;;
+          postinst) RPM_PREAMBLE='if [ -z "$2" ]; then _RPM_ARG=1; else _RPM_ARG=2; fi' ;;
+          prerm)    RPM_PREAMBLE='case "$1" in remove) _RPM_ARG=0 ;; upgrade) _RPM_ARG=1 ;; *) _RPM_ARG=0 ;; esac' ;;
+          postrm)   RPM_PREAMBLE='case "$1" in remove|purge) _RPM_ARG=0 ;; upgrade) _RPM_ARG=1 ;; *) _RPM_ARG=0 ;; esac' ;;
+        esac
+
+        TRANSLATED=$(translate_script "$INTDIR/meta/scripts/$script" "rpm" "deb" "runtime")
+        if [[ -n "$TRANSLATED" ]]; then
+          {
+            echo "#!/bin/bash"
+            echo "$RPM_PREAMBLE"
+            echo "$TRANSLATED"
+          } > "$BUILDDIR/DEBIAN/$script"
+          chmod 755 "$BUILDDIR/DEBIAN/$script"
+        fi
+      fi
+    done
+
+  elif [[ "$SOURCE_FORMAT" == "pacman" ]]; then
+    # ---- Pacman → deb: map install/upgrade/remove functions with guards ----
+    # Pacman has separate functions (pre_install vs pre_upgrade vs pre_remove).
+    # Deb scripts run on all events, so we add guards to match Pacman semantics:
+    #   preinst:  install → pre_install, upgrade → pre_upgrade
+    #   postinst: fresh ($2 empty) → post_install, upgrade ($2 set) → post_upgrade
+    #   prerm:    remove → pre_remove
+    #   postrm:   remove/purge → post_remove
+    for script in preinst postinst prerm postrm; do
+      BODY=""
+
+      # Install/remove scripts with appropriate guards
+      if [[ -f "$INTDIR/meta/scripts/$script" ]]; then
+        TRANSLATED=$(translate_script "$INTDIR/meta/scripts/$script" "pacman" "deb")
+        if [[ -n "$TRANSLATED" ]]; then
+          case "$script" in
+            preinst)  BODY+='if [ "$1" = "install" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n' ;;
+            postinst) BODY+='if [ -z "$2" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n' ;;
+            prerm)    BODY+='if [ "$1" = "remove" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n' ;;
+            postrm)   BODY+='if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n' ;;
+          esac
+        fi
+      fi
+
+      # Merge upgrade scripts with upgrade guards
+      case "$script" in
+        preinst)
+          if [[ -f "$INTDIR/meta/scripts/pre_upgrade" ]]; then
+            TRANSLATED=$(translate_script "$INTDIR/meta/scripts/pre_upgrade" "pacman" "deb")
+            [[ -n "$TRANSLATED" ]] && BODY+='if [ "$1" = "upgrade" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n'
+          fi ;;
+        postinst)
+          if [[ -f "$INTDIR/meta/scripts/post_upgrade" ]]; then
+            TRANSLATED=$(translate_script "$INTDIR/meta/scripts/post_upgrade" "pacman" "deb")
+            [[ -n "$TRANSLATED" ]] && BODY+='if [ -n "$2" ]; then'$'\n'"$TRANSLATED"$'\n''fi'$'\n'
+          fi ;;
+      esac
+
+      if [[ -n "$BODY" ]]; then
+        {
+          echo "#!/bin/bash"
+          echo "$BODY"
+        } > "$BUILDDIR/DEBIAN/$script"
+        chmod 755 "$BUILDDIR/DEBIAN/$script"
+      fi
+    done
+
+  else
+    # ---- Unknown source → deb: best-effort translation ----
+    for script in preinst postinst prerm postrm; do
+      if [[ -f "$INTDIR/meta/scripts/$script" ]]; then
+        TRANSLATED=$(translate_script "$INTDIR/meta/scripts/$script" "$SOURCE_FORMAT" "deb")
+        if [[ -n "$TRANSLATED" ]]; then
+          {
+            echo "#!/bin/bash"
+            echo "$TRANSLATED"
+          } > "$BUILDDIR/DEBIAN/$script"
+          chmod 755 "$BUILDDIR/DEBIAN/$script"
+        fi
+      fi
+    done
   fi
-done
+fi
 
 # Build the .deb (strip epoch from filename — colons are invalid on some filesystems)
 DEB_VERSION=$(echo "$PKG_VERSION" | sed 's/^[0-9]*://')
