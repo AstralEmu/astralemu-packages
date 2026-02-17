@@ -257,6 +257,6 @@ fi
 # Build the .deb (strip epoch from filename — colons are invalid on some filesystems)
 DEB_VERSION=$(echo "$PKG_VERSION" | sed 's/^[0-9]*://')
 DEB_FILE="${PKG_NAME}_${DEB_VERSION}_${DEB_ARCH}.deb"
-dpkg-deb --build --root-owner-group "$BUILDDIR" "$OUTDIR/$DEB_FILE"
+dpkg-deb --build --root-owner-group -Zzstd -z19 "$BUILDDIR" "$OUTDIR/$DEB_FILE"
 
 echo "DEB built: $OUTDIR/$DEB_FILE"
