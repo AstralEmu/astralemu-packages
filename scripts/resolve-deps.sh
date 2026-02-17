@@ -238,26 +238,34 @@ collect_deps_from_pkg() {
 batch_fetch() {
   local dep_list="$1" fetch_dir="$2" source_format="$3"
 
+  # Single Docker call, but per-package downloads so one failure doesn't block all
   case "$source_format" in
     deb)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
           apt-get update -qq >/dev/null 2>&1
-          cd /tmp && apt-get download $dep_list 2>/dev/null || true
+          cd /tmp
+          for pkg in $dep_list; do
+            apt-get download \"\$pkg\" 2>/dev/null || true
+          done
           mv /tmp/*.deb /out/ 2>/dev/null || true
         " 2>/dev/null || true
       ;;
     rpm)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
-          dnf download --destdir=/out $dep_list 2>/dev/null
+          for pkg in $dep_list; do
+            dnf download --destdir=/out \"\$pkg\" 2>/dev/null || true
+          done
         " 2>/dev/null || true
       ;;
     pacman)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
           pacman -Sy --noconfirm >/dev/null 2>&1
-          pacman -Sw --noconfirm $dep_list 2>/dev/null
+          for pkg in $dep_list; do
+            pacman -Sw --noconfirm \"\$pkg\" 2>/dev/null || true
+          done
           cp /var/cache/pacman/pkg/*.pkg.tar.* /out/ 2>/dev/null || true
         " 2>/dev/null || true
       ;;
