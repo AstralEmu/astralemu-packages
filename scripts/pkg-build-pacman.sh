@@ -43,8 +43,8 @@ case "$PKG_ARCH" in
   *)       PAC_ARCH="$PKG_ARCH" ;;
 esac
 
-# Clean version (remove epoch, replace - with .)
-PAC_VERSION=$(echo "$PKG_VERSION" | sed 's/^[0-9]*://; s/-/./g')
+# Clean version (remove epoch, strip +suffix, replace - with .)
+PAC_VERSION=$(echo "$PKG_VERSION" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')
 
 # Map dependency name to pacman name
 map_dep_to_pacman() {
@@ -292,11 +292,10 @@ if [[ -n "$(find . -mindepth 1 -not -name '.PKGINFO' -not -name '.MTREE' -not -n
 fi
 
 if $HAS_CONTENT; then
-  tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
+  if ! tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
     $TAR_FILES \
     --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO' \
-    ./* 2>/dev/null
-  if [[ $? -ne 0 ]]; then
+    ./* 2>/dev/null; then
     echo "WARNING: tar failed with content, retrying metadata-only" >&2
     tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
   fi

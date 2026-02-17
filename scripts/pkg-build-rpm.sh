@@ -49,8 +49,8 @@ case "$RPM_ARCH" in
   *)              TARGET_LIBDIR="/usr/lib" ;;
 esac
 
-# Clean version for RPM (no colons, translate hyphens)
-RPM_VERSION=$(echo "$PKG_VERSION" | tr ':~' '..' | sed 's/-/./g')
+# Clean version for RPM (no colons, strip +suffix, translate hyphens)
+RPM_VERSION=$(echo "$PKG_VERSION" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')
 
 # Map dependency name to RPM name
 map_dep_to_rpm() {
@@ -288,6 +288,7 @@ SPEC
 # Build RPM (output to private dir to avoid race conditions in parallel builds)
 rpmbuild --define "_topdir $RPMBUILD" \
          --define "_rpmdir $RPMBUILD/RPMS" \
+         --define "_arch $RPM_ARCH" \
          --target "$RPM_ARCH" \
          -bb "$RPMBUILD/SPECS/$PKG_NAME.spec"
 
