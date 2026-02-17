@@ -200,4 +200,13 @@ esac
 # Write source distro
 echo "${SOURCE_DISTRO:-unknown}" > "$OUTDIR/meta/source_distro"
 
+# Validate extraction produced required metadata
+for required in name version arch source_format; do
+  if [[ ! -s "$OUTDIR/meta/$required" ]]; then
+    echo "ERROR: Extraction failed for $PKG — missing meta/$required" >&2
+    rm -rf "$OUTDIR"
+    exit 1
+  fi
+done
+
 echo "Extracted $(cat "$OUTDIR/meta/name") $(cat "$OUTDIR/meta/version") ($(cat "$OUTDIR/meta/source_format") from ${SOURCE_DISTRO:-unknown})"

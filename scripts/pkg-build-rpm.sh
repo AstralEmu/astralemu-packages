@@ -216,7 +216,7 @@ if [[ -n "$SYSTEMD_UNITS" ]]; then
 fi
 
 # Add ldconfig if package has shared libs
-if find "$INTDIR/root" -name '*.so' -o -name '*.so.*' 2>/dev/null | grep -q .; then
+if [[ -n "$(find "$INTDIR/root" \( -name '*.so' -o -name '*.so.*' \) -print -quit 2>/dev/null)" ]]; then
   POST_BODY+="/sbin/ldconfig"$'\n'
   POSTUN_BODY+="/sbin/ldconfig"$'\n'
 fi
@@ -244,7 +244,7 @@ fi
 HAS_FILES=false
 FILE_LIST=""
 DIR_LIST=""
-if [[ -d "$INTDIR/root" ]] && find "$INTDIR/root" -mindepth 1 -maxdepth 1 2>/dev/null | grep -q .; then
+if [[ -d "$INTDIR/root" ]] && [[ -n "$(find "$INTDIR/root" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
   HAS_FILES=true
 
   while IFS= read -r fpath; do
