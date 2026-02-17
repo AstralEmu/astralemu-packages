@@ -32,6 +32,7 @@ PKG_MAINTAINER=$(cat "$INTDIR/meta/maintainer")
 case "$PKG_ARCH" in
   aarch64) RPM_ARCH="aarch64" ;;
   x86_64)  RPM_ARCH="x86_64" ;;
+  armhf)   RPM_ARCH="armv7hl" ;;
   *)       RPM_ARCH="$PKG_ARCH" ;;
 esac
 
