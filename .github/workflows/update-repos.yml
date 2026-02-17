@@ -372,9 +372,8 @@ jobs:
                 DIR_ARCH=$(map_dir_arch "$arch")
                 PAC_DIR="repo-output/pacman/${DIR_ARCH}"
                 if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
-                  cd "$PAC_DIR"
-                  repo-add astralemu.db.tar.gz *.pkg.tar.zst
-                  cd ../../..
+                  docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
+                    bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
                 fi
               done
               ;;
@@ -415,7 +414,7 @@ jobs:
           path: repo-artifacts/
 
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install -y pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc apt-utils
 
       - name: Import GPG key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
