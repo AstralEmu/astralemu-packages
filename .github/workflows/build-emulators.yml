@@ -7,7 +7,10 @@ on:
   push:
     paths:
       - '.github/workflows/build-emulators.yml'
+      - '.github/workflows/update-repos.yml'
       - 'devices.yml'
+      - 'distros.yml'
+      - 'scripts/**'
 
 permissions:
   contents: write
