@@ -514,6 +514,14 @@ jobs:
               -o gh-pages-dir/index.html
           fi
 
+      - name: Remove oversized files
+        run: |
+          MAX_MB=95
+          find gh-pages-dir -type f -size +${MAX_MB}M | while read -r f; do
+            echo "Removing oversized file: $f ($(du -h "$f" | cut -f1))"
+            rm -f "$f"
+          done
+
       - name: Deploy to gh-pages
         run: |
           cd gh-pages-dir
