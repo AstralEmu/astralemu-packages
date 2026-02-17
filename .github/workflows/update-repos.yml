@@ -257,8 +257,13 @@ jobs:
                 [[ -d "$intdir/meta" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
-                  "$BUILD_SCRIPT" "$intdir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" 2>&1 || \
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                    cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
+                  else
                     echo "WARNING: Failed to build from $(basename "$intdir")"
+                  fi
+                  rm -rf "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -273,7 +278,11 @@ jobs:
                 [[ -d "$intdir/meta" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
-                  "$BUILD_SCRIPT" "$intdir" "$TEMP_DIR/" --dep-map "$DEP_MAP" 2>/dev/null || true
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                    cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
+                  fi
+                  rm -rf "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -318,9 +327,13 @@ jobs:
                     done < "$MAPPING"
                   fi
 
-                  "$BUILD_SCRIPT" "$INTCOPY" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" 2>&1 || \
-                    echo "WARNING: Failed to rebuild for $DISTRO"
-                  rm -rf "$INTCOPY"
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                    cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
+                  else
+                    echo "WARNING: Failed to rebuild $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                  fi
+                  rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done

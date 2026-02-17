@@ -166,14 +166,13 @@ if [[ -n "$DIR_LIST" ]]; then
   echo "$DIR_LIST" >> "$RPMBUILD/SPECS/$PKG_NAME.spec"
 fi
 
-# Build RPM
+# Build RPM (output to private dir to avoid race conditions in parallel builds)
 rpmbuild --define "_topdir $RPMBUILD" \
-         --define "_rpmdir $OUTDIR" \
+         --define "_rpmdir $RPMBUILD/RPMS" \
          --target "$RPM_ARCH" \
          -bb "$RPMBUILD/SPECS/$PKG_NAME.spec" 2>/dev/null
 
-# Move RPM to output dir root (rpmbuild puts it in arch subdir)
-find "$OUTDIR" -name '*.rpm' -path "*/$RPM_ARCH/*" -exec mv {} "$OUTDIR/" \; 2>/dev/null
-rmdir "$OUTDIR/$RPM_ARCH" 2>/dev/null || true
+# Copy RPM to output dir
+find "$RPMBUILD/RPMS" -name '*.rpm' -exec cp {} "$OUTDIR/" \;
 
 echo "RPM built: $OUTDIR/${PKG_NAME}-${RPM_VERSION}-1.${RPM_ARCH}.rpm"
