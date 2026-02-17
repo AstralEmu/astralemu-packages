@@ -139,7 +139,13 @@ echo "Installed-Size: $INSTALLED_SIZE" >> "$BUILDDIR/DEBIAN/control"
 # Conffiles → DEBIAN/conffiles
 # ========================================================================
 if [[ -s "$INTDIR/meta/conffiles" ]]; then
-  cp "$INTDIR/meta/conffiles" "$BUILDDIR/DEBIAN/conffiles"
+  # Only include conffiles that actually exist in the package
+  while IFS= read -r cf; do
+    [[ -z "$cf" ]] && continue
+    [[ -e "$BUILDDIR$cf" ]] && echo "$cf"
+  done < "$INTDIR/meta/conffiles" > "$BUILDDIR/DEBIAN/conffiles"
+  # Remove if empty
+  [[ -s "$BUILDDIR/DEBIAN/conffiles" ]] || rm -f "$BUILDDIR/DEBIAN/conffiles"
 fi
 
 # ========================================================================

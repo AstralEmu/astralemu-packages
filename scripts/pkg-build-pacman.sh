@@ -286,11 +286,20 @@ TAR_FILES=".PKGINFO"
 [[ -f .INSTALL ]] && TAR_FILES="$TAR_FILES .INSTALL"
 
 # Metapackage: only metadata files. Otherwise: metadata + content.
-if find . -mindepth 1 -not -name '.PKGINFO' -not -name '.MTREE' -not -name '.INSTALL' -not -name '.BUILDINFO' | grep -q .; then
+HAS_CONTENT=false
+if [[ -n "$(find . -mindepth 1 -not -name '.PKGINFO' -not -name '.MTREE' -not -name '.INSTALL' -not -name '.BUILDINFO' -print -quit 2>/dev/null)" ]]; then
+  HAS_CONTENT=true
+fi
+
+if $HAS_CONTENT; then
   tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
     $TAR_FILES \
     --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO' \
-    * 2>/dev/null || tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+    ./* 2>/dev/null
+  if [[ $? -ne 0 ]]; then
+    echo "WARNING: tar failed with content, retrying metadata-only" >&2
+    tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+  fi
 else
   tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
 fi
