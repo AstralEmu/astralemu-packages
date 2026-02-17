@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/mirror-l4t-debs.yml'
+      - '.github/workflows/update-repos.yml'
+      - 'distros.yml'
+      - 'scripts/**'
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
