@@ -149,10 +149,6 @@ jobs:
 
       - name: Upload per-device package artifacts
         if: steps.process.outputs.has_updates == 'true'
-        run: npm install @actions/artifact
-
-      - name: Upload artifacts
-        if: steps.process.outputs.has_updates == 'true'
         uses: actions/github-script@v7
         with:
           script: |
