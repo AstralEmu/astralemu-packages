@@ -2435,7 +2435,17 @@ jobs:
   # ===========================================================================
   update-repo:
     needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf]
-    if: always()
+    if: >-
+      always() &&
+      (needs.build-azahar.result == 'success' ||
+       needs.build-dolphin.result == 'success' ||
+       needs.build-duckstation.result == 'success' ||
+       needs.build-esde.result == 'success' ||
+       needs.build-melonds.result == 'success' ||
+       needs.build-ppsspp.result == 'success' ||
+       needs.build-xemu.result == 'success' ||
+       needs.build-libretro-package.result == 'success' ||
+       needs.build-setperf.result == 'success')
     strategy:
       fail-fast: false
       matrix:
@@ -2453,7 +2463,7 @@ jobs:
   # ===========================================================================
   save-trackers:
     needs: [prepare, update-repo]
-    if: always() && needs.update-repo.result == 'success'
+    if: needs.update-repo.result == 'success'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout main
