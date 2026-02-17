@@ -2436,10 +2436,15 @@ jobs:
   update-repo:
     needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf]
     if: always()
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ${{ fromJson(needs.prepare.outputs.devices) }}
     uses: ./.github/workflows/update-repos.yml
     with:
-      artifact_pattern: 'pkg-*'
-      source_distro: 'noble'
+      artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
+      source_distro: ${{ matrix.device.source_distro }}
+      device: ${{ matrix.device.id }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 

@@ -1,4 +1,4 @@
-name: Mirror L4T Kernel Packages
+name: Mirror Package Sources
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/mirror-l4t-debs.yml'
       - '.github/workflows/update-repos.yml'
+      - 'devices.yml'
       - 'distros.yml'
       - 'scripts/**'
   schedule:
@@ -16,124 +17,205 @@ permissions:
   contents: write
 
 concurrency:
-  group: mirror-l4t-debs
+  group: mirror-sources
   cancel-in-progress: false
 
 jobs:
   # ===========================================================================
-  # MIRROR: Clone l4t-debs, detect new/changed packages, upload as artifacts
+  # MIRROR: Check all sources from devices.yml, detect new/changed packages
+  # Outputs a matrix of ONLY devices with actual new packages
   # ===========================================================================
   mirror:
     runs-on: ubuntu-latest
     outputs:
-      should_update: ${{ steps.check.outputs.should_update }}
-      has_new_debs: ${{ steps.list.outputs.has_new_debs }}
+      matrix: ${{ steps.process.outputs.matrix }}
+      has_updates: ${{ steps.process.outputs.has_updates }}
     steps:
-      - name: Checkout this repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: main
 
-      - name: Check if l4t-debs has new commits
-        id: check
+      - name: Process all sources from devices.yml
+        id: process
         run: |
-          LATEST_COMMIT=$(git ls-remote https://github.com/theofficialgman/l4t-debs.git HEAD | cut -f1)
-          echo "Latest l4t-debs commit: $LATEST_COMMIT"
+          mkdir -p .trackers
+          MATRIX="[]"
 
-          STORED_COMMIT=""
-          if [ -f .trackers/l4t-debs-commit ]; then
-            STORED_COMMIT=$(cat .trackers/l4t-debs-commit)
-          fi
-          echo "Stored commit: $STORED_COMMIT"
+          # Iterate devices with sources
+          DEVICE_IDS=$(yq -r '.devices[] | select(.sources != null) | select(.sources | length > 0) | .id' devices.yml)
 
-          if [ "$LATEST_COMMIT" != "$STORED_COMMIT" ]; then
-            echo "should_update=true" >> $GITHUB_OUTPUT
-            echo "New commits detected, will update"
-          else
-            echo "should_update=false" >> $GITHUB_OUTPUT
-            echo "No changes, skipping"
-          fi
+          for device_id in $DEVICE_IDS; do
+            source_distro=$(yq -r ".devices[] | select(.id == \"$device_id\") | .source_distro" devices.yml)
+            SOURCE_COUNT=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources | length" devices.yml)
+            DEVICE_HAS_NEW=false
 
-          echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+            echo ""
+            echo "=== Device: $device_id ($SOURCE_COUNT source(s)) ==="
+            mkdir -p "new-pkgs-${device_id}"
 
-      - name: Clone l4t-debs and find new/changed packages
-        if: steps.check.outputs.should_update == 'true'
-        id: list
-        run: |
-          git clone --depth 1 https://github.com/theofficialgman/l4t-debs.git /tmp/l4t-debs
-          mkdir -p new-debs
+            for idx in $(seq 0 $((SOURCE_COUNT - 1))); do
+              source_id=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].id" devices.yml)
+              source_url=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].url" devices.yml)
+              source_type=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].type" devices.yml)
+              source_format=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].format" devices.yml)
 
-          declare -A OLD_HASHES
-          if [ -f .trackers/deb-hashes ]; then
-            while IFS='=' read -r name hash; do
-              OLD_HASHES["$name"]="$hash"
-            done < .trackers/deb-hashes
-          fi
+              echo "--- Source: $source_id ($source_type) ---"
 
-          NEW_COUNT=0
-          > .trackers/deb-hashes.new
+              # Check for new commits
+              COMMIT_TRACKER=".trackers/${source_id}-commit"
+              LATEST_COMMIT=$(git ls-remote "$source_url" HEAD | cut -f1)
+              STORED_COMMIT=""
+              if [ -f "$COMMIT_TRACKER" ]; then
+                STORED_COMMIT=$(cat "$COMMIT_TRACKER")
+              fi
 
-          for f in $(find /tmp/l4t-debs -name "*.deb"); do
-            filename=$(basename "$f")
-            safename="${filename//:/_}"
-            hash=$(sha256sum "$f" | cut -d' ' -f1)
+              if [ "$LATEST_COMMIT" == "$STORED_COMMIT" ]; then
+                echo "  No new commits (${LATEST_COMMIT:0:12})"
+                continue
+              fi
 
-            echo "${safename}=${hash}" >> .trackers/deb-hashes.new
+              echo "  New commits: ${STORED_COMMIT:0:12} -> ${LATEST_COMMIT:0:12}"
+              echo "$LATEST_COMMIT" > "$COMMIT_TRACKER"
 
-            if [ "${OLD_HASHES[$safename]}" != "$hash" ]; then
-              cp "$f" "new-debs/$safename"
-              echo "New/changed: $safename"
-              NEW_COUNT=$((NEW_COUNT + 1))
+              # Clone source
+              CLONE_DIR="/tmp/source-${source_id}"
+              git clone --depth 1 "$source_url" "$CLONE_DIR"
+
+              # Find package pattern
+              case "$source_format" in
+                deb)    PATTERN="*.deb" ;;
+                rpm)    PATTERN="*.rpm" ;;
+                pacman) PATTERN="*.pkg.tar.*" ;;
+                *)      PATTERN="*.deb" ;;
+              esac
+
+              # Load previous hashes
+              HASH_TRACKER=".trackers/${source_id}-hashes"
+              declare -A OLD_HASHES=()
+              if [ -f "$HASH_TRACKER" ]; then
+                while IFS='=' read -r name hash; do
+                  [[ -z "$name" ]] && continue
+                  OLD_HASHES["$name"]="$hash"
+                done < "$HASH_TRACKER"
+              fi
+
+              > "${HASH_TRACKER}.new"
+              NEW_COUNT=0
+
+              for f in $(find "$CLONE_DIR" -name "$PATTERN"); do
+                filename=$(basename "$f")
+                safename="${filename//:/_}"
+                hash=$(sha256sum "$f" | cut -d' ' -f1)
+
+                echo "${safename}=${hash}" >> "${HASH_TRACKER}.new"
+
+                if [ "${OLD_HASHES[$safename]}" != "$hash" ]; then
+                  cp "$f" "new-pkgs-${device_id}/$safename"
+                  echo "  New/changed: $safename"
+                  NEW_COUNT=$((NEW_COUNT + 1))
+                fi
+              done
+
+              mv "${HASH_TRACKER}.new" "$HASH_TRACKER"
+              rm -rf "$CLONE_DIR"
+
+              if [ "$NEW_COUNT" -gt 0 ]; then
+                DEVICE_HAS_NEW=true
+                echo "  $NEW_COUNT new/changed package(s)"
+              else
+                echo "  All hashes match, no changes"
+              fi
+            done
+
+            # Only add device to matrix if it has actual new packages
+            if [ "$DEVICE_HAS_NEW" == "true" ]; then
+              MATRIX=$(echo "$MATRIX" | jq -c ". + [{\"device_id\": \"$device_id\", \"source_distro\": \"$source_distro\"}]")
+              echo ">>> $device_id has new packages, added to build matrix"
+            else
+              rm -rf "new-pkgs-${device_id}"
             fi
           done
 
-          mv .trackers/deb-hashes.new .trackers/deb-hashes
+          echo ""
+          echo "=== Matrix: $MATRIX ==="
 
-          if [ "$NEW_COUNT" -gt 0 ]; then
-            echo "has_new_debs=true" >> $GITHUB_OUTPUT
-            echo "Found $NEW_COUNT new/changed packages"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          if [ "$MATRIX" == "[]" ]; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
           else
-            echo "has_new_debs=false" >> $GITHUB_OUTPUT
-            echo "No new/changed packages"
+            echo "has_updates=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Upload new debs as artifacts
-        if: steps.list.outputs.has_new_debs == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: deb-l4t-mirror
-          path: new-debs/*.deb
-          retention-days: 1
+      - name: Upload per-device package artifacts
+        if: steps.process.outputs.has_updates == 'true'
+        run: npm install @actions/artifact
 
-      - name: Upload tracker data as artifact
-        if: steps.check.outputs.should_update == 'true'
+      - name: Upload artifacts
+        if: steps.process.outputs.has_updates == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {DefaultArtifactClient} = require('@actions/artifact')
+            const client = new DefaultArtifactClient()
+            const fs = require('fs')
+            const path = require('path')
+
+            const dirs = fs.readdirSync('.').filter(d =>
+              d.startsWith('new-pkgs-') && fs.statSync(d).isDirectory()
+            )
+
+            for (const dir of dirs) {
+              const deviceId = dir.replace('new-pkgs-', '')
+              const files = []
+              const walk = (d) => {
+                for (const entry of fs.readdirSync(d, {withFileTypes: true})) {
+                  const full = path.join(d, entry.name)
+                  if (entry.isDirectory()) walk(full)
+                  else files.push(full)
+                }
+              }
+              walk(dir)
+
+              if (files.length > 0) {
+                console.log(`Uploading mirror-${deviceId}: ${files.length} file(s)`)
+                await client.uploadArtifact(`mirror-${deviceId}`, files, dir)
+              }
+            }
+
+      - name: Upload tracker data
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: l4t-tracker-data
-          path: |
-            .trackers/l4t-debs-commit
-            .trackers/deb-hashes
+          name: mirror-trackers
+          path: .trackers/*
+          if-no-files-found: ignore
           retention-days: 1
 
   # ===========================================================================
-  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
+  # UPDATE REPO: Convert and publish (only for devices with new packages)
   # ===========================================================================
   update-repo:
-    needs: [mirror]
-    if: needs.mirror.outputs.has_new_debs == 'true'
+    needs: mirror
+    if: needs.mirror.outputs.has_updates == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.mirror.outputs.matrix) }}
     uses: ./.github/workflows/update-repos.yml
     with:
-      artifact_pattern: 'deb-l4t-*'
-      source_distro: 'noble'
+      artifact_pattern: mirror-${{ matrix.device_id }}
+      source_distro: ${{ matrix.source_distro }}
+      device: ${{ matrix.device_id }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
   # ===========================================================================
-  # SAVE TRACKERS: Update trackers on main branch
+  # SAVE TRACKERS: Update tracker files on main branch
   # ===========================================================================
   save-trackers:
     needs: [mirror, update-repo]
-    if: always() && needs.mirror.outputs.should_update == 'true'
+    if: always() && needs.mirror.outputs.has_updates == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -144,13 +226,13 @@ jobs:
       - name: Download tracker data
         uses: actions/download-artifact@v4
         with:
-          name: l4t-tracker-data
+          name: mirror-trackers
           path: .trackers/
 
       - name: Save trackers to main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .trackers/l4t-debs-commit .trackers/deb-hashes
-          git commit -m "Update L4T mirror trackers" || echo "No changes to commit"
+          git add .trackers/
+          git commit -m "Update mirror trackers" || echo "No changes to commit"
           git push origin main

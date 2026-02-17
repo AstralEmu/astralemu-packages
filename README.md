@@ -52,18 +52,20 @@ Builds run on GitHub Actions and are triggered automatically every 24 hours, or 
 
 ## Repository setup
 
+Each device has its own repository. Replace `<device>` with your device ID (e.g. `l4t` for Nintendo Switch).
+
 ### APT (Ubuntu / Debian)
 
 ```bash
-curl -fsSL https://astralemu.github.io/astralemu-packages/apt/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt stable main" | sudo tee /etc/apt/sources.list.d/astralemu.list
+curl -fsSL https://astralemu.github.io/astralemu-packages/apt/<device>/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt/<device> $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/astralemu.list
 sudo apt update
 ```
 
 ### DNF (Universal Blue / Fedora)
 
 ```bash
-sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-packages/dnf/astralemu.repo
+sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-packages/dnf/<device>/astralemu-<device>.repo
 ```
 
 ### Pacman (Arch Linux)
@@ -73,29 +75,37 @@ Add to `/etc/pacman.conf`:
 ```ini
 [astralemu]
 SigLevel = Optional TrustAll
-Server = https://astralemu.github.io/astralemu-packages/pacman/$arch
+Server = https://astralemu.github.io/astralemu-packages/pacman/<device>/$arch
 ```
+
+### Available devices
+
+| Device ID | Name | Architecture |
+| --------- | ---- | ------------ |
+| `l4t` | Nintendo Switch (Tegra X1) | arm64 |
 
 ## Hosting
 
-This repo has its own GitHub Pages enabled. The built packages and repo metadata are served as static files from the `gh-pages` branch, accessible at:
+This repo has its own GitHub Pages enabled. The built packages and repo metadata are served as static files from the `gh-pages` branch, with per-device repositories:
 
 ```
 https://astralemu.github.io/astralemu-packages/
-├── apt/
-├── dnf/
-└── pacman/
+├── apt/<device>/pool/<distro>/
+├── apt/<device>/dists/<distro>/
+├── dnf/<device>/<version>/<arch>/
+└── pacman/<device>/<arch>/
 ```
 
 The CI pipeline builds the packages on `main`, then pushes the repo metadata and package files to `gh-pages` for serving.
 
 ## Build matrix
 
-The CI dynamically generates the build matrix based on:
+The CI dynamically generates the build matrix from two config files:
 
-- **Target architecture** — ARM64, x86_64, and device-specific variants
-- **Package manager** — Generates `.deb`, `.rpm`, and Pacman packages from the same source
-- **Upstream version** — Tracks upstream releases and rebuilds on new tags
+- **`devices.yml`** — Target devices with architecture, compiler flags, and package sources to mirror
+- **`distros.yml`** — Target distributions (APT, DNF, Pacman) with their versions and mirrors
+
+Every package is cross-built to all target formats (`.deb`, `.rpm`, Pacman) with automatic dependency resolution. Dependencies missing or incompatible on the target distro are fetched from source, prefixed with the device ID (e.g. `l4t-libfoo`), and included in the device repo.
 
 ---
 

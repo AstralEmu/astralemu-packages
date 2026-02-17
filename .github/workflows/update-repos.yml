@@ -11,6 +11,10 @@ on:
         type: string
         default: 'noble'
         description: 'Codename of the source distro the packages were built on'
+      device:
+        type: string
+        required: true
+        description: 'Device ID from devices.yml (e.g. l4t). Used for repo paths and dependency prefix'
     secrets:
       GPG_PRIVATE_KEY:
         required: true
@@ -138,7 +142,7 @@ jobs:
         if: steps.check.outputs.has_pkgs == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: intermediates
+          name: intermediates-${{ inputs.device }}
           path: |
             intermediates/
             own-packages.txt
@@ -163,7 +167,7 @@ jobs:
       - name: Download intermediates
         uses: actions/download-artifact@v4
         with:
-          name: intermediates
+          name: intermediates-${{ inputs.device }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -181,6 +185,7 @@ jobs:
           SCRIPT_DIR="$(pwd)/scripts"
           DEP_MAP="$SCRIPT_DIR/dep-map.conf"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
+          DEVICE="${{ inputs.device }}"
           DISTRO="${{ matrix.distro }}"
           FORMAT="${{ matrix.format }}"
           IS_SOURCE="${{ matrix.is_source }}"
@@ -231,21 +236,21 @@ jobs:
             echo ""
             echo "--- $DISTRO / $DIR_ARCH ($arch) ---"
 
-            # Create format-specific output dirs
+            # Create format-specific output dirs (per-device repos)
             case "$FORMAT" in
               deb)
-                POOL_DIR="repo-output/apt/pool/${DISTRO}"
+                POOL_DIR="repo-output/apt/${DEVICE}/pool/${DISTRO}"
                 mkdir -p "$POOL_DIR"
-                mkdir -p "repo-output/apt/dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                mkdir -p "repo-output/apt/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 OUTPUT_DIR="$POOL_DIR"
                 ;;
               rpm)
                 VERSION="${{ matrix.version }}"
-                OUTPUT_DIR="repo-output/dnf/${VERSION}/${DIR_ARCH}"
+                OUTPUT_DIR="repo-output/dnf/${DEVICE}/${VERSION}/${DIR_ARCH}"
                 mkdir -p "$OUTPUT_DIR"
                 ;;
               pacman)
-                OUTPUT_DIR="repo-output/pacman/${DIR_ARCH}"
+                OUTPUT_DIR="repo-output/pacman/${DEVICE}/${DIR_ARCH}"
                 mkdir -p "$OUTPUT_DIR"
                 ;;
             esac
@@ -292,6 +297,8 @@ jobs:
               echo "Step 2: Resolving dependencies..."
               FETCH_DIR="fetched-deps-${DISTRO}-${arch}"
               mkdir -p "$FETCH_DIR"
+              PREFIX_ARG=""
+              [[ -n "$DEVICE" ]] && PREFIX_ARG="--prefix $DEVICE"
               "$SCRIPT_DIR/resolve-deps.sh" \
                 --source-pkgs "$TEMP_DIR" \
                 --source-distro "$SOURCE_DISTRO" \
@@ -301,7 +308,8 @@ jobs:
                 --dep-map "$DEP_MAP" \
                 --output-dir "$FETCH_DIR" \
                 --arch "$arch" \
-                --skip-names own-packages.txt || echo "WARNING: dep resolution had errors for $DISTRO"
+                --skip-names own-packages.txt \
+                $PREFIX_ARG || echo "WARNING: dep resolution had errors for $DISTRO"
 
               # Step 3: Copy prefixed dep packages to output
               case "$FORMAT" in
@@ -350,18 +358,18 @@ jobs:
             deb)
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                cd repo-output/apt
+                cd "repo-output/apt/${DEVICE}"
                 mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
                 gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../..
+                cd ../../..
               done
               ;;
             rpm)
               VERSION="${{ matrix.version }}"
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                RPM_DIR="repo-output/dnf/${VERSION}/${DIR_ARCH}"
+                RPM_DIR="repo-output/dnf/${DEVICE}/${VERSION}/${DIR_ARCH}"
                 if ls "$RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
                   createrepo_c "$RPM_DIR/"
                 fi
@@ -370,7 +378,7 @@ jobs:
             pacman)
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                PAC_DIR="repo-output/pacman/${DIR_ARCH}"
+                PAC_DIR="repo-output/pacman/${DEVICE}/${DIR_ARCH}"
                 if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
                   docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
                     bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
@@ -384,7 +392,7 @@ jobs:
       - name: Upload repo artifact
         uses: actions/upload-artifact@v4
         with:
-          name: repo-${{ matrix.distro }}
+          name: repo-${{ inputs.device }}-${{ matrix.distro }}
           path: repo-output/
           retention-days: 1
 
@@ -404,13 +412,13 @@ jobs:
       - name: Download intermediates (for pages template)
         uses: actions/download-artifact@v4
         with:
-          name: intermediates
+          name: intermediates-${{ inputs.device }}
           path: intermediates-data/
 
       - name: Download all repo artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: repo-*
+          pattern: repo-${{ inputs.device }}-*
           path: repo-artifacts/
 
       - name: Install tools
@@ -429,7 +437,8 @@ jobs:
             git rm -rf . 2>/dev/null || true
             cd ..
           }
-          mkdir -p gh-pages-dir/apt gh-pages-dir/dnf gh-pages-dir/pacman
+          DEVICE="${{ inputs.device }}"
+          mkdir -p "gh-pages-dir/apt/${DEVICE}" "gh-pages-dir/dnf/${DEVICE}" "gh-pages-dir/pacman/${DEVICE}"
 
       - name: Merge repo artifacts
         run: |
@@ -443,54 +452,57 @@ jobs:
 
       - name: Sign APT releases
         run: |
+          DEVICE="${{ inputs.device }}"
+
           # Export GPG public key
-          gpg --armor --export "AstralEmu Packages" > gh-pages-dir/apt/astralemu.gpg
+          gpg --armor --export "AstralEmu Packages" > "gh-pages-dir/apt/${DEVICE}/astralemu.gpg"
 
           # Sign Release for each APT distro
           APT_IDS=$(yq -r '.distros.apt[].id' distros.yml)
           for distro_id in $APT_IDS; do
-            DIST_DIR="gh-pages-dir/apt/dists/${distro_id}"
+            DIST_DIR="gh-pages-dir/apt/${DEVICE}/dists/${distro_id}"
             [[ -d "$DIST_DIR" ]] || continue
 
             cd "$DIST_DIR"
             ARCH_LIST=$(ls -d main/binary-* 2>/dev/null | sed 's|main/binary-||' | tr '\n' ' ')
 
             cat > Release << RELEASE_EOF
-          Origin: AstralEmu Packages
-          Label: astralemu
+          Origin: AstralEmu Packages (${DEVICE})
+          Label: astralemu-${DEVICE}
           Suite: ${distro_id}
           Codename: ${distro_id}
           Architectures: ${ARCH_LIST}
           Components: main
-          Description: AstralEmu packages for ${distro_id}
+          Description: AstralEmu ${DEVICE} packages for ${distro_id}
           RELEASE_EOF
 
             apt-ftparchive release . >> Release
             rm -f Release.gpg InRelease
             gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
             gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
-            cd ../../../..
+            cd ../../../../..
           done
 
       - name: Sign DNF repos
         run: |
-          cp gh-pages-dir/apt/astralemu.gpg gh-pages-dir/dnf/astralemu.gpg 2>/dev/null || \
-            gpg --armor --export "AstralEmu Packages" > gh-pages-dir/dnf/astralemu.gpg
+          DEVICE="${{ inputs.device }}"
+
+          gpg --armor --export "AstralEmu Packages" > "gh-pages-dir/dnf/${DEVICE}/astralemu.gpg"
 
           # Sign repomd.xml for each DNF repo
-          find gh-pages-dir/dnf -name 'repomd.xml' | while read -r repomd; do
+          find "gh-pages-dir/dnf/${DEVICE}" -name 'repomd.xml' | while read -r repomd; do
             gpg --batch --default-key "AstralEmu Packages" -abs \
               -o "${repomd}.asc" "$repomd"
           done
 
           # Create .repo config
-          cat > gh-pages-dir/dnf/astralemu.repo << 'REPO_EOF'
-          [astralemu]
-          name=AstralEmu Packages
-          baseurl=https://astralemu.github.io/astralemu-packages/dnf/$releasever/$basearch/
+          cat > "gh-pages-dir/dnf/${DEVICE}/astralemu-${DEVICE}.repo" << REPO_EOF
+          [astralemu-${DEVICE}]
+          name=AstralEmu Packages (${DEVICE})
+          baseurl=https://astralemu.github.io/astralemu-packages/dnf/${DEVICE}/\$releasever/\$basearch/
           enabled=1
           gpgcheck=1
-          gpgkey=https://astralemu.github.io/astralemu-packages/dnf/astralemu.gpg
+          gpgkey=https://astralemu.github.io/astralemu-packages/dnf/${DEVICE}/astralemu.gpg
           REPO_EOF
 
       - name: Generate landing page

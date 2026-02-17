@@ -9,12 +9,22 @@
 #
 # Fields:
 #   id         — Short identifier used in package names (e.g. azahar-emu-<id>)
+#                Also used as prefix for mirrored dependency packages (e.g. l4t-libfoo)
 #   name       — Human-readable device name
 #   arch       — Debian architecture (arm64, amd64)
 #   platform   — Docker platform string
 #   base_image — Docker base image for the build container
+#   source_distro — Distro codename matching the base_image (for dep resolution)
 #   cflags     — C compiler flags (arch targeting + optimizations, WITHOUT LTO)
 #   cxxflags   — C++ compiler flags (usually same as cflags, WITHOUT LTO)
+#   sources    — List of package sources to mirror for this device (optional)
+#
+# Source fields:
+#   id         — Unique source identifier
+#   name       — Human-readable description
+#   type       — Source type: git-repo, url
+#   url        — URL to clone or fetch from
+#   format     — Package format at source: deb, rpm, pacman
 #
 # Note: LTO and jemalloc are added by the workflow, not here.
 #   clang builds → -flto=thin    (azahar, duckstation)
@@ -27,5 +37,12 @@ devices:
     arch: arm64
     platform: linux/arm64
     base_image: ubuntu:24.04
+    source_distro: noble
     cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
     cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
+    sources:
+      - id: l4t-debs
+        name: "L4T kernel and driver packages"
+        type: git-repo
+        url: https://github.com/theofficialgman/l4t-debs.git
+        format: deb
