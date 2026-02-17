@@ -12,6 +12,10 @@ source "$SCRIPT_DIR/cross-pkg-helpers.sh"
 INTDIR="$1"
 OUTDIR="$2"
 DEP_MAP=""
+# Convert to absolute paths
+[[ "$INTDIR" != /* ]] && INTDIR="$(cd "$INTDIR" && pwd)"
+mkdir -p "$OUTDIR"
+[[ "$OUTDIR" != /* ]] && OUTDIR="$(cd "$OUTDIR" && pwd)"
 
 shift 2
 while [[ $# -gt 0 ]]; do
@@ -25,8 +29,6 @@ if [[ ! -d "$INTDIR/meta" || ! -d "$INTDIR/root" ]]; then
   echo "ERROR: Invalid intermediate directory: $INTDIR" >&2
   exit 1
 fi
-
-mkdir -p "$OUTDIR"
 
 PKG_NAME=$(cat "$INTDIR/meta/name")
 PKG_VERSION=$(cat "$INTDIR/meta/version")
