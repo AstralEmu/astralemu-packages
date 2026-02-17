@@ -27,6 +27,7 @@ ARCH="aarch64"
 SKIP_NAMES=""
 DEP_PREFIX=""
 MAX_PARALLEL=8
+MAX_PKG_SIZE=$((95 * 1024 * 1024))  # 95 MB — GitHub rejects files > 100 MB
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -446,6 +447,16 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   FETCH_DIR=$(mktemp -d)
   echo "  Batch fetching $(echo "$src_fetch_list" | wc -w) packages from $SOURCE_DISTRO..."
   batch_fetch "$src_fetch_list" "$FETCH_DIR" "$SOURCE_FORMAT"
+
+  # Filter oversized packages (GitHub rejects files > 100 MB)
+  for pkg_file in "$FETCH_DIR"/*; do
+    [[ -f "$pkg_file" ]] || continue
+    pkg_size=$(stat -c%s "$pkg_file" 2>/dev/null || stat -f%z "$pkg_file")
+    if (( pkg_size > MAX_PKG_SIZE )); then
+      echo "  [SKIP] $(basename "$pkg_file") — too large ($(( pkg_size / 1024 / 1024 )) MB > $(( MAX_PKG_SIZE / 1024 / 1024 )) MB)" >&2
+      rm -f "$pkg_file"
+    fi
+  done
 
   # Parallel prefix + rebuild
   RESULTS_DIR=$(mktemp -d)
