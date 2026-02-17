@@ -149,9 +149,7 @@ jobs:
 
       - name: Install artifact SDK
         if: steps.process.outputs.has_updates == 'true'
-        run: |
-          npm install --global @actions/artifact
-          echo "NODE_PATH=$(npm root --quiet -g)" >> $GITHUB_ENV
+        run: npm install @actions/artifact
 
       - name: Export artifact runtime variables
         if: steps.process.outputs.has_updates == 'true'
@@ -164,39 +162,36 @@ jobs:
 
       - name: Upload per-device package artifacts
         if: steps.process.outputs.has_updates == 'true'
-        shell: node {0}
         run: |
-          const fs = require('fs')
-          const path = require('path')
-          const {DefaultArtifactClient} = require('@actions/artifact')
+          node --input-type=module << 'SCRIPT'
+          import {DefaultArtifactClient} from '@actions/artifact'
+          import {readdirSync, statSync} from 'fs'
+          import {resolve} from 'path'
+
           const client = new DefaultArtifactClient()
+          const dirs = readdirSync('.').filter(d =>
+            d.startsWith('new-pkgs-') && statSync(d).isDirectory()
+          )
 
-          async function main() {
-            const dirs = fs.readdirSync('.').filter(d =>
-              d.startsWith('new-pkgs-') && fs.statSync(d).isDirectory()
-            )
-
-            for (const dir of dirs) {
-              const deviceId = dir.replace('new-pkgs-', '')
-              const files = []
-              const walk = (d) => {
-                for (const entry of fs.readdirSync(d, {withFileTypes: true})) {
-                  const full = path.resolve(d, entry.name)
-                  if (entry.isDirectory()) walk(full)
-                  else files.push(full)
-                }
-              }
-              walk(dir)
-
-              if (files.length > 0) {
-                console.log(`Uploading mirror-${deviceId}: ${files.length} file(s)`)
-                const {id, size} = await client.uploadArtifact(`mirror-${deviceId}`, files, dir)
-                console.log(`  -> artifact id=${id} size=${size}`)
+          for (const dir of dirs) {
+            const deviceId = dir.replace('new-pkgs-', '')
+            const files = []
+            const walk = (d) => {
+              for (const entry of readdirSync(d, {withFileTypes: true})) {
+                const full = resolve(d, entry.name)
+                if (entry.isDirectory()) walk(full)
+                else files.push(full)
               }
             }
-          }
+            walk(dir)
 
-          main().catch(err => { console.error(err); process.exit(1) })
+            if (files.length > 0) {
+              console.log(`Uploading mirror-${deviceId}: ${files.length} file(s)`)
+              const {id, size} = await client.uploadArtifact(`mirror-${deviceId}`, files, dir)
+              console.log(`  -> artifact id=${id} size=${size}`)
+            }
+          }
+          SCRIPT
 
       - name: Upload tracker data
         if: steps.process.outputs.has_updates == 'true'
