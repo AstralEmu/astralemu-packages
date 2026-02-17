@@ -10,7 +10,7 @@
 #   - Rebuilt prefixed packages in OUTPUT_DIR/
 #   - dep-mapping.txt in OUTPUT_DIR/ (original=prefixed, one per line)
 #
-# Uses batched Docker calls (2 per resolution round) for efficiency.
+# Uses batched Docker calls for efficiency + parallel local rebuild.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -23,6 +23,8 @@ DISTROS_CONFIG=""
 DEP_MAP=""
 OUTPUT_DIR=""
 ARCH="aarch64"
+SKIP_NAMES=""
+MAX_PARALLEL=8
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --dep-map)         DEP_MAP="$2";         shift 2 ;;
     --output-dir)      OUTPUT_DIR="$2";      shift 2 ;;
     --arch)            ARCH="$2";            shift 2 ;;
+    --skip-names)      SKIP_NAMES="$2";      shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -45,6 +48,19 @@ fi
 
 mkdir -p "$OUTPUT_DIR"
 > "$OUTPUT_DIR/dep-mapping.txt"
+
+# ========================================================================
+# Skip set — our own packages to never fetch
+# ========================================================================
+
+declare -A SKIP_SET
+if [[ -n "$SKIP_NAMES" && -f "$SKIP_NAMES" ]]; then
+  while IFS= read -r name; do
+    [[ -z "$name" ]] && continue
+    SKIP_SET["$name"]=1
+  done < "$SKIP_NAMES"
+  echo "Loaded ${#SKIP_SET[@]} own package names to skip"
+fi
 
 # ========================================================================
 # Helpers
@@ -112,6 +128,12 @@ map_dep_name() {
   echo "${mapped:-$dep}"
 }
 
+limit_jobs() {
+  while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do
+    wait -n 2>/dev/null || true
+  done
+}
+
 # ========================================================================
 # Batch version query — one Docker call per distro per round
 # Output: "name=version" or "name=MISSING", one per line
@@ -160,11 +182,13 @@ collect_deps_from_pkg() {
   case "$pkg_file" in
     *.deb)
       dpkg-deb -f "$pkg_file" Depends 2>/dev/null | tr ',' '\n' | \
-        sed 's/([^)]*)//g; s/|.*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true
+        sed 's/([^)]*)//g; s/|.*//; s/:.*$//; s/^[[:space:]]*//; s/[[:space:]]*$//' | \
+        grep -E '^[a-zA-Z]' || true
       ;;
     *.rpm)
       rpm -qp --requires "$pkg_file" 2>/dev/null | grep -v '^rpmlib(' | grep -v '^/' | \
-        sed 's/[[:space:]]*[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' | sort -u || true
+        sed 's/[[:space:]]*[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | \
+        grep -E '^[a-zA-Z]' | sort -u || true
       ;;
     *.pkg.tar.zst|*.pkg.tar.xz|*.pkg.tar.gz)
       local tmpext
@@ -172,7 +196,8 @@ collect_deps_from_pkg() {
       tar xf "$pkg_file" -C "$tmpext" .PKGINFO 2>/dev/null || true
       if [[ -f "$tmpext/.PKGINFO" ]]; then
         grep '^depend = ' "$tmpext/.PKGINFO" | sed 's/^depend = //; s/[><=].*//' | \
-          sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true
+          sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | \
+          grep -E '^[a-zA-Z]' || true
       fi
       rm -rf "$tmpext"
       ;;
@@ -180,90 +205,85 @@ collect_deps_from_pkg() {
 }
 
 # ========================================================================
-# Fetch a dep from source, prefix, rebuild as target format
-# Prints sub-deps (in SOURCE_FORMAT) on stdout for recursion
+# Batch fetch — one Docker call to download ALL deps at once
 # ========================================================================
 
-fetch_and_prefix() {
-  local dep_name="$1" source_format="$2"
-
-  echo "  Fetching $dep_name from $SOURCE_DISTRO..." >&2
-
-  local fetch_dir
-  fetch_dir=$(mktemp -d)
+batch_fetch() {
+  local dep_list="$1" fetch_dir="$2" source_format="$3"
 
   case "$source_format" in
     deb)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
           apt-get update -qq >/dev/null 2>&1
-          cd /tmp && apt-get download '$dep_name' 2>/dev/null
-          cp *.deb /out/ 2>/dev/null
+          for pkg in $dep_list; do
+            cd /tmp && apt-get download \"\$pkg\" 2>/dev/null
+            mv /tmp/*.deb /out/ 2>/dev/null || true
+          done
         " 2>/dev/null || true
       ;;
     rpm)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
-        bash -c "dnf download --destdir=/out '$dep_name' 2>/dev/null" 2>/dev/null || true
+        bash -c "
+          dnf download --destdir=/out $dep_list 2>/dev/null
+        " 2>/dev/null || true
       ;;
     pacman)
       docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
         bash -c "
           pacman -Sy --noconfirm >/dev/null 2>&1
-          pacman -Sw --noconfirm '$dep_name' 2>/dev/null
-          cp /var/cache/pacman/pkg/${dep_name}-*.pkg.tar.* /out/ 2>/dev/null
+          pacman -Sw --noconfirm $dep_list 2>/dev/null
+          cp /var/cache/pacman/pkg/*.pkg.tar.* /out/ 2>/dev/null || true
         " 2>/dev/null || true
       ;;
   esac
+}
 
-  for pkg_file in "$fetch_dir"/*; do
-    [[ -f "$pkg_file" ]] || continue
+# ========================================================================
+# Parallel prefix + rebuild of fetched packages
+# Each subprocess writes its mapping and sub-deps to individual files
+# ========================================================================
 
-    # Extract to intermediate
-    local int_dir
-    int_dir=$(mktemp -d)
-    if ! "$SCRIPT_DIR/pkg-extract.sh" "$pkg_file" "$int_dir" --source-distro "$SOURCE_DISTRO" >&2; then
-      echo "  WARNING: Failed to extract $(basename "$pkg_file")" >&2
-      rm -rf "$int_dir"
-      continue
-    fi
+prefix_and_rebuild() {
+  local pkg_file="$1" result_dir="$2"
 
-    # Prefix Package name
-    local orig_name
-    orig_name=$(cat "$int_dir/meta/name")
-    local prefixed="${SOURCE_DISTRO}-${orig_name}"
-    echo "$prefixed" > "$int_dir/meta/name"
+  mkdir -p "$result_dir"
 
-    # Add Provides so original name resolves
-    echo "$orig_name" >> "$int_dir/meta/provides"
+  local int_dir
+  int_dir=$(mktemp -d)
 
-    # Rebuild as target format
-    case "$TARGET_FORMAT" in
-      deb)
-        "$SCRIPT_DIR/pkg-build-deb.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-          echo "  WARNING: Failed to rebuild $prefixed as deb" >&2 ;;
-      rpm)
-        "$SCRIPT_DIR/pkg-build-rpm.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-          echo "  WARNING: Failed to rebuild $prefixed as rpm" >&2 ;;
-      pacman)
-        "$SCRIPT_DIR/pkg-build-pacman.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-          echo "  WARNING: Failed to rebuild $prefixed as pacman" >&2 ;;
-    esac
-
-    echo "  -> Prefixed: $prefixed (provides $orig_name)" >&2
-    FETCHED_DEPS["$dep_name"]="$prefixed"
-
-    # Record mapping
-    echo "${orig_name}=${prefixed}" >> "$OUTPUT_DIR/dep-mapping.txt"
-
-    # Output sub-deps for recursion (in source format, via stdout)
-    if [[ -f "$int_dir/meta/depends" ]]; then
-      cat "$int_dir/meta/depends"
-    fi
-
+  if ! "$SCRIPT_DIR/pkg-extract.sh" "$pkg_file" "$int_dir" --source-distro "$SOURCE_DISTRO" >&2; then
+    echo "  WARNING: Failed to extract $(basename "$pkg_file")" >&2
     rm -rf "$int_dir"
-  done
+    return 1
+  fi
 
-  rm -rf "$fetch_dir"
+  local orig_name
+  orig_name=$(cat "$int_dir/meta/name")
+  local prefixed="${SOURCE_DISTRO}-${orig_name}"
+
+  echo "$prefixed" > "$int_dir/meta/name"
+  echo "$orig_name" >> "$int_dir/meta/provides"
+
+  case "$TARGET_FORMAT" in
+    deb)
+      "$SCRIPT_DIR/pkg-build-deb.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+        echo "  WARNING: Failed to rebuild $prefixed as deb" >&2 ;;
+    rpm)
+      "$SCRIPT_DIR/pkg-build-rpm.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+        echo "  WARNING: Failed to rebuild $prefixed as rpm" >&2 ;;
+    pacman)
+      "$SCRIPT_DIR/pkg-build-pacman.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+        echo "  WARNING: Failed to rebuild $prefixed as pacman" >&2 ;;
+  esac
+
+  echo "  -> Prefixed: $prefixed (provides $orig_name)" >&2
+
+  # Write results to individual files (no shared state)
+  echo "${orig_name}=${prefixed}" > "$result_dir/mapping"
+  cat "$int_dir/meta/depends" > "$result_dir/subdeps" 2>/dev/null || touch "$result_dir/subdeps"
+
+  rm -rf "$int_dir"
 }
 
 # ========================================================================
@@ -276,7 +296,6 @@ SOURCE_IMAGE=$(get_docker_image "${SOURCE_DISTRO:-noble}")
 SOURCE_FORMAT=$(get_source_format)
 
 declare -A CHECKED_DEPS
-declare -A FETCHED_DEPS
 
 echo "=== Dependency Resolution ==="
 echo "Source: $SOURCE_DISTRO ($SOURCE_FORMAT)"
@@ -300,14 +319,16 @@ done
 # to_check is always in TARGET_FORMAT naming
 to_check=$(echo "$initial_deps" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
+total_fetched=0
 round=0
 while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   round=$((round + 1))
 
-  # Filter already checked
+  # Filter already checked + skip our own packages
   new_deps=""
   for dep in $to_check; do
     [[ -z "$dep" ]] && continue
+    [[ -n "${SKIP_SET[$dep]+x}" ]] && continue
     if [[ -z "${CHECKED_DEPS[$dep]+x}" ]]; then
       new_deps="$new_deps $dep"
       CHECKED_DEPS["$dep"]=1
@@ -383,26 +404,55 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   fi
   incompatible_deps=$(echo "$incompatible_deps" | xargs)
 
-  # Fetch missing + incompatible
+  # Determine what to fetch
   to_fetch="$missing_deps $incompatible_deps"
   to_fetch=$(echo "$to_fetch" | xargs)
+  [[ -z "$to_fetch" ]] && { to_check=""; continue; }
 
-  next_round=""
+  # Map to source names for fetching
+  src_fetch_list=""
   for dep in $to_fetch; do
-    [[ -z "$dep" ]] && continue
     src_dep=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
+    src_fetch_list="$src_fetch_list $src_dep"
+  done
+  src_fetch_list=$(echo "$src_fetch_list" | xargs)
 
-    # fetch_and_prefix prints sub-deps (SOURCE_FORMAT) on stdout
-    sub_deps=$(fetch_and_prefix "$src_dep" "$SOURCE_FORMAT")
+  # Batch fetch: one Docker call for all deps
+  FETCH_DIR=$(mktemp -d)
+  echo "  Batch fetching $(echo "$src_fetch_list" | wc -w) packages from $SOURCE_DISTRO..."
+  batch_fetch "$src_fetch_list" "$FETCH_DIR" "$SOURCE_FORMAT"
 
-    # Map sub-deps to TARGET_FORMAT for next round
-    while IFS= read -r subdep; do
-      [[ -z "$subdep" ]] && continue
-      tgt_subdep=$(map_dep_name "$subdep" "$SOURCE_FORMAT" "$TARGET_FORMAT")
-      next_round="$next_round $tgt_subdep"
-    done <<< "$sub_deps"
+  # Parallel prefix + rebuild
+  RESULTS_DIR=$(mktemp -d)
+  fetch_idx=0
+  for pkg_file in "$FETCH_DIR"/*; do
+    [[ -f "$pkg_file" ]] || continue
+    limit_jobs
+    prefix_and_rebuild "$pkg_file" "$RESULTS_DIR/result-${fetch_idx}" &
+    fetch_idx=$((fetch_idx + 1))
+  done
+  wait
+
+  # Merge results: mappings + sub-deps
+  next_round=""
+  for result in "$RESULTS_DIR"/result-*/; do
+    [[ -d "$result" ]] || continue
+
+    if [[ -f "$result/mapping" ]]; then
+      cat "$result/mapping" >> "$OUTPUT_DIR/dep-mapping.txt"
+      total_fetched=$((total_fetched + 1))
+    fi
+
+    if [[ -s "$result/subdeps" ]]; then
+      while IFS= read -r subdep; do
+        [[ -z "$subdep" ]] && continue
+        tgt_subdep=$(map_dep_name "$subdep" "$SOURCE_FORMAT" "$TARGET_FORMAT")
+        next_round="$next_round $tgt_subdep"
+      done < "$result/subdeps"
+    fi
   done
 
+  rm -rf "$FETCH_DIR" "$RESULTS_DIR"
   to_check=$(echo "$next_round" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 done
 
@@ -412,15 +462,12 @@ if [[ -f "$OUTPUT_DIR/dep-mapping.txt" ]]; then
 fi
 
 # Summary
-TOTAL_FETCHED=${#FETCHED_DEPS[@]}
 echo ""
-echo "=== Done: $TOTAL_FETCHED dependencies fetched and prefixed ==="
+echo "=== Done: $total_fetched dependencies fetched and prefixed ==="
 
-if [[ $TOTAL_FETCHED -gt 0 ]]; then
-  echo "Prefixed packages:"
-  for dep in "${!FETCHED_DEPS[@]}"; do
-    echo "  $dep -> ${FETCHED_DEPS[$dep]}"
-  done
-  echo ""
-  echo "Mapping file: $OUTPUT_DIR/dep-mapping.txt"
+if [[ $total_fetched -gt 0 && -s "$OUTPUT_DIR/dep-mapping.txt" ]]; then
+  echo "Mappings:"
+  while IFS='=' read -r orig prefixed; do
+    echo "  $orig -> $prefixed"
+  done < "$OUTPUT_DIR/dep-mapping.txt"
 fi
