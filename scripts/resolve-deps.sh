@@ -4,7 +4,8 @@
 # Checks if dependencies exist in the target distro with compatible versions
 # (same major.minor.patch — bugfix/revision differences are ignored).
 # Missing or incompatible deps are fetched from source, rebuilt with a prefixed
-# Package name (e.g. noble-libfoo) and Provides: original_name.
+# package name (e.g. l4t-libfoo) and Provides: original_name.
+# The prefix defaults to SOURCE_DISTRO but can be overridden with --prefix.
 #
 # Outputs:
 #   - Rebuilt prefixed packages in OUTPUT_DIR/
@@ -24,6 +25,7 @@ DEP_MAP=""
 OUTPUT_DIR=""
 ARCH="aarch64"
 SKIP_NAMES=""
+DEP_PREFIX=""
 MAX_PARALLEL=8
 
 while [[ $# -gt 0 ]]; do
@@ -37,6 +39,7 @@ while [[ $# -gt 0 ]]; do
     --output-dir)      OUTPUT_DIR="$2";      shift 2 ;;
     --arch)            ARCH="$2";            shift 2 ;;
     --skip-names)      SKIP_NAMES="$2";      shift 2 ;;
+    --prefix)          DEP_PREFIX="$2";      shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -280,7 +283,8 @@ prefix_and_rebuild() {
 
   local orig_name
   orig_name=$(cat "$int_dir/meta/name")
-  local prefixed="${SOURCE_DISTRO}-${orig_name}"
+  local prefix="${DEP_PREFIX:-$SOURCE_DISTRO}"
+  local prefixed="${prefix}-${orig_name}"
 
   echo "$prefixed" > "$int_dir/meta/name"
   echo "$orig_name" >> "$int_dir/meta/provides"
