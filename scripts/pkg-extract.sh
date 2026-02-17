@@ -32,9 +32,10 @@ mkdir -p "$OUTDIR/meta/scripts" "$OUTDIR/root"
 # Normalize architecture names
 normalize_arch() {
   case "$1" in
-    arm64|aarch64) echo "aarch64" ;;
-    amd64|x86_64)  echo "x86_64" ;;
-    *)             echo "$1" ;;
+    arm64|aarch64)          echo "aarch64" ;;
+    amd64|x86_64)           echo "x86_64" ;;
+    armhf|armv7hl|armv7h|armv7l) echo "armhf" ;;
+    *)                      echo "$1" ;;
   esac
 }
 

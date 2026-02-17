@@ -1,20 +1,19 @@
 #!/bin/bash
 # resolve-deps.sh — Recursive dependency resolution across distros
 #
-# For each source package, checks if its dependencies exist in the target distro.
-# Missing deps are fetched from the source distro, prefixed with source codename,
-# and recursively resolved.
+# Checks if dependencies exist in the target distro with compatible versions
+# (same major.minor.patch — bugfix/revision differences are ignored).
+# Missing or incompatible deps are fetched from source, rebuilt with a prefixed
+# Package name (e.g. noble-libfoo) and Provides: original_name.
 #
-# Usage:
-#   ./resolve-deps.sh --source-pkgs <dir-with-packages> \
-#                     --source-distro <codename> \
-#                     --target-distro <codename> \
-#                     --target-format <deb|rpm|pacman> \
-#                     --distros-config <distros.yml> \
-#                     --dep-map <dep-map.conf> \
-#                     --output-dir <dir-for-fetched-deps> \
-#                     --arch <aarch64|x86_64>
+# Outputs:
+#   - Rebuilt prefixed packages in OUTPUT_DIR/
+#   - dep-mapping.txt in OUTPUT_DIR/ (original=prefixed, one per line)
+#
+# Uses batched Docker calls (2 per resolution round) for efficiency.
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 SOURCE_PKGS=""
 SOURCE_DISTRO=""
@@ -41,27 +40,18 @@ done
 
 if [[ -z "$SOURCE_PKGS" || -z "$TARGET_DISTRO" || -z "$TARGET_FORMAT" || -z "$OUTPUT_DIR" ]]; then
   echo "ERROR: Missing required arguments" >&2
-  echo "Usage: $0 --source-pkgs <dir> --target-distro <codename> --target-format <deb|rpm|pacman> --output-dir <dir> [options]" >&2
   exit 1
 fi
 
 mkdir -p "$OUTPUT_DIR"
+> "$OUTPUT_DIR/dep-mapping.txt"
 
-# Map deb arch conventions
-deb_arch() {
-  case "$1" in
-    aarch64) echo "arm64" ;;
-    x86_64)  echo "amd64" ;;
-    *)       echo "$1" ;;
-  esac
-}
+# ========================================================================
+# Helpers
+# ========================================================================
 
-DEB_ARCH=$(deb_arch "$ARCH")
-
-# Determine Docker image for target distro
 get_docker_image() {
-  local distro="$1"
-  case "$distro" in
+  case "$1" in
     noble)    echo "ubuntu:24.04" ;;
     trixie)   echo "debian:trixie" ;;
     fedora41) echo "fedora:41" ;;
@@ -70,160 +60,6 @@ get_docker_image() {
   esac
 }
 
-# Determine Docker image for source distro
-get_source_docker_image() {
-  local distro="$1"
-  case "$distro" in
-    noble)    echo "ubuntu:24.04" ;;
-    trixie)   echo "debian:trixie" ;;
-    fedora41) echo "fedora:41" ;;
-    arch)     echo "archlinux:latest" ;;
-    *)        echo "ubuntu:24.04" ;;
-  esac
-}
-
-# Determine platform from arch
-get_platform() {
-  case "$ARCH" in
-    aarch64) echo "linux/arm64" ;;
-    x86_64)  echo "linux/amd64" ;;
-    *)       echo "linux/arm64" ;;
-  esac
-}
-
-PLATFORM=$(get_platform)
-TARGET_IMAGE=$(get_docker_image "$TARGET_DISTRO")
-SOURCE_IMAGE=$(get_source_docker_image "${SOURCE_DISTRO:-noble}")
-
-# Track already-checked deps to avoid infinite recursion
-declare -A CHECKED_DEPS
-declare -A FETCHED_DEPS
-
-# Map dep name from source format to target format
-map_dep_name() {
-  local dep="$1"
-  local from_format="$2"
-  local to_format="$3"
-
-  # Same format, no mapping
-  if [[ "$from_format" == "$to_format" ]]; then
-    echo "$dep"
-    return
-  fi
-
-  if [[ -z "$DEP_MAP" || ! -f "$DEP_MAP" ]]; then
-    echo "$dep"
-    return
-  fi
-
-  local mapped=""
-  case "${from_format}:${to_format}" in
-    deb:rpm)
-      mapped=$(grep "^${dep} " "$DEP_MAP" | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ')
-      ;;
-    deb:pacman)
-      mapped=$(grep "^${dep} " "$DEP_MAP" | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ')
-      ;;
-    rpm:deb)
-      mapped=$(grep "rpm:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ')
-      ;;
-    rpm:pacman)
-      mapped=$(grep "rpm:${dep}" "$DEP_MAP" | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ')
-      ;;
-    pacman:deb)
-      mapped=$(grep "pac:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ')
-      ;;
-    pacman:rpm)
-      mapped=$(grep "pac:${dep}" "$DEP_MAP" | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ')
-      ;;
-  esac
-
-  echo "${mapped:-$dep}"
-}
-
-# Check if a package exists in the target distro
-check_dep_exists_in_target() {
-  local dep_name="$1"
-
-  case "$TARGET_FORMAT" in
-    deb)
-      docker run --rm --platform "$PLATFORM" "$TARGET_IMAGE" \
-        bash -c "apt-get update -qq 2>/dev/null && apt-cache show '$dep_name' 2>/dev/null | head -1" 2>/dev/null | grep -q "Package:" && return 0
-      ;;
-    rpm)
-      docker run --rm --platform "$PLATFORM" "$TARGET_IMAGE" \
-        bash -c "dnf repoquery '$dep_name' 2>/dev/null" 2>/dev/null | grep -q . && return 0
-      ;;
-    pacman)
-      docker run --rm --platform "$PLATFORM" "$TARGET_IMAGE" \
-        bash -c "pacman -Sy --noconfirm 2>/dev/null && pacman -Ss '^${dep_name}$' 2>/dev/null" 2>/dev/null | grep -q . && return 0
-      ;;
-  esac
-
-  return 1
-}
-
-# Fetch a dependency from the source distro
-fetch_dep_from_source() {
-  local dep_name="$1"
-  local source_format="$2"
-
-  echo "  Fetching $dep_name from $SOURCE_DISTRO..."
-
-  local fetch_dir
-  fetch_dir=$(mktemp -d)
-
-  case "$source_format" in
-    deb)
-      docker run --rm --platform "$PLATFORM" \
-        -v "$fetch_dir:/out" \
-        "$SOURCE_IMAGE" \
-        bash -c "
-          apt-get update -qq 2>/dev/null
-          cd /tmp
-          apt-get download '$dep_name' 2>/dev/null
-          cp *.deb /out/ 2>/dev/null
-        "
-      ;;
-    rpm)
-      docker run --rm --platform "$PLATFORM" \
-        -v "$fetch_dir:/out" \
-        "$SOURCE_IMAGE" \
-        bash -c "
-          dnf download --destdir=/out '$dep_name' 2>/dev/null
-        "
-      ;;
-    pacman)
-      docker run --rm --platform "$PLATFORM" \
-        -v "$fetch_dir:/out" \
-        "$SOURCE_IMAGE" \
-        bash -c "
-          pacman -Sy --noconfirm 2>/dev/null
-          pacman -Sw --noconfirm '$dep_name' 2>/dev/null
-          cp /var/cache/pacman/pkg/${dep_name}-*.pkg.tar.* /out/ 2>/dev/null
-        "
-      ;;
-  esac
-
-  # Rename with source distro prefix and move to output
-  for pkg_file in "$fetch_dir"/*; do
-    if [[ -f "$pkg_file" ]]; then
-      local base
-      base=$(basename "$pkg_file")
-      local prefixed="${SOURCE_DISTRO}-${base}"
-      cp "$pkg_file" "$OUTPUT_DIR/$prefixed"
-      echo "  -> Fetched: $prefixed"
-      FETCHED_DEPS["$dep_name"]="$prefixed"
-
-      # Recurse: extract this fetched dep and check its deps too
-      resolve_deps_for_package "$OUTPUT_DIR/$prefixed" "$source_format"
-    fi
-  done
-
-  rm -rf "$fetch_dir"
-}
-
-# Determine source format from source distro
 get_source_format() {
   case "${SOURCE_DISTRO:-noble}" in
     noble|trixie) echo "deb" ;;
@@ -233,61 +69,214 @@ get_source_format() {
   esac
 }
 
-SOURCE_FORMAT=$(get_source_format)
+get_platform() {
+  case "$ARCH" in
+    aarch64) echo "linux/arm64" ;;
+    x86_64)  echo "linux/amd64" ;;
+    armhf)   echo "linux/arm/v7" ;;
+    *)       echo "linux/arm64" ;;
+  esac
+}
 
-# Resolve dependencies for a single package file
-resolve_deps_for_package() {
-  local pkg_file="$1"
-  local pkg_format="$2"
+# Extract major.minor.patch, ignore bugfix/revision
+parse_version_triple() {
+  local ver="$1"
+  ver="${ver#*:}"                          # strip epoch
+  ver="${ver%%-*}"                         # strip revision
+  ver=$(echo "$ver" | sed 's/[+~].*//')   # strip modifiers
+  local IFS='.'
+  read -ra parts <<< "$ver"
+  echo "${parts[0]:-0}.${parts[1]:-0}.${parts[2]:-0}"
+}
 
-  local deps_list=""
+versions_compatible() {
+  [[ "$(parse_version_triple "$1")" == "$(parse_version_triple "$2")" ]]
+}
 
-  case "$pkg_format" in
+map_dep_name() {
+  local dep="$1" from_format="$2" to_format="$3"
+
+  [[ "$from_format" == "$to_format" ]] && { echo "$dep"; return; }
+  [[ -z "$DEP_MAP" || ! -f "$DEP_MAP" ]] && { echo "$dep"; return; }
+
+  local mapped=""
+  case "${from_format}:${to_format}" in
+    deb:rpm)    mapped=$(grep "^${dep} " "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ') || true ;;
+    deb:pacman) mapped=$(grep "^${dep} " "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ') || true ;;
+    rpm:deb)    mapped=$(grep "rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | cut -d'=' -f1 | tr -d ' ') || true ;;
+    rpm:pacman) mapped=$(grep "rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ') || true ;;
+    pacman:deb) mapped=$(grep "pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | cut -d'=' -f1 | tr -d ' ') || true ;;
+    pacman:rpm) mapped=$(grep "pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ') || true ;;
+  esac
+
+  echo "${mapped:-$dep}"
+}
+
+# ========================================================================
+# Batch version query — one Docker call per distro per round
+# Output: "name=version" or "name=MISSING", one per line
+# ========================================================================
+
+batch_get_versions() {
+  local dep_list="$1" image="$2" format="$3"
+  [[ -z "$dep_list" ]] && return
+
+  case "$format" in
     deb)
-      deps_list=$(dpkg-deb -f "$pkg_file" Depends 2>/dev/null | tr ',' '\n' | \
-        sed 's/([^)]*)//g; s/|.*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true)
+      docker run --rm --platform "$PLATFORM" "$image" bash -c "
+        apt-get update -qq >/dev/null 2>&1
+        for pkg in $dep_list; do
+          ver=\$(apt-cache show \"\$pkg\" 2>/dev/null | grep '^Version:' | head -1 | sed 's/^Version: //')
+          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+        done
+      " 2>/dev/null || true
       ;;
     rpm)
-      deps_list=$(rpm -qp --requires "$pkg_file" 2>/dev/null | grep -v '^rpmlib(' | grep -v '^/' | \
-        sed 's/[[:space:]]*[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' | sort -u || true)
+      docker run --rm --platform "$PLATFORM" "$image" bash -c "
+        for pkg in $dep_list; do
+          ver=\$(dnf repoquery --qf '%{version}-%{release}' \"\$pkg\" 2>/dev/null | head -1)
+          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+        done
+      " 2>/dev/null || true
       ;;
     pacman)
+      docker run --rm --platform "$PLATFORM" "$image" bash -c "
+        pacman -Sy --noconfirm >/dev/null 2>&1
+        for pkg in $dep_list; do
+          ver=\$(pacman -Si \"\$pkg\" 2>/dev/null | grep '^Version' | head -1 | sed 's/.*: //')
+          if [ -n \"\$ver\" ]; then echo \"\${pkg}=\${ver}\"; else echo \"\${pkg}=MISSING\"; fi
+        done
+      " 2>/dev/null || true
+      ;;
+  esac
+}
+
+# ========================================================================
+# Collect deps from a built package
+# ========================================================================
+
+collect_deps_from_pkg() {
+  local pkg_file="$1"
+  case "$pkg_file" in
+    *.deb)
+      dpkg-deb -f "$pkg_file" Depends 2>/dev/null | tr ',' '\n' | \
+        sed 's/([^)]*)//g; s/|.*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true
+      ;;
+    *.rpm)
+      rpm -qp --requires "$pkg_file" 2>/dev/null | grep -v '^rpmlib(' | grep -v '^/' | \
+        sed 's/[[:space:]]*[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' | sort -u || true
+      ;;
+    *.pkg.tar.zst|*.pkg.tar.xz|*.pkg.tar.gz)
       local tmpext
       tmpext=$(mktemp -d)
       tar xf "$pkg_file" -C "$tmpext" .PKGINFO 2>/dev/null || true
       if [[ -f "$tmpext/.PKGINFO" ]]; then
-        deps_list=$(grep '^depend = ' "$tmpext/.PKGINFO" | sed 's/^depend = //' | \
-          sed 's/[><=].*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true)
+        grep '^depend = ' "$tmpext/.PKGINFO" | sed 's/^depend = //; s/[><=].*//' | \
+          sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true
       fi
       rm -rf "$tmpext"
       ;;
   esac
+}
 
-  while IFS= read -r dep; do
-    [[ -z "$dep" ]] && continue
+# ========================================================================
+# Fetch a dep from source, prefix, rebuild as target format
+# Prints sub-deps (in SOURCE_FORMAT) on stdout for recursion
+# ========================================================================
 
-    # Map to target format name for checking
-    local target_dep
-    target_dep=$(map_dep_name "$dep" "$pkg_format" "$TARGET_FORMAT")
+fetch_and_prefix() {
+  local dep_name="$1" source_format="$2"
 
-    # Skip if already checked
-    if [[ -n "${CHECKED_DEPS[$target_dep]+x}" ]]; then
+  echo "  Fetching $dep_name from $SOURCE_DISTRO..." >&2
+
+  local fetch_dir
+  fetch_dir=$(mktemp -d)
+
+  case "$source_format" in
+    deb)
+      docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
+        bash -c "
+          apt-get update -qq >/dev/null 2>&1
+          cd /tmp && apt-get download '$dep_name' 2>/dev/null
+          cp *.deb /out/ 2>/dev/null
+        " 2>/dev/null || true
+      ;;
+    rpm)
+      docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
+        bash -c "dnf download --destdir=/out '$dep_name' 2>/dev/null" 2>/dev/null || true
+      ;;
+    pacman)
+      docker run --rm --platform "$PLATFORM" -v "$fetch_dir:/out" "$SOURCE_IMAGE" \
+        bash -c "
+          pacman -Sy --noconfirm >/dev/null 2>&1
+          pacman -Sw --noconfirm '$dep_name' 2>/dev/null
+          cp /var/cache/pacman/pkg/${dep_name}-*.pkg.tar.* /out/ 2>/dev/null
+        " 2>/dev/null || true
+      ;;
+  esac
+
+  for pkg_file in "$fetch_dir"/*; do
+    [[ -f "$pkg_file" ]] || continue
+
+    # Extract to intermediate
+    local int_dir
+    int_dir=$(mktemp -d)
+    if ! "$SCRIPT_DIR/pkg-extract.sh" "$pkg_file" "$int_dir" --source-distro "$SOURCE_DISTRO" >&2; then
+      echo "  WARNING: Failed to extract $(basename "$pkg_file")" >&2
+      rm -rf "$int_dir"
       continue
     fi
-    CHECKED_DEPS["$target_dep"]=1
 
-    # Check if exists in target distro
-    if check_dep_exists_in_target "$target_dep"; then
-      echo "  [OK] $target_dep exists in $TARGET_DISTRO"
-    else
-      echo "  [MISSING] $target_dep not in $TARGET_DISTRO, fetching from $SOURCE_DISTRO..."
-      # Map back to source format name to fetch
-      local source_dep
-      source_dep=$(map_dep_name "$target_dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
-      fetch_dep_from_source "$source_dep" "$SOURCE_FORMAT"
+    # Prefix Package name
+    local orig_name
+    orig_name=$(cat "$int_dir/meta/name")
+    local prefixed="${SOURCE_DISTRO}-${orig_name}"
+    echo "$prefixed" > "$int_dir/meta/name"
+
+    # Add Provides so original name resolves
+    echo "$orig_name" >> "$int_dir/meta/provides"
+
+    # Rebuild as target format
+    case "$TARGET_FORMAT" in
+      deb)
+        "$SCRIPT_DIR/pkg-build-deb.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+          echo "  WARNING: Failed to rebuild $prefixed as deb" >&2 ;;
+      rpm)
+        "$SCRIPT_DIR/pkg-build-rpm.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+          echo "  WARNING: Failed to rebuild $prefixed as rpm" >&2 ;;
+      pacman)
+        "$SCRIPT_DIR/pkg-build-pacman.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
+          echo "  WARNING: Failed to rebuild $prefixed as pacman" >&2 ;;
+    esac
+
+    echo "  -> Prefixed: $prefixed (provides $orig_name)" >&2
+    FETCHED_DEPS["$dep_name"]="$prefixed"
+
+    # Record mapping
+    echo "${orig_name}=${prefixed}" >> "$OUTPUT_DIR/dep-mapping.txt"
+
+    # Output sub-deps for recursion (in source format, via stdout)
+    if [[ -f "$int_dir/meta/depends" ]]; then
+      cat "$int_dir/meta/depends"
     fi
-  done <<< "$deps_list"
+
+    rm -rf "$int_dir"
+  done
+
+  rm -rf "$fetch_dir"
 }
+
+# ========================================================================
+# Main
+# ========================================================================
+
+PLATFORM=$(get_platform)
+TARGET_IMAGE=$(get_docker_image "$TARGET_DISTRO")
+SOURCE_IMAGE=$(get_docker_image "${SOURCE_DISTRO:-noble}")
+SOURCE_FORMAT=$(get_source_format)
+
+declare -A CHECKED_DEPS
+declare -A FETCHED_DEPS
 
 echo "=== Dependency Resolution ==="
 echo "Source: $SOURCE_DISTRO ($SOURCE_FORMAT)"
@@ -295,31 +284,143 @@ echo "Target: $TARGET_DISTRO ($TARGET_FORMAT)"
 echo "Arch: $ARCH"
 echo ""
 
-# Process each source package
+# Collect all deps from our built packages (already in TARGET_FORMAT naming)
+initial_deps=""
 for pkg_file in "$SOURCE_PKGS"/*; do
-  if [[ ! -f "$pkg_file" ]]; then
-    continue
-  fi
-
-  # Detect format
+  [[ -f "$pkg_file" ]] || continue
   case "$pkg_file" in
-    *.deb)                              pkg_format="deb" ;;
-    *.rpm)                              pkg_format="rpm" ;;
-    *.pkg.tar.zst|*.pkg.tar.xz|*.pkg.tar.gz) pkg_format="pacman" ;;
+    *.deb|*.rpm|*.pkg.tar.zst|*.pkg.tar.xz|*.pkg.tar.gz) ;;
     *) continue ;;
   esac
-
-  echo "Resolving deps for: $(basename "$pkg_file")"
-  resolve_deps_for_package "$pkg_file" "$pkg_format"
-  echo ""
+  echo "Scanning: $(basename "$pkg_file")"
+  pkg_deps=$(collect_deps_from_pkg "$pkg_file")
+  initial_deps="$initial_deps $pkg_deps"
 done
 
+# to_check is always in TARGET_FORMAT naming
+to_check=$(echo "$initial_deps" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+
+round=0
+while [[ -n "$(echo "$to_check" | xargs)" ]]; do
+  round=$((round + 1))
+
+  # Filter already checked
+  new_deps=""
+  for dep in $to_check; do
+    [[ -z "$dep" ]] && continue
+    if [[ -z "${CHECKED_DEPS[$dep]+x}" ]]; then
+      new_deps="$new_deps $dep"
+      CHECKED_DEPS["$dep"]=1
+    fi
+  done
+  new_deps=$(echo "$new_deps" | xargs)
+  [[ -z "$new_deps" ]] && break
+
+  dep_count=$(echo "$new_deps" | wc -w)
+  echo ""
+  echo "--- Round $round: checking $dep_count deps in $TARGET_DISTRO ---"
+
+  # Batch query target
+  declare -A TGT_VERS=()
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    name="${line%%=*}"
+    ver="${line#*=}"
+    TGT_VERS["$name"]="$ver"
+  done <<< "$(batch_get_versions "$new_deps" "$TARGET_IMAGE" "$TARGET_FORMAT")"
+
+  # Separate missing from existing
+  existing_deps=""
+  missing_deps=""
+  for dep in $new_deps; do
+    if [[ "${TGT_VERS[$dep]:-MISSING}" == "MISSING" ]]; then
+      missing_deps="$missing_deps $dep"
+      echo "  [MISSING] $dep"
+    else
+      existing_deps="$existing_deps $dep"
+    fi
+  done
+  existing_deps=$(echo "$existing_deps" | xargs)
+  missing_deps=$(echo "$missing_deps" | xargs)
+
+  # Compare versions for existing deps
+  incompatible_deps=""
+  if [[ -n "$existing_deps" ]]; then
+    # Map to source names
+    source_query=""
+    declare -A TGT_TO_SRC=()
+    for dep in $existing_deps; do
+      src_name=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
+      source_query="$source_query $src_name"
+      TGT_TO_SRC["$dep"]="$src_name"
+    done
+    source_query=$(echo "$source_query" | xargs)
+
+    # Batch query source
+    declare -A SRC_VERS=()
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      name="${line%%=*}"
+      ver="${line#*=}"
+      SRC_VERS["$name"]="$ver"
+    done <<< "$(batch_get_versions "$source_query" "$SOURCE_IMAGE" "$SOURCE_FORMAT")"
+
+    # Compare major.minor.patch
+    for dep in $existing_deps; do
+      src_name="${TGT_TO_SRC[$dep]}"
+      src_ver="${SRC_VERS[$src_name]:-MISSING}"
+      tgt_ver="${TGT_VERS[$dep]}"
+
+      if [[ "$src_ver" == "MISSING" ]]; then
+        echo "  [OK] $dep=$tgt_ver (not in source, using target)"
+      elif versions_compatible "$src_ver" "$tgt_ver"; then
+        echo "  [OK] $dep: $(parse_version_triple "$src_ver") = $(parse_version_triple "$tgt_ver")"
+      else
+        echo "  [MISMATCH] $dep: source=$(parse_version_triple "$src_ver") target=$(parse_version_triple "$tgt_ver")"
+        incompatible_deps="$incompatible_deps $dep"
+      fi
+    done
+  fi
+  incompatible_deps=$(echo "$incompatible_deps" | xargs)
+
+  # Fetch missing + incompatible
+  to_fetch="$missing_deps $incompatible_deps"
+  to_fetch=$(echo "$to_fetch" | xargs)
+
+  next_round=""
+  for dep in $to_fetch; do
+    [[ -z "$dep" ]] && continue
+    src_dep=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
+
+    # fetch_and_prefix prints sub-deps (SOURCE_FORMAT) on stdout
+    sub_deps=$(fetch_and_prefix "$src_dep" "$SOURCE_FORMAT")
+
+    # Map sub-deps to TARGET_FORMAT for next round
+    while IFS= read -r subdep; do
+      [[ -z "$subdep" ]] && continue
+      tgt_subdep=$(map_dep_name "$subdep" "$SOURCE_FORMAT" "$TARGET_FORMAT")
+      next_round="$next_round $tgt_subdep"
+    done <<< "$sub_deps"
+  done
+
+  to_check=$(echo "$next_round" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+done
+
+# Deduplicate mapping
+if [[ -f "$OUTPUT_DIR/dep-mapping.txt" ]]; then
+  sort -u -o "$OUTPUT_DIR/dep-mapping.txt" "$OUTPUT_DIR/dep-mapping.txt"
+fi
+
+# Summary
 TOTAL_FETCHED=${#FETCHED_DEPS[@]}
-echo "=== Done: $TOTAL_FETCHED dependencies fetched ==="
+echo ""
+echo "=== Done: $TOTAL_FETCHED dependencies fetched and prefixed ==="
 
 if [[ $TOTAL_FETCHED -gt 0 ]]; then
-  echo "Fetched packages:"
+  echo "Prefixed packages:"
   for dep in "${!FETCHED_DEPS[@]}"; do
     echo "  $dep -> ${FETCHED_DEPS[$dep]}"
   done
+  echo ""
+  echo "Mapping file: $OUTPUT_DIR/dep-mapping.txt"
 fi

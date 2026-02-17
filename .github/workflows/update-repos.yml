@@ -55,7 +55,7 @@ jobs:
         if: steps.check.outputs.has_pkgs == 'true'
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: arm64,arm
 
       - name: Checkout gh-pages
         if: steps.check.outputs.has_pkgs == 'true'
@@ -165,41 +165,77 @@ jobs:
             case "$arch" in
               aarch64) DEB_ARCH="arm64" ;;
               x86_64)  DEB_ARCH="amd64" ;;
+              armhf)   DEB_ARCH="armhf" ;;
             esac
 
-            # Build .deb from each intermediate matching this arch
-            for intdir in intermediates/pkg-*; do
-              [[ -d "$intdir/meta" ]] || continue
-              EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
-              [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
-
-              "$SCRIPT_DIR/pkg-build-deb.sh" "$intdir" "gh-pages-dir/apt/pool/main/" \
-                --dep-map "$DEP_MAP" || \
-                echo "WARNING: Failed to build deb from $(basename "$intdir")"
-            done
-
-            # Resolve deps per target distro
             for distro_id in $APT_IDS; do
               echo "=== APT: $distro_id / $DEB_ARCH ==="
+              POOL_DIR="gh-pages-dir/apt/pool/${distro_id}"
+              mkdir -p "$POOL_DIR"
               mkdir -p "gh-pages-dir/apt/dists/${distro_id}/main/binary-${DEB_ARCH}"
 
-              if [[ "$distro_id" != "$SOURCE_DISTRO" ]]; then
-                mkdir -p "fetched-deps-apt-${distro_id}"
+              if [[ "$distro_id" == "$SOURCE_DISTRO" ]]; then
+                # Source distro: build .debs with original deps
+                for intdir in intermediates/pkg-*; do
+                  [[ -d "$intdir/meta" ]] || continue
+                  [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                  "$SCRIPT_DIR/pkg-build-deb.sh" "$intdir" "$POOL_DIR/" \
+                    --dep-map "$DEP_MAP" || \
+                    echo "WARNING: Failed to build deb from $(basename "$intdir")"
+                done
+              else
+                # Non-source distro: resolve deps first, then rebuild with mapping
+                # Step 1: build temp .debs for dep scanning
+                TEMP_POOL=$(mktemp -d)
+                for intdir in intermediates/pkg-*; do
+                  [[ -d "$intdir/meta" ]] || continue
+                  [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                  "$SCRIPT_DIR/pkg-build-deb.sh" "$intdir" "$TEMP_POOL/" \
+                    --dep-map "$DEP_MAP" 2>/dev/null || true
+                done
+
+                # Step 2: resolve deps → prefixed packages + dep-mapping.txt
+                FETCH_DIR="fetched-deps-apt-${distro_id}-${arch}"
+                mkdir -p "$FETCH_DIR"
                 "$SCRIPT_DIR/resolve-deps.sh" \
-                  --source-pkgs "gh-pages-dir/apt/pool/main" \
+                  --source-pkgs "$TEMP_POOL" \
                   --source-distro "$SOURCE_DISTRO" \
                   --target-distro "$distro_id" \
                   --target-format deb \
                   --distros-config distros.yml \
                   --dep-map "$DEP_MAP" \
-                  --output-dir "fetched-deps-apt-${distro_id}" \
+                  --output-dir "$FETCH_DIR" \
                   --arch "$arch" || echo "WARNING: dep resolution had errors for $distro_id"
 
-                # Copy fetched deps (already prefixed with source codename)
-                for fetched in "fetched-deps-apt-${distro_id}"/*.deb; do
+                # Step 3: copy prefixed dep packages to pool
+                for fetched in "$FETCH_DIR"/*.deb; do
                   [[ -f "$fetched" ]] || continue
-                  cp "$fetched" "gh-pages-dir/apt/pool/main/"
+                  cp "$fetched" "$POOL_DIR/"
                 done
+
+                # Step 4: rebuild our packages with deps updated from mapping
+                MAPPING="$FETCH_DIR/dep-mapping.txt"
+                for intdir in intermediates/pkg-*; do
+                  [[ -d "$intdir/meta" ]] || continue
+                  [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
+
+                  if [[ -s "$MAPPING" ]]; then
+                    while IFS='=' read -r orig prefixed; do
+                      [[ -z "$orig" ]] && continue
+                      sed -i "s/^${orig}$/${prefixed}/" "$INTCOPY/meta/depends" 2>/dev/null || true
+                    done < "$MAPPING"
+                  fi
+
+                  "$SCRIPT_DIR/pkg-build-deb.sh" "$INTCOPY" "$POOL_DIR/" \
+                    --dep-map "$DEP_MAP" || \
+                    echo "WARNING: Failed to rebuild deb for $distro_id"
+                  rm -rf "$INTCOPY"
+                done
+
+                rm -rf "$TEMP_POOL"
               fi
             done
 
@@ -207,7 +243,7 @@ jobs:
             cd gh-pages-dir/apt
             for distro_id in $APT_IDS; do
               mkdir -p "dists/${distro_id}/main/binary-${DEB_ARCH}"
-              dpkg-scanpackages --arch "$DEB_ARCH" pool/ > "dists/${distro_id}/main/binary-${DEB_ARCH}/Packages" 2>/dev/null || true
+              dpkg-scanpackages --arch "$DEB_ARCH" "pool/${distro_id}" > "dists/${distro_id}/main/binary-${DEB_ARCH}/Packages" 2>/dev/null || true
               gzip -k -f "dists/${distro_id}/main/binary-${DEB_ARCH}/Packages"
             done
             cd ../..
@@ -248,50 +284,77 @@ jobs:
           DNF_IDS=$(yq -r '.distros.dnf[].id' distros.yml)
 
           for arch in ${{ steps.normalize.outputs.arches }}; do
+            RPM_ARCH="$arch"
+            case "$arch" in
+              aarch64) RPM_ARCH="aarch64" ;;
+              x86_64)  RPM_ARCH="x86_64" ;;
+              armhf)   RPM_ARCH="armv7hl" ;;
+            esac
+
             for distro_id in $DNF_IDS; do
               VERSION=$(yq -r ".distros.dnf[] | select(.id == \"$distro_id\") | .version" distros.yml)
-              echo "=== DNF: $distro_id ($VERSION) / $arch ==="
-              mkdir -p "gh-pages-dir/dnf/${VERSION}/${arch}"
+              echo "=== DNF: $distro_id ($VERSION) / $RPM_ARCH ==="
+              RPM_DIR="gh-pages-dir/dnf/${VERSION}/${RPM_ARCH}"
+              mkdir -p "$RPM_DIR"
 
-              # Build .rpm from each intermediate matching this arch
+              # Build temp .rpms for dep scanning
+              TEMP_RPM=$(mktemp -d)
               for intdir in intermediates/pkg-*; do
                 [[ -d "$intdir/meta" ]] || continue
-                EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
-                [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
-
-                "$SCRIPT_DIR/pkg-build-rpm.sh" "$intdir" "gh-pages-dir/dnf/${VERSION}/${arch}/" \
-                  --dep-map "$DEP_MAP" || \
-                  echo "WARNING: Failed to build RPM from $(basename "$intdir")"
+                [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                "$SCRIPT_DIR/pkg-build-rpm.sh" "$intdir" "$TEMP_RPM/" \
+                  --dep-map "$DEP_MAP" 2>/dev/null || true
               done
 
-              # Resolve deps
-              mkdir -p "fetched-deps-dnf-${distro_id}"
+              # Resolve deps → prefixed .rpms + dep-mapping.txt
+              FETCH_DIR="fetched-deps-dnf-${distro_id}-${arch}"
+              mkdir -p "$FETCH_DIR"
               "$SCRIPT_DIR/resolve-deps.sh" \
-                --source-pkgs "gh-pages-dir/dnf/${VERSION}/${arch}" \
+                --source-pkgs "$TEMP_RPM" \
                 --source-distro "$SOURCE_DISTRO" \
                 --target-distro "$distro_id" \
                 --target-format rpm \
                 --distros-config distros.yml \
                 --dep-map "$DEP_MAP" \
-                --output-dir "fetched-deps-dnf-${distro_id}" \
+                --output-dir "$FETCH_DIR" \
                 --arch "$arch" || echo "WARNING: dep resolution had errors for $distro_id"
 
-              # Convert fetched deps to RPM
-              for fetched in "fetched-deps-dnf-${distro_id}"/*; do
+              # Copy prefixed dep packages
+              for fetched in "$FETCH_DIR"/*.rpm; do
                 [[ -f "$fetched" ]] || continue
-                INTDIR=$(mktemp -d)
-                "$SCRIPT_DIR/pkg-extract.sh" "$fetched" "$INTDIR" --source-distro "$SOURCE_DISTRO"
-                "$SCRIPT_DIR/pkg-build-rpm.sh" "$INTDIR" "gh-pages-dir/dnf/${VERSION}/${arch}/" \
-                  --dep-map "$DEP_MAP" || echo "WARNING: Failed to convert fetched dep $(basename "$fetched")"
-                rm -rf "$INTDIR"
+                cp "$fetched" "$RPM_DIR/"
               done
 
+              # Rebuild our packages with mapping applied
+              MAPPING="$FETCH_DIR/dep-mapping.txt"
+              for intdir in intermediates/pkg-*; do
+                [[ -d "$intdir/meta" ]] || continue
+                [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+
+                INTCOPY=$(mktemp -d)
+                cp -a "$intdir"/* "$INTCOPY/"
+
+                if [[ -s "$MAPPING" ]]; then
+                  while IFS='=' read -r orig prefixed; do
+                    [[ -z "$orig" ]] && continue
+                    sed -i "s/^${orig}$/${prefixed}/" "$INTCOPY/meta/depends" 2>/dev/null || true
+                  done < "$MAPPING"
+                fi
+
+                "$SCRIPT_DIR/pkg-build-rpm.sh" "$INTCOPY" "$RPM_DIR/" \
+                  --dep-map "$DEP_MAP" || \
+                  echo "WARNING: Failed to rebuild RPM for $distro_id"
+                rm -rf "$INTCOPY"
+              done
+
+              rm -rf "$TEMP_RPM"
+
               # Generate repodata
-              if ls "gh-pages-dir/dnf/${VERSION}/${arch}/"*.rpm 1>/dev/null 2>&1; then
-                createrepo_c "gh-pages-dir/dnf/${VERSION}/${arch}/"
+              if ls "gh-pages-dir/dnf/${VERSION}/${RPM_ARCH}/"*.rpm 1>/dev/null 2>&1; then
+                createrepo_c "gh-pages-dir/dnf/${VERSION}/${RPM_ARCH}/"
                 gpg --batch --default-key "AstralEmu Packages" -abs \
-                  -o "gh-pages-dir/dnf/${VERSION}/${arch}/repodata/repomd.xml.asc" \
-                  "gh-pages-dir/dnf/${VERSION}/${arch}/repodata/repomd.xml"
+                  -o "gh-pages-dir/dnf/${VERSION}/${RPM_ARCH}/repodata/repomd.xml.asc" \
+                  "gh-pages-dir/dnf/${VERSION}/${RPM_ARCH}/repodata/repomd.xml"
               fi
             done
           done
@@ -317,45 +380,72 @@ jobs:
           SOURCE_DISTRO="${{ inputs.source_distro }}"
 
           for arch in ${{ steps.normalize.outputs.arches }}; do
-            echo "=== Pacman: $arch ==="
-            mkdir -p "gh-pages-dir/pacman/${arch}"
+            PAC_ARCH="$arch"
+            case "$arch" in
+              aarch64) PAC_ARCH="aarch64" ;;
+              x86_64)  PAC_ARCH="x86_64" ;;
+              armhf)   PAC_ARCH="armv7h" ;;
+            esac
 
-            # Build .pkg.tar.zst from each intermediate matching this arch
+            echo "=== Pacman: $PAC_ARCH ==="
+            PAC_DIR="gh-pages-dir/pacman/${PAC_ARCH}"
+            mkdir -p "$PAC_DIR"
+
+            # Build temp packages for dep scanning
+            TEMP_PAC=$(mktemp -d)
             for intdir in intermediates/pkg-*; do
               [[ -d "$intdir/meta" ]] || continue
-              EXTRACTED_ARCH=$(cat "$intdir/meta/arch")
-              [[ "$EXTRACTED_ARCH" == "$arch" ]] || continue
-
-              "$SCRIPT_DIR/pkg-build-pacman.sh" "$intdir" "gh-pages-dir/pacman/${arch}/" \
-                --dep-map "$DEP_MAP" || \
-                echo "WARNING: Failed to build pacman pkg from $(basename "$intdir")"
+              [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+              "$SCRIPT_DIR/pkg-build-pacman.sh" "$intdir" "$TEMP_PAC/" \
+                --dep-map "$DEP_MAP" 2>/dev/null || true
             done
 
-            # Resolve deps
-            mkdir -p "fetched-deps-pacman-${arch}"
+            # Resolve deps → prefixed .pkg.tar.zst + dep-mapping.txt
+            FETCH_DIR="fetched-deps-pacman-${arch}"
+            mkdir -p "$FETCH_DIR"
             "$SCRIPT_DIR/resolve-deps.sh" \
-              --source-pkgs "gh-pages-dir/pacman/${arch}" \
+              --source-pkgs "$TEMP_PAC" \
               --source-distro "$SOURCE_DISTRO" \
               --target-distro arch \
               --target-format pacman \
               --distros-config distros.yml \
               --dep-map "$DEP_MAP" \
-              --output-dir "fetched-deps-pacman-${arch}" \
+              --output-dir "$FETCH_DIR" \
               --arch "$arch" || echo "WARNING: dep resolution had errors for pacman"
 
-            # Convert fetched deps to pacman
-            for fetched in "fetched-deps-pacman-${arch}"/*; do
+            # Copy prefixed dep packages
+            for fetched in "$FETCH_DIR"/*.pkg.tar.zst; do
               [[ -f "$fetched" ]] || continue
-              INTDIR=$(mktemp -d)
-              "$SCRIPT_DIR/pkg-extract.sh" "$fetched" "$INTDIR" --source-distro "$SOURCE_DISTRO"
-              "$SCRIPT_DIR/pkg-build-pacman.sh" "$INTDIR" "gh-pages-dir/pacman/${arch}/" \
-                --dep-map "$DEP_MAP" || echo "WARNING: Failed to convert fetched dep $(basename "$fetched")"
-              rm -rf "$INTDIR"
+              cp "$fetched" "$PAC_DIR/"
             done
 
+            # Rebuild our packages with mapping applied
+            MAPPING="$FETCH_DIR/dep-mapping.txt"
+            for intdir in intermediates/pkg-*; do
+              [[ -d "$intdir/meta" ]] || continue
+              [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+
+              INTCOPY=$(mktemp -d)
+              cp -a "$intdir"/* "$INTCOPY/"
+
+              if [[ -s "$MAPPING" ]]; then
+                while IFS='=' read -r orig prefixed; do
+                  [[ -z "$orig" ]] && continue
+                  sed -i "s/^${orig}$/${prefixed}/" "$INTCOPY/meta/depends" 2>/dev/null || true
+                done < "$MAPPING"
+              fi
+
+              "$SCRIPT_DIR/pkg-build-pacman.sh" "$INTCOPY" "$PAC_DIR/" \
+                --dep-map "$DEP_MAP" || \
+                echo "WARNING: Failed to rebuild pacman pkg"
+              rm -rf "$INTCOPY"
+            done
+
+            rm -rf "$TEMP_PAC"
+
             # Generate pacman database
-            if ls "gh-pages-dir/pacman/${arch}/"*.pkg.tar.zst 1>/dev/null 2>&1; then
-              cd "gh-pages-dir/pacman/${arch}"
+            if ls "$PAC_DIR/"*.pkg.tar.zst 1>/dev/null 2>&1; then
+              cd "$PAC_DIR"
               repo-add astralemu.db.tar.gz *.pkg.tar.zst
               cd ../../..
             fi

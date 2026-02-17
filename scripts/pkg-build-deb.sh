@@ -35,6 +35,7 @@ SOURCE_DISTRO=$(cat "$INTDIR/meta/source_distro" 2>/dev/null || echo "unknown")
 case "$PKG_ARCH" in
   aarch64) DEB_ARCH="arm64" ;;
   x86_64)  DEB_ARCH="amd64" ;;
+  armhf)   DEB_ARCH="armhf" ;;
   *)       DEB_ARCH="$PKG_ARCH" ;;
 esac
 

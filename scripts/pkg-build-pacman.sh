@@ -32,6 +32,7 @@ PKG_MAINTAINER=$(cat "$INTDIR/meta/maintainer")
 case "$PKG_ARCH" in
   aarch64) PAC_ARCH="aarch64" ;;
   x86_64)  PAC_ARCH="x86_64" ;;
+  armhf)   PAC_ARCH="armv7h" ;;
   *)       PAC_ARCH="$PKG_ARCH" ;;
 esac
 
