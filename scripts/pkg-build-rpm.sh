@@ -39,10 +39,11 @@ SOURCE_FORMAT=$(cat "$INTDIR/meta/source_format")
 
 # Map arch
 case "$PKG_ARCH" in
-  aarch64) RPM_ARCH="aarch64" ;;
-  x86_64)  RPM_ARCH="x86_64" ;;
-  armhf)   RPM_ARCH="armv7hl" ;;
-  *)       RPM_ARCH="$PKG_ARCH" ;;
+  aarch64)        RPM_ARCH="aarch64" ;;
+  x86_64)         RPM_ARCH="x86_64" ;;
+  armhf)          RPM_ARCH="armv7hl" ;;
+  all|noarch|any) RPM_ARCH="noarch" ;;
+  *)              RPM_ARCH="$PKG_ARCH" ;;
 esac
 
 # Target libdir based on arch (Fedora uses lib64 for 64-bit)
