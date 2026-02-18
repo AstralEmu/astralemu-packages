@@ -121,6 +121,12 @@ jobs:
           echo "Own packages ($(wc -l < own-packages.txt) entries):"
           cat own-packages.txt
 
+          # Fetch existing package filenames from gh-pages (just names, no content)
+          git fetch origin gh-pages 2>/dev/null || true
+          git ls-tree -r --name-only origin/gh-pages 2>/dev/null \
+            | grep -E '\.(deb|rpm|pkg\.tar\.zst)$' > existing-repo.txt || touch existing-repo.txt
+          echo "Existing repo: $(wc -l < existing-repo.txt) package files"
+
           # Generate matrix from distros.yml
           MATRIX="["
           for id in $(yq -r '.distros.apt[].id' distros.yml); do
@@ -146,6 +152,7 @@ jobs:
           path: |
             intermediates/
             own-packages.txt
+            existing-repo.txt
             scripts/
             distros.yml
             pages/
@@ -228,6 +235,30 @@ jobs:
             esac
           }
 
+          # Check if a package (name+version+arch) already exists in the repo
+          pkg_exists_in_repo() {
+            local name="$1" version="$2" format="$3" arch="$4"
+            local expected
+            case "$format" in
+              deb)
+                local deb_arch
+                case "$arch" in aarch64) deb_arch="arm64";; x86_64) deb_arch="amd64";; *) deb_arch="$arch";; esac
+                expected="${name}_$(echo "$version" | sed 's/^[0-9]*://')_${deb_arch}.deb"
+                ;;
+              rpm)
+                local rpm_arch
+                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; *) rpm_arch="$arch";; esac
+                expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
+                ;;
+              pacman)
+                local pac_arch
+                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; *) pac_arch="$arch";; esac
+                expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
+                ;;
+            esac
+            grep -qF "/$expected" existing-repo.txt 2>/dev/null
+          }
+
           # Create output structure
           mkdir -p repo-output
 
@@ -261,6 +292,12 @@ jobs:
               for intdir in intermediates/pkg-*; do
                 [[ -d "$intdir/meta" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                PKG_NAME=$(cat "$intdir/meta/name")
+                PKG_VERSION=$(cat "$intdir/meta/version")
+                if pkg_exists_in_repo "$PKG_NAME" "$PKG_VERSION" "$FORMAT" "$arch"; then
+                  echo "SKIP: $PKG_NAME ($PKG_VERSION) already in $DISTRO repo"
+                  continue
+                fi
                 (
                   TMPOUT=$(mktemp -d)
                   if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
@@ -309,6 +346,7 @@ jobs:
                 --output-dir "$FETCH_DIR" \
                 --arch "$arch" \
                 --skip-names own-packages.txt \
+                --existing-repo existing-repo.txt \
                 $PREFIX_ARG || echo "WARNING: dep resolution had errors for $DISTRO"
 
               # Step 3: Copy prefixed dep packages to output
@@ -324,6 +362,12 @@ jobs:
               for intdir in intermediates/pkg-*; do
                 [[ -d "$intdir/meta" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                PKG_NAME=$(cat "$intdir/meta/name")
+                PKG_VERSION=$(cat "$intdir/meta/version")
+                if pkg_exists_in_repo "$PKG_NAME" "$PKG_VERSION" "$FORMAT" "$arch"; then
+                  echo "SKIP: $PKG_NAME ($PKG_VERSION) already in $DISTRO repo"
+                  continue
+                fi
                 (
                   INTCOPY=$(mktemp -d)
                   cp -a "$intdir"/* "$INTCOPY/"
@@ -449,6 +493,76 @@ jobs:
           done
           echo "=== Merged structure ==="
           find gh-pages-dir -type f | head -50
+
+      - name: Cleanup old package versions
+        run: |
+          DEVICE="${{ inputs.device }}"
+
+          # Keep only 3 latest major versions per package, delete older ones
+          cleanup_old_versions() {
+            local dir="$1" format="$2"
+            [[ -d "$dir" ]] || return 0
+
+            declare -A SEEN_MAJORS
+            declare -A DELETE_FILES
+
+            for file in "$dir"/*; do
+              [[ -f "$file" ]] || continue
+              local bn
+              bn=$(basename "$file")
+              local pkg_name="" version=""
+
+              case "$format" in
+                deb)
+                  pkg_name="${bn%%_*}"
+                  version=$(echo "$bn" | cut -d_ -f2)
+                  ;;
+                rpm)
+                  local stem="${bn%.*.rpm}"
+                  pkg_name=$(echo "$stem" | rev | cut -d- -f3- | rev)
+                  version=$(echo "$stem" | rev | cut -d- -f2 | rev)
+                  ;;
+                pacman)
+                  local stem="${bn%.pkg.tar.zst}"
+                  pkg_name=$(echo "$stem" | rev | cut -d- -f3- | rev)
+                  version=$(echo "$stem" | rev | cut -d- -f2 | rev)
+                  ;;
+              esac
+
+              local major
+              major=$(echo "$version" | cut -d. -f1)
+              [[ "$major" =~ ^[0-9]+$ ]] || continue
+
+              SEEN_MAJORS["$pkg_name"]+=" $major"
+              DELETE_FILES["${pkg_name}:${major}"]+=" $file"
+            done
+
+            for pkg_name in $(printf '%s\n' "${!SEEN_MAJORS[@]}" | sort -u); do
+              local majors
+              majors=$(echo "${SEEN_MAJORS[$pkg_name]}" | tr ' ' '\n' | sort -rn | uniq)
+              local count=0
+              for major in $majors; do
+                count=$((count + 1))
+                if [ $count -gt 3 ]; then
+                  for f in ${DELETE_FILES["${pkg_name}:${major}"]}; do
+                    echo "  CLEANUP: $(basename "$f") (major=$major, keeping latest 3)"
+                    rm -f "$f"
+                  done
+                fi
+              done
+            done
+          }
+
+          echo "=== Cleaning old package versions ==="
+          for pool_dir in gh-pages-dir/apt/${DEVICE}/pool/*/; do
+            cleanup_old_versions "$pool_dir" "deb"
+          done
+          for rpm_dir in gh-pages-dir/dnf/${DEVICE}/*/*/; do
+            cleanup_old_versions "$rpm_dir" "rpm"
+          done
+          for pac_dir in gh-pages-dir/pacman/${DEVICE}/*/; do
+            cleanup_old_versions "$pac_dir" "pacman"
+          done
 
       - name: Sign APT releases
         run: |
