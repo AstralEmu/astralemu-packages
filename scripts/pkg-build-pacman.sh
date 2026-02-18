@@ -295,15 +295,15 @@ if [[ -n "$(find . -mindepth 1 -not -name '.PKGINFO' -not -name '.MTREE' -not -n
 fi
 
 if $HAS_CONTENT; then
-  if ! tar --zstd -cf "$OUTDIR/$PKG_FILENAME" \
+  if ! tar -I 'zstd -19 -T0' -cf "$OUTDIR/$PKG_FILENAME" \
     $TAR_FILES \
     --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO' \
     ./* 2>/dev/null; then
     echo "WARNING: tar failed with content, retrying metadata-only" >&2
-    tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+    tar -I 'zstd -19 -T0' -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
   fi
 else
-  tar --zstd -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
+  tar -I 'zstd -19 -T0' -cf "$OUTDIR/$PKG_FILENAME" $TAR_FILES
 fi
 
 echo "Pacman package built: $OUTDIR/$PKG_FILENAME"

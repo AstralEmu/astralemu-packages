@@ -106,7 +106,7 @@ jobs:
           # Detect architectures
           ARCHES=""
           for intdir in intermediates/pkg-*; do
-            [[ -d "$intdir/meta" ]] || continue
+            [[ -s "$intdir/meta/name" ]] || continue
             A=$(cat "$intdir/meta/arch")
             ARCHES="$ARCHES $A"
           done
@@ -117,7 +117,7 @@ jobs:
 
           # Generate own-packages skip list
           for intdir in intermediates/pkg-*; do
-            [[ -d "$intdir/meta" ]] || continue
+            [[ -s "$intdir/meta/name" ]] || continue
             cat "$intdir/meta/name"
           done | sort -u > own-packages.txt
           echo "Own packages ($(wc -l < own-packages.txt) entries):"
@@ -317,7 +317,7 @@ jobs:
               # Source distro: build directly, no dep resolution
               echo "Building packages (source distro, no dep resolution)..."
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -326,13 +326,15 @@ jobs:
                   continue
                 fi
                 (
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to build from $(basename "$intdir")"
+                    echo "WARNING: Failed to build $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
                   fi
-                  rm -rf "$TMPOUT"
+                  rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -344,14 +346,16 @@ jobs:
               echo "Step 1: Building temp packages for dep scanning..."
               TEMP_DIR=$(mktemp -d)
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
                   fi
-                  rm -rf "$TMPOUT"
+                  rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -386,7 +390,7 @@ jobs:
               echo "Step 4: Rebuilding packages with dependency mapping..."
               MAPPING="$FETCH_DIR/dep-mapping.txt"
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -632,7 +636,7 @@ jobs:
               # Source distro: build directly, no dep resolution
               echo "Building packages (source distro, no dep resolution)..."
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -641,13 +645,15 @@ jobs:
                   continue
                 fi
                 (
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to build from $(basename "$intdir")"
+                    echo "WARNING: Failed to build $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
                   fi
-                  rm -rf "$TMPOUT"
+                  rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -659,14 +665,16 @@ jobs:
               echo "Step 1: Building temp packages for dep scanning..."
               TEMP_DIR=$(mktemp -d)
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
                   fi
-                  rm -rf "$TMPOUT"
+                  rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
                 while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
               done
@@ -701,7 +709,7 @@ jobs:
               echo "Step 4: Rebuilding packages with dependency mapping..."
               MAPPING="$FETCH_DIR/dep-mapping.txt"
               for intdir in intermediates/pkg-*; do
-                [[ -d "$intdir/meta" ]] || continue
+                [[ -s "$intdir/meta/name" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
