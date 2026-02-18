@@ -26,6 +26,7 @@ OUTPUT_DIR=""
 ARCH="aarch64"
 SKIP_NAMES=""
 DEP_PREFIX=""
+EXISTING_REPO=""
 MAX_PARALLEL=8
 MAX_PKG_SIZE=$((95 * 1024 * 1024))  # 95 MB — GitHub rejects files > 100 MB
 
@@ -41,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     --arch)            ARCH="$2";            shift 2 ;;
     --skip-names)      SKIP_NAMES="$2";      shift 2 ;;
     --prefix)          DEP_PREFIX="$2";      shift 2 ;;
+    --existing-repo)   EXISTING_REPO="$2";  shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -52,6 +54,11 @@ fi
 
 mkdir -p "$OUTPUT_DIR"
 > "$OUTPUT_DIR/dep-mapping.txt"
+
+# Make EXISTING_REPO absolute (subprocesses may run from different dirs)
+if [[ -n "$EXISTING_REPO" && "$EXISTING_REPO" != /* ]]; then
+  EXISTING_REPO="$(pwd)/$EXISTING_REPO"
+fi
 
 # ========================================================================
 # Skip set — our own packages to never fetch
@@ -156,6 +163,38 @@ limit_jobs() {
   while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do
     wait -n 2>/dev/null || true
   done
+}
+
+# Check if a prefixed dep already exists in the repo with a compatible version
+dep_version_in_repo() {
+  local prefixed="$1" new_version="$2"
+  [[ -z "$EXISTING_REPO" || ! -f "$EXISTING_REPO" ]] && return 1
+
+  local match existing_ver
+  case "$TARGET_FORMAT" in
+    deb)
+      # Filename: prefixed_VERSION_ARCH.deb
+      match=$(grep -m1 "/${prefixed}_" "$EXISTING_REPO" 2>/dev/null) || return 1
+      existing_ver=$(basename "$match" | sed "s/^${prefixed}_//; s/_[^_]*\.deb$//")
+      ;;
+    rpm)
+      # Filename: prefixed-VERSION-RELEASE.ARCH.rpm
+      match=$(grep -m1 "/${prefixed}-[0-9]" "$EXISTING_REPO" 2>/dev/null) || return 1
+      local stem
+      stem=$(basename "$match" | sed 's/\.[^.]*\.rpm$//')
+      existing_ver=$(echo "$stem" | sed "s/^${prefixed}-//" | rev | cut -d- -f2- | rev)
+      ;;
+    pacman)
+      # Filename: prefixed-VERSION-PKGREL-ARCH.pkg.tar.zst
+      match=$(grep -m1 "/${prefixed}-[0-9]" "$EXISTING_REPO" 2>/dev/null) || return 1
+      local stem
+      stem=$(basename "$match" | sed 's/\.pkg\.tar\.zst$//')
+      existing_ver=$(echo "$stem" | rev | cut -d- -f3- | rev | sed "s/^${prefixed}-//")
+      ;;
+  esac
+
+  [[ -z "$existing_ver" ]] && return 1
+  versions_compatible "$new_version" "$existing_ver"
 }
 
 # ========================================================================
@@ -303,6 +342,17 @@ prefix_and_rebuild() {
   orig_name=$(cat "$int_dir/meta/name")
   local prefix="${DEP_PREFIX:-$SOURCE_DISTRO}"
   local prefixed="${prefix}-${orig_name}"
+
+  # Skip if a compatible version already exists in the repo
+  local pkg_version
+  pkg_version=$(cat "$int_dir/meta/version")
+  if dep_version_in_repo "$prefixed" "$pkg_version"; then
+    echo "  [SKIP] $prefixed — compatible version already in repo" >&2
+    echo "${orig_name}=${prefixed}" > "$result_dir/mapping"
+    cat "$int_dir/meta/depends" > "$result_dir/subdeps" 2>/dev/null || touch "$result_dir/subdeps"
+    rm -rf "$int_dir"
+    return 0
+  fi
 
   echo "$prefixed" > "$int_dir/meta/name"
   echo "$orig_name" >> "$int_dir/meta/provides"
