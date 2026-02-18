@@ -220,6 +220,8 @@ jobs:
           MAX_PARALLEL=8
 
           echo "=== Building $FORMAT repo for $DISTRO ==="
+          FAIL_LOG="build-failures.log"
+          > "$FAIL_LOG"
 
           # Determine build script
           case "$FORMAT" in
@@ -244,6 +246,7 @@ jobs:
                   aarch64) echo "aarch64" ;;
                   x86_64)  echo "x86_64" ;;
                   armhf)   echo "armv7hl" ;;
+                  all)     echo "noarch" ;;
                   *)       echo "$arch" ;;
                 esac ;;
               pacman)
@@ -251,6 +254,7 @@ jobs:
                   aarch64) echo "aarch64" ;;
                   x86_64)  echo "x86_64" ;;
                   armhf)   echo "armv7h" ;;
+                  all)     echo "any" ;;
                   *)       echo "$arch" ;;
                 esac ;;
             esac
@@ -295,8 +299,6 @@ jobs:
                 POOL_DIR="repo-output/apt/device/${DEVICE}/pool/${DISTRO}"
                 DEP_POOL_DIR="repo-output/apt/deps/${SOURCE_DISTRO}/pool/${DISTRO}"
                 mkdir -p "$POOL_DIR" "$DEP_POOL_DIR"
-                mkdir -p "repo-output/apt/device/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                mkdir -p "repo-output/apt/deps/${SOURCE_DISTRO}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 OUTPUT_DIR="$POOL_DIR"
                 DEP_OUTPUT_DIR="$DEP_POOL_DIR"
                 ;;
@@ -332,7 +334,7 @@ jobs:
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to build $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — build for $DISTRO" | tee -a "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -354,6 +356,8 @@ jobs:
                   TMPOUT=$(mktemp -d)
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
+                  else
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO" >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -377,7 +381,7 @@ jobs:
                 --skip-names own-packages.txt \
                 --existing-repo existing-repo.txt \
                 --prefix "$SOURCE_DISTRO" \
-                --cache-dir dep-cache/ || echo "WARNING: dep resolution had errors for $DISTRO"
+                --cache-dir dep-cache/ || echo "FAIL: dependency resolution for $DISTRO/$arch" | tee -a "$FAIL_LOG"
 
               # Step 3: Copy prefixed dep packages to shared deps output
               case "$FORMAT" in
@@ -413,7 +417,7 @@ jobs:
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to rebuild $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO" | tee -a "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -425,57 +429,13 @@ jobs:
             fi
           done
 
-          # Generate repo metadata for device AND deps repos
-          echo ""
-          echo "=== Generating repo metadata ==="
-          case "$FORMAT" in
-            deb)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                # Device repo metadata
-                cd "repo-output/apt/device/${DEVICE}"
-                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
-                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../../../..
-                # Deps repo metadata
-                cd "repo-output/apt/deps/${SOURCE_DISTRO}"
-                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
-                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../../../..
-              done
-              ;;
-            rpm)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                RPM_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
-                if ls "$RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
-                  createrepo_c "$RPM_DIR/"
-                fi
-                DEP_RPM_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
-                if ls "$DEP_RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
-                  createrepo_c "$DEP_RPM_DIR/"
-                fi
-              done
-              ;;
-            pacman)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                PAC_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
-                if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
-                  docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
-                    bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
-                fi
-                DEP_PAC_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
-                if ls "$DEP_PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
-                  docker run --rm -v "$(pwd)/$DEP_PAC_DIR:/repo" archlinux:latest \
-                    bash -c "cd /repo && repo-add astralemu-deps.db.tar.gz *.pkg.tar.zst"
-                fi
-              done
-              ;;
-          esac
-
+          if [[ -s "$FAIL_LOG" ]]; then
+            echo ""
+            echo "========================================="
+            echo "FAILURES ($DISTRO / $FORMAT):"
+            cat "$FAIL_LOG"
+            echo "========================================="
+          fi
           echo "=== Done building $FORMAT repo for $DISTRO ==="
 
       - name: Upload repo artifact
@@ -539,6 +499,8 @@ jobs:
           MAX_PARALLEL=8
 
           echo "=== Building $FORMAT repo for $DISTRO ==="
+          FAIL_LOG="build-failures.log"
+          > "$FAIL_LOG"
 
           # Determine build script
           case "$FORMAT" in
@@ -563,6 +525,7 @@ jobs:
                   aarch64) echo "aarch64" ;;
                   x86_64)  echo "x86_64" ;;
                   armhf)   echo "armv7hl" ;;
+                  all)     echo "noarch" ;;
                   *)       echo "$arch" ;;
                 esac ;;
               pacman)
@@ -570,6 +533,7 @@ jobs:
                   aarch64) echo "aarch64" ;;
                   x86_64)  echo "x86_64" ;;
                   armhf)   echo "armv7h" ;;
+                  all)     echo "any" ;;
                   *)       echo "$arch" ;;
                 esac ;;
             esac
@@ -614,8 +578,6 @@ jobs:
                 POOL_DIR="repo-output/apt/device/${DEVICE}/pool/${DISTRO}"
                 DEP_POOL_DIR="repo-output/apt/deps/${SOURCE_DISTRO}/pool/${DISTRO}"
                 mkdir -p "$POOL_DIR" "$DEP_POOL_DIR"
-                mkdir -p "repo-output/apt/device/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                mkdir -p "repo-output/apt/deps/${SOURCE_DISTRO}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 OUTPUT_DIR="$POOL_DIR"
                 DEP_OUTPUT_DIR="$DEP_POOL_DIR"
                 ;;
@@ -651,7 +613,7 @@ jobs:
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to build $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — build for $DISTRO" | tee -a "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -673,6 +635,8 @@ jobs:
                   TMPOUT=$(mktemp -d)
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
+                  else
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO" >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -696,7 +660,7 @@ jobs:
                 --skip-names own-packages.txt \
                 --existing-repo existing-repo.txt \
                 --prefix "$SOURCE_DISTRO" \
-                --cache-dir dep-cache/ || echo "WARNING: dep resolution had errors for $DISTRO"
+                --cache-dir dep-cache/ || echo "FAIL: dependency resolution for $DISTRO/$arch" | tee -a "$FAIL_LOG"
 
               # Step 3: Copy prefixed dep packages to shared deps output
               case "$FORMAT" in
@@ -732,7 +696,7 @@ jobs:
                   if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "WARNING: Failed to rebuild $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO" | tee -a "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -744,57 +708,13 @@ jobs:
             fi
           done
 
-          # Generate repo metadata for device AND deps repos
-          echo ""
-          echo "=== Generating repo metadata ==="
-          case "$FORMAT" in
-            deb)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                # Device repo metadata
-                cd "repo-output/apt/device/${DEVICE}"
-                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
-                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../../../..
-                # Deps repo metadata
-                cd "repo-output/apt/deps/${SOURCE_DISTRO}"
-                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
-                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
-                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../../../..
-              done
-              ;;
-            rpm)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                RPM_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
-                if ls "$RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
-                  createrepo_c "$RPM_DIR/"
-                fi
-                DEP_RPM_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
-                if ls "$DEP_RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
-                  createrepo_c "$DEP_RPM_DIR/"
-                fi
-              done
-              ;;
-            pacman)
-              for arch in ${{ needs.normalize.outputs.arches }}; do
-                DIR_ARCH=$(map_dir_arch "$arch")
-                PAC_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
-                if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
-                  docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
-                    bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
-                fi
-                DEP_PAC_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
-                if ls "$DEP_PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
-                  docker run --rm -v "$(pwd)/$DEP_PAC_DIR:/repo" archlinux:latest \
-                    bash -c "cd /repo && repo-add astralemu-deps.db.tar.gz *.pkg.tar.zst"
-                fi
-              done
-              ;;
-          esac
-
+          if [[ -s "$FAIL_LOG" ]]; then
+            echo ""
+            echo "========================================="
+            echo "FAILURES ($DISTRO / $FORMAT):"
+            cat "$FAIL_LOG"
+            echo "========================================="
+          fi
           echo "=== Done building $FORMAT repo for $DISTRO ==="
 
       - name: Upload repo artifact
@@ -830,7 +750,7 @@ jobs:
           path: repo-artifacts/
 
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install -y pandoc apt-utils
+        run: sudo apt-get update && sudo apt-get install -y pandoc apt-utils dpkg-dev createrepo-c
 
       - name: Import GPG key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
@@ -858,6 +778,18 @@ jobs:
               cp -a "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
             fi
           done
+          # Clean up old flat paths (superseded by device/ subdirs)
+          for fmt in apt dnf pacman; do
+            if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" ]]; then
+              echo "Removing old path: ${fmt}/${DEVICE}/"
+              rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
+            fi
+          done
+          # Clean up non-standard pacman arm64 dir (should be aarch64)
+          if [[ -d "gh-pages-dir/pacman/device/${DEVICE}/arm64" ]]; then
+            echo "Removing non-standard arch dir: pacman/device/${DEVICE}/arm64/"
+            rm -rf "gh-pages-dir/pacman/device/${DEVICE}/arm64"
+          fi
 
       - name: Merge repo artifacts
         run: |
@@ -951,6 +883,61 @@ jobs:
             cleanup_old_versions "$pac_dir" "pacman"
           done
 
+      - name: Remove oversized files
+        run: |
+          MAX_MB=95
+          find gh-pages-dir -type f -size +${MAX_MB}M | while read -r f; do
+            echo "Removing oversized file: $f ($(du -h "$f" | cut -f1))"
+            rm -f "$f"
+          done
+
+      - name: Generate repo metadata
+        run: |
+          DEVICE="${{ inputs.device }}"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+
+          echo "=== Generating APT metadata ==="
+          APT_DISTROS=$(yq -r '.distros.apt[].id' distros.yml)
+          for repo_base in "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/apt/deps/${SOURCE_DISTRO}"; do
+            [[ -d "$repo_base" ]] || continue
+            for distro in $APT_DISTROS; do
+              [[ -d "$repo_base/pool/$distro" ]] || continue
+              # Extract unique architectures from deb filenames
+              POOL_ARCHES=$(ls "$repo_base/pool/$distro/"*.deb 2>/dev/null | sed 's/.*_\([^_]*\)\.deb$/\1/' | sort -u)
+              [[ -z "$POOL_ARCHES" ]] && continue
+              for deb_arch in $POOL_ARCHES; do
+                mkdir -p "$repo_base/dists/$distro/main/binary-$deb_arch"
+                (cd "$repo_base" && dpkg-scanpackages --arch "$deb_arch" "pool/$distro" > "dists/$distro/main/binary-$deb_arch/Packages" 2>/dev/null || true)
+                gzip -k -f "$repo_base/dists/$distro/main/binary-$deb_arch/Packages"
+                echo "  $(basename "$repo_base") $distro/$deb_arch: $(grep -c '^Package:' "$repo_base/dists/$distro/main/binary-$deb_arch/Packages" 2>/dev/null || echo 0) packages"
+              done
+            done
+          done
+
+          echo "=== Generating RPM metadata ==="
+          for rpm_root in "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}"; do
+            [[ -d "$rpm_root" ]] || continue
+            find "$rpm_root" -name '*.rpm' -printf '%h\n' 2>/dev/null | sort -u | while read -r rpm_dir; do
+              echo "  createrepo_c $rpm_dir"
+              createrepo_c "$rpm_dir/"
+            done
+          done
+
+          echo "=== Generating Pacman metadata ==="
+          for pac_root in "gh-pages-dir/pacman/device/${DEVICE}" "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"; do
+            [[ -d "$pac_root" ]] || continue
+            for pac_dir in "$pac_root"/*/; do
+              [[ -d "$pac_dir" ]] || continue
+              ls "$pac_dir"/*.pkg.tar.zst 1>/dev/null 2>&1 || continue
+              db_name="astralemu"
+              echo "$pac_dir" | grep -q "/deps/" && db_name="astralemu-deps"
+              rm -f "$pac_dir"/${db_name}.db* "$pac_dir"/${db_name}.files*
+              echo "  repo-add $pac_dir${db_name}.db.tar.gz"
+              docker run --rm -v "$(realpath "$pac_dir"):/repo" archlinux:latest \
+                bash -c "cd /repo && repo-add ${db_name}.db.tar.gz *.pkg.tar.zst"
+            done
+          done
+
       - name: Sign APT releases
         run: |
           DEVICE="${{ inputs.device }}"
@@ -1027,14 +1014,6 @@ jobs:
               --metadata title="AstralEmu Packages" \
               -o gh-pages-dir/index.html
           fi
-
-      - name: Remove oversized files
-        run: |
-          MAX_MB=95
-          find gh-pages-dir -type f -size +${MAX_MB}M | while read -r f; do
-            echo "Removing oversized file: $f ($(du -h "$f" | cut -f1))"
-            rm -f "$f"
-          done
 
       - name: Deploy to gh-pages
         run: |

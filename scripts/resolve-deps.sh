@@ -71,6 +71,10 @@ if [[ -n "$CACHE_DIR" ]]; then
   mkdir -p "$CACHE_DIR"
 fi
 
+# Failure tracking
+FAIL_LOG=$(mktemp)
+log_fail() { echo "  FAIL: $*" >&2; echo "$*" >> "$FAIL_LOG"; }
+
 # ========================================================================
 # Skip set — our own packages to never fetch
 # ========================================================================
@@ -344,7 +348,7 @@ prefix_and_rebuild() {
   int_dir=$(mktemp -d)
 
   if ! "$SCRIPT_DIR/pkg-extract.sh" "$pkg_file" "$int_dir" --source-distro "$SOURCE_DISTRO" >&2; then
-    echo "  WARNING: Failed to extract $(basename "$pkg_file")" >&2
+    log_fail "extract $(basename "$pkg_file")"
     rm -rf "$int_dir"
     return 1
   fi
@@ -371,13 +375,13 @@ prefix_and_rebuild() {
   case "$TARGET_FORMAT" in
     deb)
       "$SCRIPT_DIR/pkg-build-deb.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-        echo "  WARNING: Failed to rebuild $prefixed as deb" >&2 ;;
+        log_fail "rebuild $prefixed (deb)" ;;
     rpm)
       "$SCRIPT_DIR/pkg-build-rpm.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-        echo "  WARNING: Failed to rebuild $prefixed as rpm" >&2 ;;
+        log_fail "rebuild $prefixed (rpm)" ;;
     pacman)
       "$SCRIPT_DIR/pkg-build-pacman.sh" "$int_dir" "$OUTPUT_DIR/" --dep-map "$DEP_MAP" >&2 || \
-        echo "  WARNING: Failed to rebuild $prefixed as pacman" >&2 ;;
+        log_fail "rebuild $prefixed (pacman)" ;;
   esac
 
   echo "  -> Prefixed: $prefixed (provides $orig_name)" >&2
@@ -631,3 +635,12 @@ if [[ $total_fetched -gt 0 && -s "$OUTPUT_DIR/dep-mapping.txt" ]]; then
     echo "  $orig -> $prefixed"
   done < "$OUTPUT_DIR/dep-mapping.txt"
 fi
+
+if [[ -s "$FAIL_LOG" ]]; then
+  echo ""
+  echo "========================================="
+  echo "DEPENDENCY RESOLUTION FAILURES:"
+  sort "$FAIL_LOG" | uniq -c | sort -rn
+  echo "========================================="
+fi
+rm -f "$FAIL_LOG"
