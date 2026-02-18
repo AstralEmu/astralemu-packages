@@ -194,7 +194,6 @@ jobs:
           SCRIPT
 
       - name: Upload tracker data
-        if: steps.process.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: mirror-trackers
@@ -225,7 +224,7 @@ jobs:
   # ===========================================================================
   save-trackers:
     needs: [mirror, update-repo]
-    if: needs.update-repo.result == 'success'
+    if: always() && needs.mirror.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
