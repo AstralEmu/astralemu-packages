@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       devices: ${{ steps.load-devices.outputs.devices }}
+      seed_device: ${{ steps.load-devices.outputs.seed_device }}
+      devices_rest: ${{ steps.load-devices.outputs.devices_rest }}
       azahar_version: ${{ steps.versions.outputs.azahar_version }}
       dolphin_commit: ${{ steps.versions.outputs.dolphin_commit }}
       dolphin_short: ${{ steps.versions.outputs.dolphin_short }}
@@ -75,6 +77,10 @@ jobs:
         run: |
           DEVICES=$(yq -o=json -I=0 '.devices' devices.yml)
           echo "devices=$DEVICES" >> $GITHUB_OUTPUT
+          SEED=$(echo "$DEVICES" | jq -c '.[0]')
+          REST=$(echo "$DEVICES" | jq -c 'if length > 1 then .[1:] else [] end')
+          echo "seed_device=$SEED" >> $GITHUB_OUTPUT
+          echo "devices_rest=$REST" >> $GITHUB_OUTPUT
 
       - name: Compute job hashes
         id: hashes
@@ -2448,10 +2454,40 @@ jobs:
           key: success-setperf-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_setperf }}
 
   # ===========================================================================
-  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
+  # BUILD-DEPS-REPO: Build the shared deps repo config meta-package
   # ===========================================================================
-  update-repo:
-    needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf]
+  build-deps-repo:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Build astralemu-deps-repo package
+        run: |
+          cd packages/astralemu-deps-repo
+          chmod +x build.sh
+          ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}" "${{ matrix.device.source_distro }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-astralemu-deps-repo-${{ matrix.device.id }}
+          path: "packages/astralemu-deps-repo/*.pkg.tar"
+          retention-days: 1
+
+  # ===========================================================================
+  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
+  # Seed device first (builds+deploys shared deps), then rest in parallel
+  # ===========================================================================
+  update-repo-seed:
+    needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf, build-deps-repo]
     if: >-
       always() &&
       (needs.build-azahar.result == 'success' ||
@@ -2462,11 +2498,35 @@ jobs:
        needs.build-ppsspp.result == 'success' ||
        needs.build-xemu.result == 'success' ||
        needs.build-libretro-package.result == 'success' ||
-       needs.build-setperf.result == 'success')
+       needs.build-setperf.result == 'success' ||
+       needs.build-deps-repo.result == 'success')
+    uses: ./.github/workflows/update-repos.yml
+    with:
+      artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
+      source_distro: ${{ fromJson(needs.prepare.outputs.seed_device).source_distro }}
+      device: ${{ fromJson(needs.prepare.outputs.seed_device).id }}
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+  update-repo:
+    needs: [prepare, update-repo-seed, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf, build-deps-repo]
+    if: >-
+      always() &&
+      fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
+      (needs.build-azahar.result == 'success' ||
+       needs.build-dolphin.result == 'success' ||
+       needs.build-duckstation.result == 'success' ||
+       needs.build-esde.result == 'success' ||
+       needs.build-melonds.result == 'success' ||
+       needs.build-ppsspp.result == 'success' ||
+       needs.build-xemu.result == 'success' ||
+       needs.build-libretro-package.result == 'success' ||
+       needs.build-setperf.result == 'success' ||
+       needs.build-deps-repo.result == 'success')
     strategy:
       fail-fast: false
       matrix:
-        device: ${{ fromJson(needs.prepare.outputs.devices) }}
+        device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
     uses: ./.github/workflows/update-repos.yml
     with:
       artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
@@ -2479,8 +2539,8 @@ jobs:
   # SAVE TRACKERS: Update version trackers on main branch
   # ===========================================================================
   save-trackers:
-    needs: [prepare, update-repo]
-    if: needs.update-repo.result == 'success'
+    needs: [prepare, update-repo-seed, update-repo]
+    if: always() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout main
