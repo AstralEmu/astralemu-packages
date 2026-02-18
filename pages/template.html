@@ -6,16 +6,17 @@
 <title>$title$</title>
 <style>
 :root {
-  --bg: #050507;
+  --bg: #080816;
+  --bg-center: #0e0e28;
   --glass: rgba(255, 255, 255, 0.04);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-hover: rgba(255, 255, 255, 0.06);
   --glass-strong: rgba(255, 255, 255, 0.07);
-  --text: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.55);
-  --accent: #f2d974;
-  --accent-glow: rgba(242, 217, 116, 0.15);
-  --link: #7abaff;
+  --text: rgba(253, 248, 230, 0.92);
+  --text-secondary: rgba(220, 210, 180, 0.78);
+  --accent: rgba(242, 217, 116, 0.85);
+  --accent-glow: rgba(242, 217, 116, 0.08);
+  --link: rgba(245, 230, 163, 0.8);
   --code-bg: rgba(255, 255, 255, 0.03);
   --radius: 16px;
   --radius-sm: 10px;
@@ -26,8 +27,8 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
-  line-height: 1.7;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.9;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -45,16 +46,16 @@ body::before, body::after {
 body::before {
   width: 600px; height: 600px;
   top: -150px; left: -100px;
-  background: radial-gradient(circle, rgba(242, 217, 116, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(242, 217, 116, 0.06), transparent 70%);
 }
 body::after {
   width: 500px; height: 500px;
   bottom: -100px; right: -80px;
-  background: radial-gradient(circle, rgba(122, 186, 255, 0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(26, 26, 78, 0.15), transparent 70%);
 }
 
 .container {
-  max-width: 820px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
 }
@@ -99,13 +100,14 @@ h1 {
   font-weight: 700;
   color: var(--text);
   margin: 1.5rem 0 0.5rem;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.04em;
   text-align: center;
 }
 h1 + p {
   text-align: center;
   color: var(--text-secondary);
   font-size: 1.05rem;
+  letter-spacing: 0.02em;
   margin-bottom: 1rem;
 }
 
@@ -118,7 +120,7 @@ h3 {
 
 /* Paragraphs */
 p {
-  margin: 0.6rem 0;
+  margin: 0.8rem 0;
   color: var(--text-secondary);
 }
 strong { color: var(--text); font-weight: 600; }
@@ -196,7 +198,7 @@ ul, ol {
   margin: 0.6rem 0 0.6rem 1.25rem;
   color: var(--text-secondary);
 }
-li { margin: 0.25rem 0; }
+li { margin: 0.4rem 0; }
 li strong { color: var(--text); }
 
 /* Images / badges */
@@ -212,7 +214,7 @@ img { max-width: 100%; height: auto; }
   font-size: 0.95rem;
 }
 .container > p:last-child a {
-  color: var(--text-secondary);
+  color: rgba(220, 210, 180, 0.65);
   transition: color 0.2s ease;
 }
 .container > p:last-child a:hover {
@@ -243,6 +245,7 @@ img { max-width: 100%; height: auto; }
 </style>
 </head>
 <body>
+<div style="position:fixed;inset:0;width:100vw;height:100vh;background:radial-gradient(ellipse at 50% 40%,var(--bg-center),var(--bg) 70%);z-index:-2;pointer-events:none"></div>
 <div class="container">
 $body$
 </div>
