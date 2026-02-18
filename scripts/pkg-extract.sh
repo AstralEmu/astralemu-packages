@@ -35,6 +35,7 @@ normalize_arch() {
     arm64|aarch64)          echo "aarch64" ;;
     amd64|x86_64)           echo "x86_64" ;;
     armhf|armv7hl|armv7h|armv7l) echo "armhf" ;;
+    all|any|noarch)          echo "all" ;;
     *)                      echo "$1" ;;
   esac
 }
