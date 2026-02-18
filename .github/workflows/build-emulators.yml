@@ -224,16 +224,14 @@ jobs:
           CURRENT_PPSSPP=$(cat .trackers/ppsspp-version 2>/dev/null || echo "")
           CURRENT_XEMU=$(cat .trackers/xemu-version 2>/dev/null || echo "")
 
-          # Fetch latest versions from upstream (with auth to avoid rate limits)
-          AUTH_HEADER="Authorization: token ${{ github.token }}"
-
-          AZAHAR_TAG=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/azahar-emu/azahar/releases/latest | jq -r '.tag_name // empty')
-          DOLPHIN_COMMIT=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/dolphin-emu/dolphin/commits/master | jq -r '.sha // empty')
-          DUCK_COMMIT=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/stenzek/duckstation/commits/master | jq -r '.sha // empty')
+          # Fetch latest versions from upstream (public repos, no auth needed)
+          AZAHAR_TAG=$(curl -fsSL https://api.github.com/repos/azahar-emu/azahar/releases/latest | jq -r '.tag_name // empty')
+          DOLPHIN_COMMIT=$(curl -fsSL https://api.github.com/repos/dolphin-emu/dolphin/commits/master | jq -r '.sha // empty')
+          DUCK_COMMIT=$(curl -fsSL https://api.github.com/repos/stenzek/duckstation/commits/master | jq -r '.sha // empty')
           ESDE_TAG=$(curl -fsSL "https://gitlab.com/api/v4/projects/es-de%2Femulationstation-de/releases" | jq -r '.[0].tag_name // empty')
-          MELON_TAG=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/melonDS-emu/melonDS/releases/latest | jq -r '.tag_name // empty')
-          PPSSPP_TAG=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/hrydgard/ppsspp/releases/latest | jq -r '.tag_name // empty')
-          XEMU_TAG=$(curl -fsSL -H "$AUTH_HEADER" https://api.github.com/repos/xemu-project/xemu/releases/latest | jq -r '.tag_name // empty')
+          MELON_TAG=$(curl -fsSL https://api.github.com/repos/melonDS-emu/melonDS/releases/latest | jq -r '.tag_name // empty')
+          PPSSPP_TAG=$(curl -fsSL https://api.github.com/repos/hrydgard/ppsspp/releases/latest | jq -r '.tag_name // empty')
+          XEMU_TAG=$(curl -fsSL https://api.github.com/repos/xemu-project/xemu/releases/latest | jq -r '.tag_name // empty')
 
           # Validate versions are not empty
           if [[ -z "$AZAHAR_TAG" || "$AZAHAR_TAG" == "null" ]]; then
