@@ -11,6 +11,7 @@ on:
       - 'devices.yml'
       - 'distros.yml'
       - 'scripts/**'
+      - 'packages/**'
 
 permissions:
   contents: write
@@ -2402,33 +2403,51 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_setperf == 'true'
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: main
 
+      - name: Check for device-specific setperf
+        id: check
+        run: |
+          if [[ -f "packages/setperf/${{ matrix.device.id }}/setperf" ]]; then
+            echo "has_setperf=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_setperf=false" >> $GITHUB_OUTPUT
+            echo "No setperf for ${{ matrix.device.id }}, skipping"
+          fi
+
       - name: Build setperf package
+        if: steps.check.outputs.has_setperf == 'true'
         run: |
           cd packages/setperf
           chmod +x build.sh
-          ./build.sh
+          ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}"
 
       - name: Upload artifact
+        if: steps.check.outputs.has_setperf == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: pkg-setperf
+          name: pkg-setperf-${{ matrix.device.id }}
           path: "packages/setperf/*.pkg.tar"
           retention-days: 1
 
       - name: Save success marker
+        if: steps.check.outputs.has_setperf == 'true'
         run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
 
       - name: Upload success marker
+        if: steps.check.outputs.has_setperf == 'true'
         uses: actions/cache/save@v4
         with:
           path: /tmp/marker
-          key: success-setperf-${{ needs.prepare.outputs.hash_setperf }}
+          key: success-setperf-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_setperf }}
 
   # ===========================================================================
   # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
