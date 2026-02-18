@@ -491,6 +491,7 @@ jobs:
 
           # Sign repomd.xml for each DNF repo
           find "gh-pages-dir/dnf/${DEVICE}" -name 'repomd.xml' | while read -r repomd; do
+            rm -f "${repomd}.asc"
             gpg --batch --default-key "AstralEmu Packages" -abs \
               -o "${repomd}.asc" "$repomd"
           done

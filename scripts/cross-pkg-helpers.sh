@@ -71,7 +71,9 @@ relocate_lib_paths() {
     relocated=true
   fi
 
-  [[ "$relocated" == "true" ]] && echo "  Relocated library paths → $target_libdir"
+  if [[ "$relocated" == "true" ]]; then
+    echo "  Relocated library paths → $target_libdir"
+  fi
 }
 
 # ========================================================================
