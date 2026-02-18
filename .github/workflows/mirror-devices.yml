@@ -234,6 +234,7 @@ jobs:
 
       - name: Download tracker data
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: mirror-trackers
           path: .trackers/

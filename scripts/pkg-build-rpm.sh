@@ -267,7 +267,7 @@ cat > "$RPMBUILD/SPECS/$PKG_NAME.spec" << SPEC
 %define _unpackaged_files_terminate_build 0
 %define __check_files %{nil}
 %define __os_install_post %{nil}
-%define _binary_payload w19.zstdio
+%define _binary_payload w19T0.zstdio
 Name:    $PKG_NAME
 Version: $RPM_VERSION
 Release: 1
