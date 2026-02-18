@@ -52,20 +52,22 @@ Builds run on GitHub Actions and are triggered automatically every 24 hours, or 
 
 ## Repository setup
 
-Each device has its own repository. Replace `<device>` with your device ID (e.g. `l4t` for Nintendo Switch).
+Each device has its own repository for emulator packages, plus a shared repository for dependencies grouped by source distribution. Replace `<device>` with your device ID (e.g. `l4t`) and `<source_distro>` with the source distribution (e.g. `noble`).
+
+The `astralemu-deps-repo` meta-package (included in the device repo) automatically configures the shared dependency repository.
 
 ### APT (Ubuntu / Debian)
 
 ```bash
-curl -fsSL https://astralemu.github.io/astralemu-packages/apt/<device>/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt/<device> $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/astralemu.list
+curl -fsSL https://astralemu.github.io/astralemu-packages/apt/device/<device>/astralemu.gpg | sudo tee /usr/share/keyrings/astralemu.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt/device/<device> $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/astralemu.list
 sudo apt update
 ```
 
 ### DNF (Universal Blue / Fedora)
 
 ```bash
-sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-packages/dnf/<device>/astralemu-<device>.repo
+sudo dnf config-manager --add-repo https://astralemu.github.io/astralemu-packages/dnf/device/<device>/astralemu-<device>.repo
 ```
 
 ### Pacman (Arch Linux)
@@ -75,25 +77,29 @@ Add to `/etc/pacman.conf`:
 ```ini
 [astralemu]
 SigLevel = Optional TrustAll
-Server = https://astralemu.github.io/astralemu-packages/pacman/<device>/$arch
+Server = https://astralemu.github.io/astralemu-packages/pacman/device/<device>/$arch
 ```
 
 ### Available devices
 
-| Device ID | Name | Architecture |
-| --------- | ---- | ------------ |
-| `l4t` | Nintendo Switch (Tegra X1) | arm64 |
+| Device ID | Name | Architecture | Source Distro |
+| --------- | ---- | ------------ | ------------- |
+| `l4t` | Nintendo Switch (Tegra X1) | arm64 | `noble` |
 
 ## Hosting
 
-This repo has its own GitHub Pages enabled. The built packages and repo metadata are served as static files from the `gh-pages` branch, with per-device repositories:
+This repo has its own GitHub Pages enabled. The built packages and repo metadata are served as static files from the `gh-pages` branch:
 
 ```
 https://astralemu.github.io/astralemu-packages/
-├── apt/<device>/pool/<distro>/
-├── apt/<device>/dists/<distro>/
-├── dnf/<device>/<version>/<arch>/
-└── pacman/<device>/<arch>/
+├── apt/device/<device>/pool/<distro>/       # emulator packages
+├── apt/device/<device>/dists/<distro>/
+├── apt/deps/<source_distro>/pool/<distro>/  # shared dependencies
+├── apt/deps/<source_distro>/dists/<distro>/
+├── dnf/device/<device>/<version>/<arch>/
+├── dnf/deps/<source_distro>/<version>/<arch>/
+├── pacman/device/<device>/<arch>/
+└── pacman/deps/<source_distro>/<arch>/
 ```
 
 The CI pipeline builds the packages on `main`, then pushes the repo metadata and package files to `gh-pages` for serving.
@@ -105,7 +111,7 @@ The CI dynamically generates the build matrix from two config files:
 - **`devices.yml`** — Target devices with architecture, compiler flags, and package sources to mirror
 - **`distros.yml`** — Target distributions (APT, DNF, Pacman) with their versions and mirrors
 
-Every package is cross-built to all target formats (`.deb`, `.rpm`, Pacman) with automatic dependency resolution. Dependencies missing or incompatible on the target distro are fetched from source, prefixed with the device ID (e.g. `l4t-libfoo`), and included in the device repo.
+Every package is cross-built to all target formats (`.deb`, `.rpm`, Pacman) with automatic dependency resolution. Dependencies missing or incompatible on the target distro are fetched from the source distribution, prefixed with its codename (e.g. `noble-libfoo`), and published to a shared dependency repository. Devices with the same source distribution share the same dependencies.
 
 ---
 

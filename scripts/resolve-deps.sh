@@ -4,8 +4,9 @@
 # Checks if dependencies exist in the target distro with compatible versions
 # (same major.minor.patch — bugfix/revision differences are ignored).
 # Missing or incompatible deps are fetched from source, rebuilt with a prefixed
-# package name (e.g. l4t-libfoo) and Provides: original_name.
+# package name (e.g. noble-libfoo) and Provides: original_name.
 # The prefix defaults to SOURCE_DISTRO but can be overridden with --prefix.
+# Supports --cache-dir to reuse previously fetched source packages across runs.
 #
 # Outputs:
 #   - Rebuilt prefixed packages in OUTPUT_DIR/
@@ -27,6 +28,7 @@ ARCH="aarch64"
 SKIP_NAMES=""
 DEP_PREFIX=""
 EXISTING_REPO=""
+CACHE_DIR=""
 MAX_PARALLEL=8
 MAX_PKG_SIZE=$((95 * 1024 * 1024))  # 95 MB — GitHub rejects files > 100 MB
 
@@ -43,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --skip-names)      SKIP_NAMES="$2";      shift 2 ;;
     --prefix)          DEP_PREFIX="$2";      shift 2 ;;
     --existing-repo)   EXISTING_REPO="$2";  shift 2 ;;
+    --cache-dir)       CACHE_DIR="$2";       shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -58,6 +61,14 @@ mkdir -p "$OUTPUT_DIR"
 # Make EXISTING_REPO absolute (subprocesses may run from different dirs)
 if [[ -n "$EXISTING_REPO" && "$EXISTING_REPO" != /* ]]; then
   EXISTING_REPO="$(pwd)/$EXISTING_REPO"
+fi
+
+# Make CACHE_DIR absolute and ensure it exists
+if [[ -n "$CACHE_DIR" && "$CACHE_DIR" != /* ]]; then
+  CACHE_DIR="$(pwd)/$CACHE_DIR"
+fi
+if [[ -n "$CACHE_DIR" ]]; then
+  mkdir -p "$CACHE_DIR"
 fi
 
 # ========================================================================
@@ -501,6 +512,24 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   to_fetch=$(echo "$to_fetch" | xargs)
   [[ -z "$to_fetch" ]] && { to_check=""; continue; }
 
+  # Pre-skip: deps already prefixed in repo (from a prior device/run) don't need fetching
+  actually_needed=""
+  prefix="${DEP_PREFIX:-$SOURCE_DISTRO}"
+  for dep in $to_fetch; do
+    src_dep=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
+    prefixed="${prefix}-${src_dep}"
+    src_ver="${SRC_VERS[$src_dep]:-${TGT_VERS[$dep]:-}}"
+    if [[ -n "$src_ver" && "$src_ver" != "MISSING" ]] && dep_version_in_repo "$prefixed" "$src_ver"; then
+      echo "  [PRE-SKIP] $prefixed — already in shared repo"
+      echo "${dep}=${prefixed}" >> "$OUTPUT_DIR/dep-mapping.txt"
+      total_fetched=$((total_fetched + 1))
+    else
+      actually_needed="$actually_needed $dep"
+    fi
+  done
+  to_fetch=$(echo "$actually_needed" | xargs)
+  [[ -z "$to_fetch" ]] && { to_check=""; continue; }
+
   # Map to source names for fetching
   src_fetch_list=""
   for dep in $to_fetch; do
@@ -509,10 +538,39 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   done
   src_fetch_list=$(echo "$src_fetch_list" | xargs)
 
-  # Batch fetch: one Docker call for all deps
-  FETCH_DIR=$(mktemp -d)
-  echo "  Batch fetching $(echo "$src_fetch_list" | wc -w) packages from $SOURCE_DISTRO..."
-  batch_fetch "$src_fetch_list" "$FETCH_DIR" "$SOURCE_FORMAT"
+  # Check cache for already-fetched source packages
+  if [[ -n "$CACHE_DIR" ]]; then
+    remaining_fetch=""
+    cached_count=0
+    FETCH_DIR=$(mktemp -d)
+    for src_dep in $src_fetch_list; do
+      cached_file=$(ls "$CACHE_DIR"/${src_dep}_*.deb "$CACHE_DIR"/${src_dep}-[0-9]*.rpm "$CACHE_DIR"/${src_dep}-[0-9]*.pkg.tar.* 2>/dev/null | head -1)
+      if [[ -n "$cached_file" && -f "$cached_file" ]]; then
+        cp "$cached_file" "$FETCH_DIR/"
+        cached_count=$((cached_count + 1))
+      else
+        remaining_fetch="$remaining_fetch $src_dep"
+      fi
+    done
+    src_fetch_list=$(echo "$remaining_fetch" | xargs)
+    [[ $cached_count -gt 0 ]] && echo "  Cache hit: $cached_count packages, still need $(echo "$src_fetch_list" | wc -w)"
+  else
+    FETCH_DIR=$(mktemp -d)
+  fi
+
+  # Batch fetch: one Docker call for remaining deps
+  if [[ -n "$src_fetch_list" ]]; then
+    echo "  Batch fetching $(echo "$src_fetch_list" | wc -w) packages from $SOURCE_DISTRO..."
+    batch_fetch "$src_fetch_list" "$FETCH_DIR" "$SOURCE_FORMAT"
+  fi
+
+  # Save fetched packages to cache
+  if [[ -n "$CACHE_DIR" ]]; then
+    for pkg_file in "$FETCH_DIR"/*; do
+      [[ -f "$pkg_file" ]] || continue
+      cp "$pkg_file" "$CACHE_DIR/" 2>/dev/null || true
+    done
+  fi
 
   # Filter oversized packages (GitHub rejects files > 100 MB)
   for pkg_file in "$FETCH_DIR"/*; do

@@ -32,6 +32,8 @@ jobs:
       arches: ${{ steps.normalize.outputs.arches }}
       count: ${{ steps.normalize.outputs.count }}
       matrix: ${{ steps.normalize.outputs.matrix }}
+      seed_entry: ${{ steps.normalize.outputs.seed_entry }}
+      matrix_rest: ${{ steps.normalize.outputs.matrix_rest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -144,6 +146,29 @@ jobs:
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Matrix: $MATRIX"
 
+          # Detect source format from distros.yml, then pick most distant target as seed
+          SOURCE_FORMAT=""
+          for fmt in apt dnf pacman; do
+            if yq -e ".distros.${fmt}[] | select(.id == \"$SOURCE_DISTRO\")" distros.yml > /dev/null 2>&1; then
+              case "$fmt" in
+                apt) SOURCE_FORMAT="deb" ;;
+                dnf) SOURCE_FORMAT="rpm" ;;
+                pacman) SOURCE_FORMAT="pacman" ;;
+              esac
+              break
+            fi
+          done
+          SOURCE_FORMAT="${SOURCE_FORMAT:-deb}"
+          case "$SOURCE_FORMAT" in
+            deb|rpm) SEED_FORMAT="pacman" ;;
+            pacman)  SEED_FORMAT="deb" ;;
+          esac
+          SEED_ENTRY=$(echo "$MATRIX" | jq -c "[.[] | select(.format == \"$SEED_FORMAT\")][0]")
+          MATRIX_REST=$(echo "$MATRIX" | jq -c "[.[] | select(. != $SEED_ENTRY)]")
+          echo "seed_entry=$SEED_ENTRY" >> $GITHUB_OUTPUT
+          echo "matrix_rest=$MATRIX_REST" >> $GITHUB_OUTPUT
+          echo "Seed: $SEED_ENTRY"
+
       - name: Upload intermediates
         if: steps.check.outputs.has_pkgs == 'true'
         uses: actions/upload-artifact@v4
@@ -160,21 +185,332 @@ jobs:
           retention-days: 1
 
   # ==================================================================
-  # BUILD-REPO: One job per distro (matrix), parallel internal builds
+  # BUILD-REPO-SEED: Single distro (most distant from source) to fill dep cache
   # ==================================================================
-  build-repo:
+  build-repo-seed:
     needs: normalize
     if: needs.normalize.outputs.count > 0
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.normalize.outputs.matrix) }}
     steps:
       - name: Download intermediates
         uses: actions/download-artifact@v4
         with:
           name: intermediates-${{ inputs.device }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,arm
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils rpm createrepo-c libarchive-tools zstd
+          chmod +x scripts/pkg-extract.sh scripts/pkg-build-deb.sh scripts/pkg-build-rpm.sh scripts/pkg-build-pacman.sh scripts/resolve-deps.sh
+
+      - name: Build ${{ fromJson(needs.normalize.outputs.seed_entry).format }} repo for ${{ fromJson(needs.normalize.outputs.seed_entry).distro }} (seed)
+        run: |
+          SCRIPT_DIR="$(pwd)/scripts"
+          DEP_MAP="$SCRIPT_DIR/dep-map.conf"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          DEVICE="${{ inputs.device }}"
+          DISTRO="${{ fromJson(needs.normalize.outputs.seed_entry).distro }}"
+          FORMAT="${{ fromJson(needs.normalize.outputs.seed_entry).format }}"
+          IS_SOURCE="${{ fromJson(needs.normalize.outputs.seed_entry).is_source }}"
+          MAX_PARALLEL=8
+
+          echo "=== Building $FORMAT repo for $DISTRO ==="
+
+          # Determine build script
+          case "$FORMAT" in
+            deb)    BUILD_SCRIPT="$SCRIPT_DIR/pkg-build-deb.sh" ;;
+            rpm)    BUILD_SCRIPT="$SCRIPT_DIR/pkg-build-rpm.sh" ;;
+            pacman) BUILD_SCRIPT="$SCRIPT_DIR/pkg-build-pacman.sh" ;;
+          esac
+
+          # Map arch for directory names
+          map_dir_arch() {
+            local arch="$1"
+            case "$FORMAT" in
+              deb)
+                case "$arch" in
+                  aarch64) echo "arm64" ;;
+                  x86_64)  echo "amd64" ;;
+                  armhf)   echo "armhf" ;;
+                  *)       echo "$arch" ;;
+                esac ;;
+              rpm)
+                case "$arch" in
+                  aarch64) echo "aarch64" ;;
+                  x86_64)  echo "x86_64" ;;
+                  armhf)   echo "armv7hl" ;;
+                  *)       echo "$arch" ;;
+                esac ;;
+              pacman)
+                case "$arch" in
+                  aarch64) echo "aarch64" ;;
+                  x86_64)  echo "x86_64" ;;
+                  armhf)   echo "armv7h" ;;
+                  *)       echo "$arch" ;;
+                esac ;;
+            esac
+          }
+
+          # Check if a package (name+version+arch) already exists in the repo
+          pkg_exists_in_repo() {
+            local name="$1" version="$2" format="$3" arch="$4"
+            local expected
+            case "$format" in
+              deb)
+                local deb_arch
+                case "$arch" in aarch64) deb_arch="arm64";; x86_64) deb_arch="amd64";; *) deb_arch="$arch";; esac
+                expected="${name}_$(echo "$version" | sed 's/^[0-9]*://')_${deb_arch}.deb"
+                ;;
+              rpm)
+                local rpm_arch
+                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; *) rpm_arch="$arch";; esac
+                expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
+                ;;
+              pacman)
+                local pac_arch
+                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; *) pac_arch="$arch";; esac
+                expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
+                ;;
+            esac
+            grep -qF "/$expected" existing-repo.txt 2>/dev/null
+          }
+
+          # Create output structure
+          mkdir -p repo-output
+
+          for arch in ${{ needs.normalize.outputs.arches }}; do
+            DIR_ARCH=$(map_dir_arch "$arch")
+            echo ""
+            echo "--- $DISTRO / $DIR_ARCH ($arch) ---"
+
+            # Create format-specific output dirs
+            # Device packages → device/{id}, deps → deps/{source_distro}
+            case "$FORMAT" in
+              deb)
+                POOL_DIR="repo-output/apt/device/${DEVICE}/pool/${DISTRO}"
+                DEP_POOL_DIR="repo-output/apt/deps/${SOURCE_DISTRO}/pool/${DISTRO}"
+                mkdir -p "$POOL_DIR" "$DEP_POOL_DIR"
+                mkdir -p "repo-output/apt/device/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                mkdir -p "repo-output/apt/deps/${SOURCE_DISTRO}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                OUTPUT_DIR="$POOL_DIR"
+                DEP_OUTPUT_DIR="$DEP_POOL_DIR"
+                ;;
+              rpm)
+                VERSION="${{ fromJson(needs.normalize.outputs.seed_entry).version }}"
+                OUTPUT_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
+                DEP_OUTPUT_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
+                mkdir -p "$OUTPUT_DIR" "$DEP_OUTPUT_DIR"
+                ;;
+              pacman)
+                OUTPUT_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
+                DEP_OUTPUT_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
+                mkdir -p "$OUTPUT_DIR" "$DEP_OUTPUT_DIR"
+                ;;
+            esac
+
+            if [[ "$IS_SOURCE" == "true" ]]; then
+              # Source distro: build directly, no dep resolution
+              echo "Building packages (source distro, no dep resolution)..."
+              for intdir in intermediates/pkg-*; do
+                [[ -d "$intdir/meta" ]] || continue
+                [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                PKG_NAME=$(cat "$intdir/meta/name")
+                PKG_VERSION=$(cat "$intdir/meta/version")
+                if pkg_exists_in_repo "$PKG_NAME" "$PKG_VERSION" "$FORMAT" "$arch"; then
+                  echo "SKIP: $PKG_NAME ($PKG_VERSION) already in $DISTRO repo"
+                  continue
+                fi
+                (
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                    cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
+                  else
+                    echo "WARNING: Failed to build from $(basename "$intdir")"
+                  fi
+                  rm -rf "$TMPOUT"
+                ) &
+                while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
+              done
+              wait
+            else
+              # Non-source distro: build temp → resolve deps → rebuild with mapping
+
+              # Step 1: Build temp packages for dep scanning (parallel)
+              echo "Step 1: Building temp packages for dep scanning..."
+              TEMP_DIR=$(mktemp -d)
+              for intdir in intermediates/pkg-*; do
+                [[ -d "$intdir/meta" ]] || continue
+                [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                (
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$intdir" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                    cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
+                  fi
+                  rm -rf "$TMPOUT"
+                ) &
+                while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
+              done
+              wait
+
+              # Step 2: Resolve deps (batch fetch + parallel rebuild)
+              echo "Step 2: Resolving dependencies..."
+              FETCH_DIR="fetched-deps-${DISTRO}-${arch}"
+              mkdir -p "$FETCH_DIR"
+              "$SCRIPT_DIR/resolve-deps.sh" \
+                --source-pkgs "$TEMP_DIR" \
+                --source-distro "$SOURCE_DISTRO" \
+                --target-distro "$DISTRO" \
+                --target-format "$FORMAT" \
+                --distros-config distros.yml \
+                --dep-map "$DEP_MAP" \
+                --output-dir "$FETCH_DIR" \
+                --arch "$arch" \
+                --skip-names own-packages.txt \
+                --existing-repo existing-repo.txt \
+                --prefix "$SOURCE_DISTRO" \
+                --cache-dir dep-cache/ || echo "WARNING: dep resolution had errors for $DISTRO"
+
+              # Step 3: Copy prefixed dep packages to shared deps output
+              case "$FORMAT" in
+                deb)    for f in "$FETCH_DIR"/*.deb;         do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
+                rpm)    for f in "$FETCH_DIR"/*.rpm;         do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
+                pacman) for f in "$FETCH_DIR"/*.pkg.tar.zst; do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
+              esac
+
+              # Step 4: Rebuild our packages with mapping applied (parallel)
+              echo "Step 4: Rebuilding packages with dependency mapping..."
+              MAPPING="$FETCH_DIR/dep-mapping.txt"
+              for intdir in intermediates/pkg-*; do
+                [[ -d "$intdir/meta" ]] || continue
+                [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
+                PKG_NAME=$(cat "$intdir/meta/name")
+                PKG_VERSION=$(cat "$intdir/meta/version")
+                if pkg_exists_in_repo "$PKG_NAME" "$PKG_VERSION" "$FORMAT" "$arch"; then
+                  echo "SKIP: $PKG_NAME ($PKG_VERSION) already in $DISTRO repo"
+                  continue
+                fi
+                (
+                  INTCOPY=$(mktemp -d)
+                  cp -a "$intdir"/* "$INTCOPY/"
+
+                  if [[ -s "$MAPPING" ]]; then
+                    while IFS='=' read -r orig prefixed; do
+                      [[ -z "$orig" ]] && continue
+                      sed -i "s/^${orig}$/${prefixed}/" "$INTCOPY/meta/depends" 2>/dev/null || true
+                    done < "$MAPPING"
+                  fi
+
+                  TMPOUT=$(mktemp -d)
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                    cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
+                  else
+                    echo "WARNING: Failed to rebuild $(cat "$INTCOPY/meta/name" 2>/dev/null) for $DISTRO"
+                  fi
+                  rm -rf "$INTCOPY" "$TMPOUT"
+                ) &
+                while [[ $(jobs -rp | wc -l) -ge $MAX_PARALLEL ]]; do wait -n; done
+              done
+              wait
+
+              rm -rf "$TEMP_DIR"
+            fi
+          done
+
+          # Generate repo metadata for device AND deps repos
+          echo ""
+          echo "=== Generating repo metadata ==="
+          case "$FORMAT" in
+            deb)
+              for arch in ${{ needs.normalize.outputs.arches }}; do
+                DIR_ARCH=$(map_dir_arch "$arch")
+                # Device repo metadata
+                cd "repo-output/apt/device/${DEVICE}"
+                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
+                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
+                cd ../../../..
+                # Deps repo metadata
+                cd "repo-output/apt/deps/${SOURCE_DISTRO}"
+                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
+                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
+                cd ../../../..
+              done
+              ;;
+            rpm)
+              for arch in ${{ needs.normalize.outputs.arches }}; do
+                DIR_ARCH=$(map_dir_arch "$arch")
+                RPM_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
+                if ls "$RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
+                  createrepo_c "$RPM_DIR/"
+                fi
+                DEP_RPM_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
+                if ls "$DEP_RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
+                  createrepo_c "$DEP_RPM_DIR/"
+                fi
+              done
+              ;;
+            pacman)
+              for arch in ${{ needs.normalize.outputs.arches }}; do
+                DIR_ARCH=$(map_dir_arch "$arch")
+                PAC_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
+                if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
+                  docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
+                    bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
+                fi
+                DEP_PAC_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
+                if ls "$DEP_PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
+                  docker run --rm -v "$(pwd)/$DEP_PAC_DIR:/repo" archlinux:latest \
+                    bash -c "cd /repo && repo-add astralemu-deps.db.tar.gz *.pkg.tar.zst"
+                fi
+              done
+              ;;
+          esac
+
+          echo "=== Done building $FORMAT repo for $DISTRO ==="
+
+      - name: Upload repo artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-${{ inputs.device }}-${{ fromJson(needs.normalize.outputs.seed_entry).distro }}
+          path: repo-output/
+          retention-days: 1
+
+      - name: Upload dep cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-cache-${{ inputs.device }}
+          path: dep-cache/
+          retention-days: 1
+
+  # ==================================================================
+  # BUILD-REPO: Remaining distros (matrix, reuses dep cache from seed)
+  # ==================================================================
+  build-repo:
+    needs: [normalize, build-repo-seed]
+    if: needs.normalize.outputs.count > 0 && fromJson(needs.normalize.outputs.matrix_rest)[0] != null
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.normalize.outputs.matrix_rest) }}
+    steps:
+      - name: Download intermediates
+        uses: actions/download-artifact@v4
+        with:
+          name: intermediates-${{ inputs.device }}
+
+      - name: Download dep cache
+        uses: actions/download-artifact@v4
+        with:
+          name: dep-cache-${{ inputs.device }}
+          path: dep-cache/
+        continue-on-error: true
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -267,22 +603,28 @@ jobs:
             echo ""
             echo "--- $DISTRO / $DIR_ARCH ($arch) ---"
 
-            # Create format-specific output dirs (per-device repos)
+            # Create format-specific output dirs
+            # Device packages → device/{id}, deps → deps/{source_distro}
             case "$FORMAT" in
               deb)
-                POOL_DIR="repo-output/apt/${DEVICE}/pool/${DISTRO}"
-                mkdir -p "$POOL_DIR"
-                mkdir -p "repo-output/apt/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                POOL_DIR="repo-output/apt/device/${DEVICE}/pool/${DISTRO}"
+                DEP_POOL_DIR="repo-output/apt/deps/${SOURCE_DISTRO}/pool/${DISTRO}"
+                mkdir -p "$POOL_DIR" "$DEP_POOL_DIR"
+                mkdir -p "repo-output/apt/device/${DEVICE}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                mkdir -p "repo-output/apt/deps/${SOURCE_DISTRO}/dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 OUTPUT_DIR="$POOL_DIR"
+                DEP_OUTPUT_DIR="$DEP_POOL_DIR"
                 ;;
               rpm)
                 VERSION="${{ matrix.version }}"
-                OUTPUT_DIR="repo-output/dnf/${DEVICE}/${VERSION}/${DIR_ARCH}"
-                mkdir -p "$OUTPUT_DIR"
+                OUTPUT_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
+                DEP_OUTPUT_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
+                mkdir -p "$OUTPUT_DIR" "$DEP_OUTPUT_DIR"
                 ;;
               pacman)
-                OUTPUT_DIR="repo-output/pacman/${DEVICE}/${DIR_ARCH}"
-                mkdir -p "$OUTPUT_DIR"
+                OUTPUT_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
+                DEP_OUTPUT_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
+                mkdir -p "$OUTPUT_DIR" "$DEP_OUTPUT_DIR"
                 ;;
             esac
 
@@ -334,8 +676,6 @@ jobs:
               echo "Step 2: Resolving dependencies..."
               FETCH_DIR="fetched-deps-${DISTRO}-${arch}"
               mkdir -p "$FETCH_DIR"
-              PREFIX_ARG=""
-              [[ -n "$DEVICE" ]] && PREFIX_ARG="--prefix $DEVICE"
               "$SCRIPT_DIR/resolve-deps.sh" \
                 --source-pkgs "$TEMP_DIR" \
                 --source-distro "$SOURCE_DISTRO" \
@@ -347,13 +687,14 @@ jobs:
                 --arch "$arch" \
                 --skip-names own-packages.txt \
                 --existing-repo existing-repo.txt \
-                $PREFIX_ARG || echo "WARNING: dep resolution had errors for $DISTRO"
+                --prefix "$SOURCE_DISTRO" \
+                --cache-dir dep-cache/ || echo "WARNING: dep resolution had errors for $DISTRO"
 
-              # Step 3: Copy prefixed dep packages to output
+              # Step 3: Copy prefixed dep packages to shared deps output
               case "$FORMAT" in
-                deb)    for f in "$FETCH_DIR"/*.deb;         do [[ -f "$f" ]] && cp "$f" "$OUTPUT_DIR/"; done ;;
-                rpm)    for f in "$FETCH_DIR"/*.rpm;         do [[ -f "$f" ]] && cp "$f" "$OUTPUT_DIR/"; done ;;
-                pacman) for f in "$FETCH_DIR"/*.pkg.tar.zst; do [[ -f "$f" ]] && cp "$f" "$OUTPUT_DIR/"; done ;;
+                deb)    for f in "$FETCH_DIR"/*.deb;         do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
+                rpm)    for f in "$FETCH_DIR"/*.rpm;         do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
+                pacman) for f in "$FETCH_DIR"/*.pkg.tar.zst; do [[ -f "$f" ]] && cp "$f" "$DEP_OUTPUT_DIR/"; done ;;
               esac
 
               # Step 4: Rebuild our packages with mapping applied (parallel)
@@ -395,37 +736,52 @@ jobs:
             fi
           done
 
-          # Generate repo metadata
+          # Generate repo metadata for device AND deps repos
           echo ""
           echo "=== Generating repo metadata ==="
           case "$FORMAT" in
             deb)
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                cd "repo-output/apt/${DEVICE}"
+                # Device repo metadata
+                cd "repo-output/apt/device/${DEVICE}"
                 mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
                 dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
                 gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
-                cd ../../..
+                cd ../../../..
+                # Deps repo metadata
+                cd "repo-output/apt/deps/${SOURCE_DISTRO}"
+                mkdir -p "dists/${DISTRO}/main/binary-${DIR_ARCH}"
+                dpkg-scanpackages --arch "$DIR_ARCH" "pool/${DISTRO}" > "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages" 2>/dev/null || true
+                gzip -k -f "dists/${DISTRO}/main/binary-${DIR_ARCH}/Packages"
+                cd ../../../..
               done
               ;;
             rpm)
-              VERSION="${{ matrix.version }}"
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                RPM_DIR="repo-output/dnf/${DEVICE}/${VERSION}/${DIR_ARCH}"
+                RPM_DIR="repo-output/dnf/device/${DEVICE}/${VERSION}/${DIR_ARCH}"
                 if ls "$RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
                   createrepo_c "$RPM_DIR/"
+                fi
+                DEP_RPM_DIR="repo-output/dnf/deps/${SOURCE_DISTRO}/${VERSION}/${DIR_ARCH}"
+                if ls "$DEP_RPM_DIR"/*.rpm 1>/dev/null 2>&1; then
+                  createrepo_c "$DEP_RPM_DIR/"
                 fi
               done
               ;;
             pacman)
               for arch in ${{ needs.normalize.outputs.arches }}; do
                 DIR_ARCH=$(map_dir_arch "$arch")
-                PAC_DIR="repo-output/pacman/${DEVICE}/${DIR_ARCH}"
+                PAC_DIR="repo-output/pacman/device/${DEVICE}/${DIR_ARCH}"
                 if ls "$PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
                   docker run --rm -v "$(pwd)/$PAC_DIR:/repo" archlinux:latest \
                     bash -c "cd /repo && repo-add astralemu.db.tar.gz *.pkg.tar.zst"
+                fi
+                DEP_PAC_DIR="repo-output/pacman/deps/${SOURCE_DISTRO}/${DIR_ARCH}"
+                if ls "$DEP_PAC_DIR"/*.pkg.tar.zst 1>/dev/null 2>&1; then
+                  docker run --rm -v "$(pwd)/$DEP_PAC_DIR:/repo" archlinux:latest \
+                    bash -c "cd /repo && repo-add astralemu-deps.db.tar.gz *.pkg.tar.zst"
                 fi
               done
               ;;
@@ -444,7 +800,7 @@ jobs:
   # DEPLOY: Merge all repo artifacts and push to gh-pages
   # ==================================================================
   deploy:
-    needs: [normalize, build-repo]
+    needs: [normalize, build-repo-seed, build-repo]
     if: always() && needs.normalize.outputs.count > 0
     runs-on: ubuntu-24.04
     steps:
@@ -482,7 +838,18 @@ jobs:
             cd ..
           }
           DEVICE="${{ inputs.device }}"
-          mkdir -p "gh-pages-dir/apt/${DEVICE}" "gh-pages-dir/dnf/${DEVICE}" "gh-pages-dir/pacman/${DEVICE}"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          # Device repos
+          mkdir -p "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/pacman/device/${DEVICE}"
+          # Shared deps repos
+          mkdir -p "gh-pages-dir/apt/deps/${SOURCE_DISTRO}" "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}" "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"
+          # Migration: move old flat paths to device/ subdirs (one-time)
+          for fmt in apt dnf pacman; do
+            if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" && ! -d "gh-pages-dir/${fmt}/device/${DEVICE}/pool" && ! -d "gh-pages-dir/${fmt}/device/${DEVICE}/repodata" ]]; then
+              echo "Migrating gh-pages-dir/${fmt}/${DEVICE}/ → gh-pages-dir/${fmt}/device/${DEVICE}/"
+              cp -a "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
+            fi
+          done
 
       - name: Merge repo artifacts
         run: |
@@ -554,71 +921,95 @@ jobs:
           }
 
           echo "=== Cleaning old package versions ==="
-          for pool_dir in gh-pages-dir/apt/${DEVICE}/pool/*/; do
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
+          # Device repos
+          for pool_dir in gh-pages-dir/apt/device/${DEVICE}/pool/*/; do
             cleanup_old_versions "$pool_dir" "deb"
           done
-          for rpm_dir in gh-pages-dir/dnf/${DEVICE}/*/*/; do
+          for rpm_dir in gh-pages-dir/dnf/device/${DEVICE}/*/*/; do
             cleanup_old_versions "$rpm_dir" "rpm"
           done
-          for pac_dir in gh-pages-dir/pacman/${DEVICE}/*/; do
+          for pac_dir in gh-pages-dir/pacman/device/${DEVICE}/*/; do
+            cleanup_old_versions "$pac_dir" "pacman"
+          done
+          # Deps repos
+          for pool_dir in gh-pages-dir/apt/deps/${SOURCE_DISTRO}/pool/*/; do
+            cleanup_old_versions "$pool_dir" "deb"
+          done
+          for rpm_dir in gh-pages-dir/dnf/deps/${SOURCE_DISTRO}/*/*/; do
+            cleanup_old_versions "$rpm_dir" "rpm"
+          done
+          for pac_dir in gh-pages-dir/pacman/deps/${SOURCE_DISTRO}/*/; do
             cleanup_old_versions "$pac_dir" "pacman"
           done
 
       - name: Sign APT releases
         run: |
           DEVICE="${{ inputs.device }}"
-
-          # Export GPG public key
-          gpg --armor --export "AstralEmu Packages" > "gh-pages-dir/apt/${DEVICE}/astralemu.gpg"
-
-          # Sign Release for each APT distro
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
           APT_IDS=$(yq -r '.distros.apt[].id' distros.yml)
-          for distro_id in $APT_IDS; do
-            DIST_DIR="gh-pages-dir/apt/${DEVICE}/dists/${distro_id}"
-            [[ -d "$DIST_DIR" ]] || continue
 
-            cd "$DIST_DIR"
-            ARCH_LIST=$(ls -d main/binary-* 2>/dev/null | sed 's|main/binary-||' | tr '\n' ' ')
+          sign_apt_repo() {
+            local repo_dir="$1" label="$2" desc_prefix="$3"
+            # Export GPG public key
+            gpg --armor --export "AstralEmu Packages" > "${repo_dir}/astralemu.gpg"
 
-            cat > Release << RELEASE_EOF
-          Origin: AstralEmu Packages (${DEVICE})
-          Label: astralemu-${DEVICE}
+            for distro_id in $APT_IDS; do
+              DIST_DIR="${repo_dir}/dists/${distro_id}"
+              [[ -d "$DIST_DIR" ]] || continue
+
+              cd "$DIST_DIR"
+              ARCH_LIST=$(ls -d main/binary-* 2>/dev/null | sed 's|main/binary-||' | tr '\n' ' ')
+
+              cat > Release << RELEASE_EOF
+          Origin: AstralEmu Packages (${label})
+          Label: astralemu-${label}
           Suite: ${distro_id}
           Codename: ${distro_id}
           Architectures: ${ARCH_LIST}
           Components: main
-          Description: AstralEmu ${DEVICE} packages for ${distro_id}
+          Description: ${desc_prefix} packages for ${distro_id}
           RELEASE_EOF
 
-            apt-ftparchive release . >> Release
-            rm -f Release.gpg InRelease
-            gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
-            gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
-            cd ../../../../..
-          done
+              apt-ftparchive release . >> Release
+              rm -f Release.gpg InRelease
+              gpg --batch --default-key "AstralEmu Packages" -abs -o Release.gpg Release
+              gpg --batch --default-key "AstralEmu Packages" --clearsign -o InRelease Release
+              cd "$OLDPWD"
+            done
+          }
+
+          sign_apt_repo "gh-pages-dir/apt/device/${DEVICE}" "${DEVICE}" "AstralEmu ${DEVICE}"
+          sign_apt_repo "gh-pages-dir/apt/deps/${SOURCE_DISTRO}" "deps-${SOURCE_DISTRO}" "AstralEmu shared dependencies (${SOURCE_DISTRO})"
 
       - name: Sign DNF repos
         run: |
           DEVICE="${{ inputs.device }}"
+          SOURCE_DISTRO="${{ inputs.source_distro }}"
 
-          gpg --armor --export "AstralEmu Packages" > "gh-pages-dir/dnf/${DEVICE}/astralemu.gpg"
+          sign_dnf_repo() {
+            local repo_dir="$1" label="$2" baseurl_path="$3"
+            [[ -d "$repo_dir" ]] || return 0
+            gpg --armor --export "AstralEmu Packages" > "${repo_dir}/astralemu.gpg"
 
-          # Sign repomd.xml for each DNF repo
-          find "gh-pages-dir/dnf/${DEVICE}" -name 'repomd.xml' | while read -r repomd; do
-            rm -f "${repomd}.asc"
-            gpg --batch --default-key "AstralEmu Packages" -abs \
-              -o "${repomd}.asc" "$repomd"
-          done
+            find "$repo_dir" -name 'repomd.xml' | while read -r repomd; do
+              rm -f "${repomd}.asc"
+              gpg --batch --default-key "AstralEmu Packages" -abs \
+                -o "${repomd}.asc" "$repomd"
+            done
 
-          # Create .repo config
-          cat > "gh-pages-dir/dnf/${DEVICE}/astralemu-${DEVICE}.repo" << REPO_EOF
-          [astralemu-${DEVICE}]
-          name=AstralEmu Packages (${DEVICE})
-          baseurl=https://astralemu.github.io/astralemu-packages/dnf/${DEVICE}/\$releasever/\$basearch/
+            cat > "${repo_dir}/astralemu-${label}.repo" << REPO_EOF
+          [astralemu-${label}]
+          name=AstralEmu Packages (${label})
+          baseurl=https://astralemu.github.io/astralemu-packages/${baseurl_path}/\$releasever/\$basearch/
           enabled=1
           gpgcheck=1
-          gpgkey=https://astralemu.github.io/astralemu-packages/dnf/${DEVICE}/astralemu.gpg
+          gpgkey=https://astralemu.github.io/astralemu-packages/${baseurl_path}/astralemu.gpg
           REPO_EOF
+          }
+
+          sign_dnf_repo "gh-pages-dir/dnf/device/${DEVICE}" "${DEVICE}" "dnf/device/${DEVICE}"
+          sign_dnf_repo "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}" "deps-${SOURCE_DISTRO}" "dnf/deps/${SOURCE_DISTRO}"
 
       - name: Generate landing page
         run: |
