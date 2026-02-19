@@ -103,10 +103,19 @@ jobs:
 
           echo "=== Normalized $PKG_INDEX packages ==="
 
+          # Validate intermediates — remove incomplete ones (e.g. OOM-killed extractions)
+          for intdir in intermediates/pkg-*; do
+            [[ -d "$intdir" ]] || continue
+            if [[ ! -s "$intdir/meta/name" || ! -d "$intdir/root" ]]; then
+              echo "WARNING: Removing incomplete intermediate: $intdir (name=$(cat "$intdir/meta/name" 2>/dev/null || echo '?'), root=$(test -d "$intdir/root" && echo ok || echo MISSING))"
+              rm -rf "$intdir"
+            fi
+          done
+
           # Detect architectures
           ARCHES=""
           for intdir in intermediates/pkg-*; do
-            [[ -s "$intdir/meta/name" ]] || continue
+            [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
             A=$(cat "$intdir/meta/arch")
             ARCHES="$ARCHES $A"
           done
@@ -117,17 +126,22 @@ jobs:
 
           # Generate own-packages skip list
           for intdir in intermediates/pkg-*; do
-            [[ -s "$intdir/meta/name" ]] || continue
+            [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
             cat "$intdir/meta/name"
           done | sort -u > own-packages.txt
           echo "Own packages ($(wc -l < own-packages.txt) entries):"
           cat own-packages.txt
 
-          # Fetch existing package filenames from gh-pages (just names, no content)
+          # Fetch existing package filenames from gh-pages (only new path structure)
+          # CRITICAL: only match files in device/ or deps/ paths — old flat paths
+          # (e.g. pacman/l4t/) are cleaned up during deploy, so matching them would
+          # cause packages to be skipped then deleted.
           git fetch origin gh-pages 2>/dev/null || true
           git ls-tree -r --name-only origin/gh-pages 2>/dev/null \
-            | grep -E '\.(deb|rpm|pkg\.tar\.zst)$' > existing-repo.txt || touch existing-repo.txt
-          echo "Existing repo: $(wc -l < existing-repo.txt) package files"
+            | grep -E '\.(deb|rpm|pkg\.tar\.zst)$' \
+            | grep -E '/(device|deps)/' \
+            > existing-repo.txt || touch existing-repo.txt
+          echo "Existing repo: $(wc -l < existing-repo.txt) package files (new paths only)"
 
           # Generate matrix from distros.yml
           MATRIX="["
@@ -272,12 +286,12 @@ jobs:
                 ;;
               rpm)
                 local rpm_arch
-                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; *) rpm_arch="$arch";; esac
+                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
                 ;;
               pacman)
                 local pac_arch
-                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; *) pac_arch="$arch";; esac
+                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
                 ;;
             esac
@@ -319,7 +333,7 @@ jobs:
               # Source distro: build directly, no dep resolution
               echo "Building packages (source distro, no dep resolution)..."
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -348,7 +362,7 @@ jobs:
               echo "Step 1: Building temp packages for dep scanning..."
               TEMP_DIR=$(mktemp -d)
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
                   INTCOPY=$(mktemp -d)
@@ -394,7 +408,7 @@ jobs:
               echo "Step 4: Rebuilding packages with dependency mapping..."
               MAPPING="$FETCH_DIR/dep-mapping.txt"
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -551,12 +565,12 @@ jobs:
                 ;;
               rpm)
                 local rpm_arch
-                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; *) rpm_arch="$arch";; esac
+                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
                 ;;
               pacman)
                 local pac_arch
-                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; *) pac_arch="$arch";; esac
+                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
                 ;;
             esac
@@ -598,7 +612,7 @@ jobs:
               # Source distro: build directly, no dep resolution
               echo "Building packages (source distro, no dep resolution)..."
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -627,7 +641,7 @@ jobs:
               echo "Step 1: Building temp packages for dep scanning..."
               TEMP_DIR=$(mktemp -d)
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 (
                   INTCOPY=$(mktemp -d)
@@ -673,7 +687,7 @@ jobs:
               echo "Step 4: Rebuilding packages with dependency mapping..."
               MAPPING="$FETCH_DIR/dep-mapping.txt"
               for intdir in intermediates/pkg-*; do
-                [[ -s "$intdir/meta/name" ]] || continue
+                [[ -s "$intdir/meta/name" && -d "$intdir/root" ]] || continue
                 [[ "$(cat "$intdir/meta/arch")" == "$arch" ]] || continue
                 PKG_NAME=$(cat "$intdir/meta/name")
                 PKG_VERSION=$(cat "$intdir/meta/version")
@@ -771,16 +785,12 @@ jobs:
           mkdir -p "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/pacman/device/${DEVICE}"
           # Shared deps repos
           mkdir -p "gh-pages-dir/apt/deps/${SOURCE_DISTRO}" "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}" "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"
-          # Migration: move old flat paths to device/ subdirs (one-time)
-          for fmt in apt dnf pacman; do
-            if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" && ! -d "gh-pages-dir/${fmt}/device/${DEVICE}/pool" && ! -d "gh-pages-dir/${fmt}/device/${DEVICE}/repodata" ]]; then
-              echo "Migrating gh-pages-dir/${fmt}/${DEVICE}/ → gh-pages-dir/${fmt}/device/${DEVICE}/"
-              cp -a "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
-            fi
-          done
-          # Clean up old flat paths (superseded by device/ subdirs)
+          # Migration: copy ALL package files from old flat paths to new device/ subdirs
+          # Uses cp -n (no-clobber) so existing files in new paths are not overwritten
           for fmt in apt dnf pacman; do
             if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" ]]; then
+              echo "Migrating gh-pages-dir/${fmt}/${DEVICE}/ → gh-pages-dir/${fmt}/device/${DEVICE}/"
+              cp -a --no-clobber "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
               echo "Removing old path: ${fmt}/${DEVICE}/"
               rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
             fi
