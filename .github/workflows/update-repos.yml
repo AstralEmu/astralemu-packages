@@ -779,7 +779,7 @@ jobs:
 
       - name: Checkout gh-pages
         run: |
-          git fetch origin gh-pages:gh-pages || true
+          git fetch --depth=1 origin gh-pages:gh-pages || true
           git worktree add gh-pages-dir gh-pages || {
             git worktree add --detach gh-pages-dir
             cd gh-pages-dir
@@ -1050,6 +1050,24 @@ jobs:
           cd gh-pages-dir
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          push_with_retry() {
+            for attempt in 1 2 3 4 5; do
+              git push origin gh-pages && return 0
+              echo "Push attempt $attempt failed, rebasing..."
+              git fetch --depth=1 origin gh-pages
+              git rebase origin/gh-pages
+            done
+            return 1
+          }
+          for fmt in apt dnf pacman; do
+            git add "${fmt}/" || true
+            if ! git diff --cached --quiet; then
+              git commit -m "Update ${{ inputs.device }} ${fmt} repository"
+              push_with_retry
+            fi
+          done
           git add -A
-          git commit -m "Update package repositories" || echo "No changes"
-          git push origin gh-pages
+          if ! git diff --cached --quiet; then
+            git commit -m "Update ${{ inputs.device }} index"
+            push_with_retry
+          fi
