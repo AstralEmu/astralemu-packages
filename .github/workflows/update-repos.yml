@@ -396,6 +396,7 @@ jobs:
                 --target-format "$FORMAT" \
                 --distros-config distros.yml \
                 --dep-map "$DEP_MAP" \
+                --ignore-file "$SCRIPT_DIR/dep-ignore.conf" \
                 --output-dir "$FETCH_DIR" \
                 --arch "$arch" \
                 --skip-names own-packages.txt \
@@ -675,6 +676,7 @@ jobs:
                 --target-format "$FORMAT" \
                 --distros-config distros.yml \
                 --dep-map "$DEP_MAP" \
+                --ignore-file "$SCRIPT_DIR/dep-ignore.conf" \
                 --output-dir "$FETCH_DIR" \
                 --arch "$arch" \
                 --skip-names own-packages.txt \

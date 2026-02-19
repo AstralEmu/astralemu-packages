@@ -29,6 +29,7 @@ SKIP_NAMES=""
 DEP_PREFIX=""
 EXISTING_REPO=""
 CACHE_DIR=""
+IGNORE_FILE=""
 MAX_PARALLEL=8
 MAX_PKG_SIZE=$((95 * 1024 * 1024))  # 95 MB — GitHub rejects files > 100 MB
 
@@ -46,6 +47,7 @@ while [[ $# -gt 0 ]]; do
     --prefix)          DEP_PREFIX="$2";      shift 2 ;;
     --existing-repo)   EXISTING_REPO="$2";  shift 2 ;;
     --cache-dir)       CACHE_DIR="$2";       shift 2 ;;
+    --ignore-file)     IGNORE_FILE="$2";     shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -86,6 +88,43 @@ if [[ -n "$SKIP_NAMES" && -f "$SKIP_NAMES" ]]; then
     SKIP_SET["$name"]=1
   done < "$SKIP_NAMES"
   echo "Loaded ${#SKIP_SET[@]} own package names to skip"
+fi
+
+# ========================================================================
+# Ignore list — packages to skip entirely (no version check, no fetch, no recursion)
+# Loaded from dep-ignore.conf: CLI tools, data packages, complete applications, etc.
+# These are DIFFERENT from dep-map.conf (which is for version-sensitive libs).
+# ========================================================================
+
+declare -A SYSTEM_DEPS
+if [[ -n "$IGNORE_FILE" && -f "$IGNORE_FILE" ]]; then
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*# || -z "${line// /}" ]] && continue
+    # Format: deb_name [rpm:rpm_name] [pac:pac_name]
+    # Extract the name for our target format
+    pkg=""
+    case "$TARGET_FORMAT" in
+      deb)
+        pkg="${line%% *}"
+        ;;
+      rpm)
+        if [[ "$line" =~ rpm:([^[:space:]]+) ]]; then
+          pkg="${BASH_REMATCH[1]}"
+        else
+          pkg="${line%% *}"
+        fi
+        ;;
+      pacman)
+        if [[ "$line" =~ pac:([^[:space:]]+) ]]; then
+          pkg="${BASH_REMATCH[1]}"
+        else
+          pkg="${line%% *}"
+        fi
+        ;;
+    esac
+    [[ -n "$pkg" ]] && SYSTEM_DEPS["$pkg"]=1
+  done < "$IGNORE_FILE"
+  echo "Loaded ${#SYSTEM_DEPS[@]} packages to ignore (no fetch, no recursion)"
 fi
 
 # ========================================================================
@@ -165,10 +204,10 @@ map_dep_name() {
   case "${from_format}:${to_format}" in
     deb:rpm)    mapped=$(grep "^${dep} " "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ') || true ;;
     deb:pacman) mapped=$(grep "^${dep} " "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ') || true ;;
-    rpm:deb)    mapped=$(grep "rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | cut -d'=' -f1 | tr -d ' ') || true ;;
-    rpm:pacman) mapped=$(grep "rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'pac:\K[^,\s]+' | tr -d ' ') || true ;;
-    pacman:deb) mapped=$(grep "pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | cut -d'=' -f1 | tr -d ' ') || true ;;
-    pacman:rpm) mapped=$(grep "pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'rpm:\K[^,\s]+' | tr -d ' ') || true ;;
+    rpm:deb)    mapped=$(grep " rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | awk '{print $1}') || true ;;
+    rpm:pacman) mapped=$(grep " rpm:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'pac:\K[^,\s]+') || true ;;
+    pacman:deb) mapped=$(grep " pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | awk '{print $1}') || true ;;
+    pacman:rpm) mapped=$(grep " pac:${dep}" "$DEP_MAP" 2>/dev/null | head -1 | grep -oP 'rpm:\K[^,\s]+') || true ;;
   esac
 
   echo "${mapped:-$dep}"
@@ -431,16 +470,25 @@ round=0
 while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   round=$((round + 1))
 
-  # Filter already checked + skip our own packages
+  # Filter already checked + skip our own packages + skip known system deps
   new_deps=""
+  system_skip_count=0
   for dep in $to_check; do
     [[ -z "$dep" ]] && continue
     [[ -n "${SKIP_SET[$dep]+x}" ]] && continue
+    if [[ -n "${SYSTEM_DEPS[$dep]+x}" ]]; then
+      if [[ -z "${CHECKED_DEPS[$dep]+x}" ]]; then
+        system_skip_count=$((system_skip_count + 1))
+        CHECKED_DEPS["$dep"]=1
+      fi
+      continue
+    fi
     if [[ -z "${CHECKED_DEPS[$dep]+x}" ]]; then
       new_deps="$new_deps $dep"
       CHECKED_DEPS["$dep"]=1
     fi
   done
+  [[ $system_skip_count -gt 0 ]] && echo "  [SYSTEM] $system_skip_count known native deps skipped (no fetch, no recursion)"
   new_deps=$(echo "$new_deps" | xargs)
   [[ -z "$new_deps" ]] && break
 
