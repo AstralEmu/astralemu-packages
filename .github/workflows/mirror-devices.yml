@@ -103,7 +103,13 @@ jobs:
               > "${HASH_TRACKER}.new"
               NEW_COUNT=0
 
-              for f in $(find "$CLONE_DIR" -name "$PATTERN"); do
+              SEARCH_DIR="$CLONE_DIR"
+              if [ -d "$CLONE_DIR/pool/$source_distro" ]; then
+                SEARCH_DIR="$CLONE_DIR/pool/$source_distro"
+                echo "  Filtering to pool/$source_distro/"
+              fi
+
+              for f in $(find "$SEARCH_DIR" -name "$PATTERN"); do
                 filename=$(basename "$f")
                 safename="${filename//:/_}"
                 hash=$(sha256sum "$f" | cut -d' ' -f1)

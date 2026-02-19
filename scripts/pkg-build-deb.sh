@@ -61,9 +61,9 @@ map_dep_to_deb() {
   if [[ -n "$DEP_MAP" && -f "$DEP_MAP" ]]; then
     local mapped=""
     if [[ "$SOURCE_FORMAT" == "rpm" ]]; then
-      mapped=$(grep "rpm:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ' || true)
+      mapped=$(grep " rpm:${dep}" "$DEP_MAP" | head -1 | awk '{print $1}' || true)
     elif [[ "$SOURCE_FORMAT" == "pacman" ]]; then
-      mapped=$(grep "pac:${dep}" "$DEP_MAP" | head -1 | cut -d'=' -f1 | tr -d ' ' || true)
+      mapped=$(grep " pac:${dep}" "$DEP_MAP" | head -1 | awk '{print $1}' || true)
     fi
     if [[ -n "$mapped" ]]; then
       echo "$mapped"
