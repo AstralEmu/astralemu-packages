@@ -103,13 +103,20 @@ jobs:
               > "${HASH_TRACKER}.new"
               NEW_COUNT=0
 
-              SEARCH_DIR="$CLONE_DIR"
-              if [ -d "$CLONE_DIR/pool/$source_distro" ]; then
-                SEARCH_DIR="$CLONE_DIR/pool/$source_distro"
-                echo "  Filtering to pool/$source_distro/"
+              # Build search path list:
+              #   pool/<source_distro>/ — distro-specific packages
+              #   pool/main/            — distro-agnostic packages (kernel, drivers, etc.)
+              # If neither exists, search the whole clone (flat repo structure).
+              SEARCH_DIRS=()
+              [ -d "$CLONE_DIR/pool/$source_distro" ] && SEARCH_DIRS+=("$CLONE_DIR/pool/$source_distro")
+              [ -d "$CLONE_DIR/pool/main" ]            && SEARCH_DIRS+=("$CLONE_DIR/pool/main")
+              if [ ${#SEARCH_DIRS[@]} -eq 0 ]; then
+                SEARCH_DIRS+=("$CLONE_DIR")
+              else
+                echo "  Searching: ${SEARCH_DIRS[*]#$CLONE_DIR/}"
               fi
 
-              for f in $(find "$SEARCH_DIR" -name "$PATTERN"); do
+              for f in $(find "${SEARCH_DIRS[@]}" -name "$PATTERN"); do
                 filename=$(basename "$f")
                 safename="${filename//:/_}"
                 hash=$(sha256sum "$f" | cut -d' ' -f1)
