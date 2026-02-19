@@ -2505,6 +2505,7 @@ jobs:
       artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
       source_distro: ${{ fromJson(needs.prepare.outputs.seed_device).source_distro }}
       device: ${{ fromJson(needs.prepare.outputs.seed_device).id }}
+      force_rebuild: true
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
@@ -2532,6 +2533,7 @@ jobs:
       artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
       source_distro: ${{ matrix.device.source_distro }}
       device: ${{ matrix.device.id }}
+      force_rebuild: true
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 

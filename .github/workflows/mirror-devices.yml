@@ -216,6 +216,7 @@ jobs:
       artifact_pattern: mirror-${{ matrix.device_id }}
       source_distro: ${{ matrix.source_distro }}
       device: ${{ matrix.device_id }}
+      force_rebuild: true
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
