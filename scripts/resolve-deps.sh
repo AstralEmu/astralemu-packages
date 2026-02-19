@@ -548,7 +548,7 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
     cached_count=0
     FETCH_DIR=$(mktemp -d)
     for src_dep in $src_fetch_list; do
-      cached_file=$(ls "$CACHE_DIR"/${src_dep}_*.deb "$CACHE_DIR"/${src_dep}-[0-9]*.rpm "$CACHE_DIR"/${src_dep}-[0-9]*.pkg.tar.* 2>/dev/null | head -1)
+      cached_file=$(ls "$CACHE_DIR"/${src_dep}_*.deb "$CACHE_DIR"/${src_dep}-[0-9]*.rpm "$CACHE_DIR"/${src_dep}-[0-9]*.pkg.tar.* 2>/dev/null | head -1) || true
       if [[ -n "$cached_file" && -f "$cached_file" ]]; then
         cp "$cached_file" "$FETCH_DIR/"
         cached_count=$((cached_count + 1))
