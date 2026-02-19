@@ -96,7 +96,7 @@ jobs:
           echo "hash_azahar=$(job_hash 'build-azahar')" >> $GITHUB_OUTPUT
           echo "hash_dolphin=$(job_hash 'build-dolphin')" >> $GITHUB_OUTPUT
           echo "hash_duck_deps=$(job_hash 'build-duckstation-deps')" >> $GITHUB_OUTPUT
-          echo "hash_duck=$(job_hash 'build-duckstation')" >> $GITHUB_OUTPUT
+          echo "hash_duck=$(job_hash 'build-duckstation-phase1')" >> $GITHUB_OUTPUT
           echo "hash_esde=$(job_hash 'build-esde')" >> $GITHUB_OUTPUT
           echo "hash_melonds=$(job_hash 'build-melonds')" >> $GITHUB_OUTPUT
           echo "hash_ppsspp=$(job_hash 'build-ppsspp')" >> $GITHUB_OUTPUT
@@ -105,7 +105,7 @@ jobs:
           echo "hash_libretro_heavy_2=$(job_hash 'build-libretro-heavy-2')" >> $GITHUB_OUTPUT
           echo "hash_libretro_heavy_3=$(job_hash 'build-libretro-heavy-3')" >> $GITHUB_OUTPUT
           echo "hash_libretro_light=$(job_hash 'build-libretro-light')" >> $GITHUB_OUTPUT
-          echo "hash_setperf=$(job_hash 'build-setperf')" >> $GITHUB_OUTPUT
+          echo "hash_setperf=$(job_hash 'build-support')" >> $GITHUB_OUTPUT
 
       - name: Check success markers
         id: markers
@@ -347,26 +347,26 @@ jobs:
         with:
           platforms: arm64
 
-      - name: Cache Docker image
-        id: cache
-        uses: actions/cache@v4
+      - name: Restore arm64 cached image
+        id: cache-arm64
+        uses: actions/cache/restore@v4
         with:
           path: /tmp/emu-deps.tar
           key: ${{ env.CACHE_KEY }}-arm64
 
       - name: Create base image if not cached
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-arm64.outputs.cache-hit != 'true'
         run: |
           docker run --name emu-deps --platform linux/arm64 ubuntu:24.04 bash -c 'echo "base image"'
           docker commit emu-deps emu-deps-image
           docker save emu-deps-image -o /tmp/emu-deps.tar
           docker rm emu-deps
 
-      - name: Load base image
+      - name: Load arm64 base image
         run: docker load -i /tmp/emu-deps.tar
 
       - name: Install dependencies into base image
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-arm64.outputs.cache-hit != 'true'
         run: |
           docker run --name emu-deps-update --platform linux/arm64 \
             emu-deps-image bash -c '
@@ -421,25 +421,106 @@ jobs:
               apt-get clean
               rm -rf /var/lib/apt/lists/*
             '
-      - name: Commit and save base image
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Commit and save arm64 base image
+        if: steps.cache-arm64.outputs.cache-hit != 'true'
         run: |
           docker commit emu-deps-update emu-deps-image
           docker save emu-deps-image -o /tmp/emu-deps.tar
           docker rm emu-deps-update
+
+      - name: Save arm64 cached image
+        if: steps.cache-arm64.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/emu-deps.tar
+          key: ${{ env.CACHE_KEY }}-arm64
+
+      - name: Restore amd64 cached image
+        id: cache-amd64
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/emu-deps.tar
+          key: ${{ env.CACHE_KEY }}-amd64
+
+      - name: Build amd64 base image if not cached
+        if: steps.cache-amd64.outputs.cache-hit != 'true'
+        run: |
+          docker run --name emu-deps-amd64 --platform linux/amd64 ubuntu:24.04 bash -c '
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
+
+            apt-get update
+            apt-get install -y \
+              build-essential cmake ninja-build git pkg-config meson dpkg-dev \
+              clang llvm lld libc++-dev libc++abi-dev \
+              ccache patchelf \
+              python3 python3-pip python3-yaml \
+              libjemalloc-dev libwayland-dev \
+              qt6-base-dev qt6-base-private-dev qt6-multimedia-dev qt6-tools-dev \
+              libqt6opengl6-dev libqt6svg6-dev \
+              qtbase5-dev qtbase5-private-dev qtmultimedia5-dev qttools5-dev \
+              libsdl2-dev libsdl2-ttf-dev \
+              libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavfilter-dev \
+              libssl-dev libcurl4-openssl-dev \
+              libfmt-dev libzstd-dev libpng-dev liblz4-dev libbz2-dev \
+              libpugixml-dev nlohmann-json3-dev \
+              libusb-1.0-0-dev libhidapi-dev libevdev-dev \
+              libspeexdsp-dev glslang-tools spirv-tools \
+              libboost-serialization-dev libboost-context-dev libcubeb-dev libenet-dev \
+              libsfml-dev libminiupnpc-dev libmbedtls-dev \
+              libsystemd-dev libbluetooth-dev libasound2-dev libpulse-dev \
+              liblzo2-dev libxxhash-dev libspng-dev \
+              extra-cmake-modules \
+              libslirp-dev libarchive-dev \
+              libglew-dev libsnappy-dev libzip-dev \
+              libfreeimage-dev libfreetype-dev libvlc-dev libpoppler-cpp-dev \
+              libepoxy-dev libpixman-1-dev libgtk-3-dev \
+              libsamplerate0-dev libpcap-dev libglib2.0-dev \
+              libfaad-dev libwebp-dev libsharpyuv-dev libwebpmux3 libwebpdemux2 \
+              libpng-dev libjpeg-dev \
+              libgit2-dev libharfbuzz-dev \
+              gettext \
+              libdbus-1-dev libfontconfig1-dev libudev-dev \
+              libxcb1-dev libxcb-composite0-dev libxcb-cursor-dev libxcb-damage0-dev \
+              libxcb-glx0-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev \
+              libxcb-present-dev libxcb-randr0-dev libxcb-render0-dev libxcb-render-util0-dev \
+              libxcb-shape0-dev libxcb-shm0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+              libxcb-xinerama0-dev libxcb-xinput-dev libxcb-xkb-dev \
+              libxcb-util-dev libxcb-util0-dev libxcb-ewmh-dev libxcb-dri2-0-dev libxcb-dri3-dev \
+              libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libx11-dev libxext-dev \
+              libxrender-dev libxi-dev libxkbfile-dev libxrandr-dev libxcursor-dev \
+              libdecor-0-dev libegl-dev libopengl-dev libdrm-dev \
+              libpipewire-0.3-dev libinput-dev libgudev-1.0-dev \
+              libva-dev libopus-dev \
+              autoconf automake libtool curl wget xz-utils
+
+            apt-get clean
+            rm -rf /var/lib/apt/lists/*
+          '
+          docker commit emu-deps-amd64 emu-deps-image-amd64
+          docker save emu-deps-image-amd64 -o /tmp/emu-deps.tar
+          docker rm emu-deps-amd64
+
+      - name: Save amd64 cached image
+        if: steps.cache-amd64.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/emu-deps.tar
+          key: ${{ env.CACHE_KEY }}-amd64
 
   # ===========================================================================
   # BUILD JOBS (with ccache and timeout handling)
   # ===========================================================================
 
   build-azahar:
-    needs: prepare
-    if: needs.prepare.outputs.build_azahar == 'true'
+    needs: [prepare, build-libretro-heavy-2]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_azahar == 'true' && (needs.build-libretro-heavy-2.result == 'success' || needs.build-libretro-heavy-2.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -458,19 +539,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-azahar-${{ matrix.device.id }}
-          key: ccache-azahar-${{ matrix.device.id }}-${{ needs.prepare.outputs.azahar_version }}
+          path: /tmp/ccache-azahar-${{ matrix.device.arch }}
+          key: ccache-azahar-${{ matrix.device.arch }}-${{ needs.prepare.outputs.azahar_version }}
           restore-keys: |
-            ccache-azahar-${{ matrix.device.id }}-
+            ccache-azahar-${{ matrix.device.arch }}-
 
       - name: Build Azahar
         id: build
         run: |
-          mkdir -p /tmp/ccache-azahar-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-azahar-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-azahar-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-azahar-${{ matrix.device.arch }}:/ccache \
             -e VERSION=${{ needs.prepare.outputs.azahar_version }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -583,8 +664,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-azahar-${{ matrix.device.id }}
-          key: ccache-azahar-${{ matrix.device.id }}-${{ needs.prepare.outputs.azahar_version }}-${{ github.run_id }}
+          path: /tmp/ccache-azahar-${{ matrix.device.arch }}
+          key: ccache-azahar-${{ matrix.device.arch }}-${{ needs.prepare.outputs.azahar_version }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -618,13 +699,14 @@ jobs:
             });
 
   build-dolphin:
-    needs: prepare
-    if: needs.prepare.outputs.build_dolphin == 'true'
+    needs: [prepare, build-libretro-heavy-1]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_dolphin == 'true' && (needs.build-libretro-heavy-1.result == 'success' || needs.build-libretro-heavy-1.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -643,19 +725,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-dolphin-${{ matrix.device.id }}
-          key: ccache-dolphin-${{ matrix.device.id }}-${{ needs.prepare.outputs.dolphin_short }}
+          path: /tmp/ccache-dolphin-${{ matrix.device.arch }}
+          key: ccache-dolphin-${{ matrix.device.arch }}-${{ needs.prepare.outputs.dolphin_short }}
           restore-keys: |
-            ccache-dolphin-${{ matrix.device.id }}-
+            ccache-dolphin-${{ matrix.device.arch }}-
 
       - name: Build Dolphin
         id: build
         run: |
-          mkdir -p /tmp/ccache-dolphin-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-dolphin-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-dolphin-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-dolphin-${{ matrix.device.arch }}:/ccache \
             -e COMMIT=${{ needs.prepare.outputs.dolphin_commit }} \
             -e SHORT=${{ needs.prepare.outputs.dolphin_short }} \
             -e CCACHE_DIR=/ccache \
@@ -766,8 +848,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-dolphin-${{ matrix.device.id }}
-          key: ccache-dolphin-${{ matrix.device.id }}-${{ needs.prepare.outputs.dolphin_short }}-${{ github.run_id }}
+          path: /tmp/ccache-dolphin-${{ matrix.device.arch }}
+          key: ccache-dolphin-${{ matrix.device.arch }}-${{ needs.prepare.outputs.dolphin_short }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -809,6 +891,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     outputs:
       deps_ready: ${{ steps.check.outputs.deps_ready }}
     steps:
@@ -817,7 +900,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /tmp/duck-deps
-          key: duck-deps-v2-${{ matrix.device.id }}
+          key: duck-deps-v2-${{ matrix.device.arch }}
           lookup-only: true
 
       - name: Set up QEMU
@@ -874,7 +957,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /tmp/duck-deps
-          key: duck-deps-v2-${{ matrix.device.id }}
+          key: duck-deps-v2-${{ matrix.device.arch }}
 
       - name: Check deps status
         id: check
@@ -892,7 +975,7 @@ jobs:
           key: success-duck-deps-${{ needs.prepare.outputs.hash_duck_deps }}
 
   # DuckStation build (uses pre-built dependencies)
-  build-duckstation:
+  build-duckstation-phase1:
     needs: [prepare, build-duckstation-deps]
     if: needs.prepare.outputs.build_duckstation == 'true'
     runs-on: ubuntu-24.04
@@ -900,6 +983,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -918,25 +1002,25 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-duck-${{ matrix.device.id }}
-          key: ccache-duck-${{ matrix.device.id }}-${{ needs.prepare.outputs.duck_short }}
+          path: /tmp/ccache-duck-${{ matrix.device.arch }}
+          key: ccache-duck-${{ matrix.device.arch }}-${{ needs.prepare.outputs.duck_short }}
           restore-keys: |
-            ccache-duck-${{ matrix.device.id }}-
+            ccache-duck-${{ matrix.device.arch }}-
 
       - name: Restore deps cache
         uses: actions/cache/restore@v4
         with:
           path: /tmp/duck-deps
-          key: duck-deps-v2-${{ matrix.device.id }}
+          key: duck-deps-v2-${{ matrix.device.arch }}
 
       - name: Build DuckStation
         id: build
         run: |
-          mkdir -p /tmp/ccache-duck-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-duck-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-duck-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-duck-${{ matrix.device.arch }}:/ccache \
             -v /tmp/duck-deps:/deps \
             -e COMMIT=${{ needs.prepare.outputs.duck_commit }} \
             -e SHORT=${{ needs.prepare.outputs.duck_short }} \
@@ -1052,8 +1136,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-duck-${{ matrix.device.id }}
-          key: ccache-duck-${{ matrix.device.id }}-${{ needs.prepare.outputs.duck_short }}-${{ github.run_id }}
+          path: /tmp/ccache-duck-${{ matrix.device.arch }}
+          key: ccache-duck-${{ matrix.device.arch }}-${{ needs.prepare.outputs.duck_short }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -1074,26 +1158,210 @@ jobs:
           path: /tmp/marker
           key: success-duck-${{ needs.prepare.outputs.hash_duck }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
+      - name: Save phase1 per-device marker
+        if: steps.build.outputs.completed == 'true'
+        uses: actions/cache/save@v4
         with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
+          path: /tmp/marker
+          key: success-duck-phase1-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_duck }}
 
-  build-esde:
-    needs: prepare
-    if: needs.prepare.outputs.build_esde == 'true'
+  build-duckstation-phase2:
+    needs: [prepare, build-duckstation-phase1]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_duckstation == 'true' && (needs.build-duckstation-phase1.result == 'success' || needs.build-duckstation-phase1.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
+    steps:
+      - name: Check if phase1 completed for this device
+        id: phase1-done
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/duck-phase1-marker
+          key: success-duck-phase1-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_duck }}
+          lookup-only: true
+
+      - name: Set up QEMU
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.device.arch }}
+
+      - name: Restore cached image
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: /tmp/emu-deps.tar
+          key: ${{ env.CACHE_KEY }}-${{ matrix.device.arch }}
+
+      - name: Load image
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        run: docker load -i /tmp/emu-deps.tar
+
+      - name: Restore ccache
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/ccache-duck-${{ matrix.device.arch }}
+          key: ccache-duck-${{ matrix.device.arch }}-${{ needs.prepare.outputs.duck_short }}
+          restore-keys: |
+            ccache-duck-${{ matrix.device.arch }}-
+
+      - name: Restore deps cache
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/duck-deps
+          key: duck-deps-v2-${{ matrix.device.arch }}
+
+      - name: Build DuckStation (phase 2 — continue from ccache)
+        id: build
+        if: steps.phase1-done.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /tmp/ccache-duck-${{ matrix.device.arch }}
+
+          docker run --rm --platform ${{ matrix.device.platform }} \
+            -v ${{ github.workspace }}:/workspace \
+            -v /tmp/ccache-duck-${{ matrix.device.arch }}:/ccache \
+            -v /tmp/duck-deps:/deps \
+            -e COMMIT=${{ needs.prepare.outputs.duck_commit }} \
+            -e SHORT=${{ needs.prepare.outputs.duck_short }} \
+            -e CCACHE_DIR=/ccache \
+            -e DEVICE_ID=${{ matrix.device.id }} \
+            -e DEVICE_ARCH=${{ matrix.device.arch }} \
+            -e DEVICE_CFLAGS="${{ matrix.device.cflags }}" \
+            -e DEVICE_CXXFLAGS="${{ matrix.device.cxxflags }}" \
+            emu-deps-image bash -c '
+              set -e
+
+              export PATH="/usr/lib/ccache:$PATH"
+              export CCACHE_MAXSIZE=5G
+              ccache -z
+
+              # Clone or update source
+              if [[ ! -d /workspace/src-duck ]]; then
+                git clone --recursive https://github.com/stenzek/duckstation.git /workspace/src-duck
+              fi
+
+              cd /workspace/src-duck
+              git fetch --unshallow 2>/dev/null || git fetch origin
+              git checkout "$COMMIT"
+              git submodule update --init --recursive
+
+              mkdir -p build && cd build
+
+              if [[ ! -f build.ninja ]]; then
+                cmake .. -G Ninja \
+                  -DCMAKE_BUILD_TYPE=Release \
+                  -DCMAKE_INSTALL_PREFIX=/usr \
+                  -DCMAKE_PREFIX_PATH=/deps \
+                  -DCMAKE_C_COMPILER=clang \
+                  -DCMAKE_CXX_COMPILER=clang++ \
+                  -DCMAKE_EXE_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \
+                  -DCMAKE_MODULE_LINKER_FLAGS_INIT="-fuse-ld=lld" \
+                  -DCMAKE_SHARED_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \
+                  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                  -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto=thin" \
+                  -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
+                  -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+                  -DENABLE_WAYLAND=OFF \
+                  -DENABLE_X11=ON
+              fi
+
+              ninja -j$(nproc)
+
+              # DuckStation has no install target, copy manually
+              mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/lib/duckstation /tmp/pkg/root/usr/share/applications
+
+              cp bin/duckstation-qt /tmp/pkg/root/usr/bin/
+              cp -r bin/resources /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
+
+              # Bundle the custom-built libraries
+              cp /deps/lib/*.so* /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
+
+              # Set rpath for bundled libs
+              patchelf --set-rpath /usr/lib/duckstation /tmp/pkg/root/usr/bin/duckstation-qt 2>/dev/null || true
+
+              cat > /tmp/pkg/root/usr/share/applications/duckstation.desktop << DESK
+          [Desktop Entry]
+          Name=DuckStation
+          Comment=PlayStation 1 Emulator
+          Exec=duckstation-qt
+          Icon=duckstation
+          Terminal=false
+          Type=Application
+          Categories=Game;Emulator;
+          DESK
+
+              PKG_VERSION="0.0.0+git.${SHORT}"
+              mkdir -p /tmp/pkg/meta
+              echo "duckstation-${DEVICE_ID}" > /tmp/pkg/meta/name
+              echo "${PKG_VERSION}" > /tmp/pkg/meta/version
+              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
+              echo "DuckStation PS1 Emulator (${DEVICE_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
+              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
+              echo "deb" > /tmp/pkg/meta/source_format
+              echo "noble" > /tmp/pkg/meta/source_distro
+              echo "games" > /tmp/pkg/meta/section
+              echo "optional" > /tmp/pkg/meta/priority
+              cat > /tmp/pkg/meta/depends << DEPS
+          libc6
+          libjemalloc2
+          libdbus-1-3
+          libcurl4t64
+          libwayland-client0
+          libudev1
+          DEPS
+              tar cf /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+
+              ccache -s
+              echo "completed" > /workspace/build-status
+            '
+
+          if [[ -f build-status ]] && [[ "$(cat build-status)" == "completed" ]]; then
+            echo "completed=true" >> $GITHUB_OUTPUT
+          else
+            echo "completed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Save ccache
+        if: always() && steps.phase1-done.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/ccache-duck-${{ matrix.device.arch }}
+          key: ccache-duck-${{ matrix.device.arch }}-${{ needs.prepare.outputs.duck_short }}-${{ github.run_id }}
+
+      - name: Upload artifact
+        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-duckstation-${{ matrix.device.id }}
+          path: "*.pkg.tar"
+          retention-days: 1
+
+      - name: Save success marker
+        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
+        run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
+
+      - name: Upload success marker
+        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/marker
+          key: success-duck-${{ needs.prepare.outputs.hash_duck }}
+
+  build-esde:
+    needs: [prepare, build-libretro-heavy-3]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_esde == 'true' && (needs.build-libretro-heavy-3.result == 'success' || needs.build-libretro-heavy-3.result == 'skipped')
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
+      fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1112,19 +1380,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-esde-${{ matrix.device.id }}
-          key: ccache-esde-${{ matrix.device.id }}-${{ needs.prepare.outputs.esde_version }}
+          path: /tmp/ccache-esde-${{ matrix.device.arch }}
+          key: ccache-esde-${{ matrix.device.arch }}-${{ needs.prepare.outputs.esde_version }}
           restore-keys: |
-            ccache-esde-${{ matrix.device.id }}-
+            ccache-esde-${{ matrix.device.arch }}-
 
       - name: Build EmulationStation-DE
         id: build
         run: |
-          mkdir -p /tmp/ccache-esde-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-esde-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-esde-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-esde-${{ matrix.device.arch }}:/ccache \
             -e VERSION=${{ needs.prepare.outputs.esde_version }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1213,8 +1481,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-esde-${{ matrix.device.id }}
-          key: ccache-esde-${{ matrix.device.id }}-${{ needs.prepare.outputs.esde_version }}-${{ github.run_id }}
+          path: /tmp/ccache-esde-${{ matrix.device.arch }}
+          key: ccache-esde-${{ matrix.device.arch }}-${{ needs.prepare.outputs.esde_version }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -1248,13 +1516,14 @@ jobs:
             });
 
   build-melonds:
-    needs: prepare
-    if: needs.prepare.outputs.build_melonds == 'true'
+    needs: [prepare, build-xemu]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_melonds == 'true' && (needs.build-xemu.result == 'success' || needs.build-xemu.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1273,19 +1542,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-melonds-${{ matrix.device.id }}
-          key: ccache-melonds-${{ matrix.device.id }}-${{ needs.prepare.outputs.melonds_version }}
+          path: /tmp/ccache-melonds-${{ matrix.device.arch }}
+          key: ccache-melonds-${{ matrix.device.arch }}-${{ needs.prepare.outputs.melonds_version }}
           restore-keys: |
-            ccache-melonds-${{ matrix.device.id }}-
+            ccache-melonds-${{ matrix.device.arch }}-
 
       - name: Build melonDS
         id: build
         run: |
-          mkdir -p /tmp/ccache-melonds-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-melonds-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-melonds-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-melonds-${{ matrix.device.arch }}:/ccache \
             -e VERSION=${{ needs.prepare.outputs.melonds_version }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1371,8 +1640,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-melonds-${{ matrix.device.id }}
-          key: ccache-melonds-${{ matrix.device.id }}-${{ needs.prepare.outputs.melonds_version }}-${{ github.run_id }}
+          path: /tmp/ccache-melonds-${{ matrix.device.arch }}
+          key: ccache-melonds-${{ matrix.device.arch }}-${{ needs.prepare.outputs.melonds_version }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -1406,13 +1675,14 @@ jobs:
             });
 
   build-ppsspp:
-    needs: prepare
-    if: needs.prepare.outputs.build_ppsspp == 'true'
+    needs: [prepare, build-azahar]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_ppsspp == 'true' && (needs.build-azahar.result == 'success' || needs.build-azahar.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1431,19 +1701,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-ppsspp-${{ matrix.device.id }}
-          key: ccache-ppsspp-${{ matrix.device.id }}-${{ needs.prepare.outputs.ppsspp_version }}
+          path: /tmp/ccache-ppsspp-${{ matrix.device.arch }}
+          key: ccache-ppsspp-${{ matrix.device.arch }}-${{ needs.prepare.outputs.ppsspp_version }}
           restore-keys: |
-            ccache-ppsspp-${{ matrix.device.id }}-
+            ccache-ppsspp-${{ matrix.device.arch }}-
 
       - name: Build PPSSPP
         id: build
         run: |
-          mkdir -p /tmp/ccache-ppsspp-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-ppsspp-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-ppsspp-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-ppsspp-${{ matrix.device.arch }}:/ccache \
             -e VERSION=${{ needs.prepare.outputs.ppsspp_version }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1551,8 +1821,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-ppsspp-${{ matrix.device.id }}
-          key: ccache-ppsspp-${{ matrix.device.id }}-${{ needs.prepare.outputs.ppsspp_version }}-${{ github.run_id }}
+          path: /tmp/ccache-ppsspp-${{ matrix.device.arch }}
+          key: ccache-ppsspp-${{ matrix.device.arch }}-${{ needs.prepare.outputs.ppsspp_version }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -1586,13 +1856,14 @@ jobs:
             });
 
   build-xemu:
-    needs: prepare
-    if: needs.prepare.outputs.build_xemu == 'true'
+    needs: [prepare, build-esde]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_xemu == 'true' && (needs.build-esde.result == 'success' || needs.build-esde.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1611,19 +1882,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-xemu-${{ matrix.device.id }}
-          key: ccache-xemu-${{ matrix.device.id }}-${{ needs.prepare.outputs.xemu_version }}
+          path: /tmp/ccache-xemu-${{ matrix.device.arch }}
+          key: ccache-xemu-${{ matrix.device.arch }}-${{ needs.prepare.outputs.xemu_version }}
           restore-keys: |
-            ccache-xemu-${{ matrix.device.id }}-
+            ccache-xemu-${{ matrix.device.arch }}-
 
       - name: Build xemu
         id: build
         run: |
-          mkdir -p /tmp/ccache-xemu-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-xemu-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-xemu-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-xemu-${{ matrix.device.arch }}:/ccache \
             -e VERSION=${{ needs.prepare.outputs.xemu_version }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1715,8 +1986,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-xemu
-          key: ccache-xemu-${{ needs.prepare.outputs.xemu_version }}-${{ github.run_id }}
+          path: /tmp/ccache-xemu-${{ matrix.device.arch }}
+          key: ccache-xemu-${{ matrix.device.arch }}-${{ needs.prepare.outputs.xemu_version }}-${{ github.run_id }}
 
       - name: Upload artifact
         if: steps.build.outputs.completed == 'true'
@@ -1759,6 +2030,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1777,15 +2049,15 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-libretro-heavy-1-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-1-${{ matrix.device.id }}-v1
+          path: /tmp/ccache-libretro-heavy-1-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-1-${{ matrix.device.arch }}-v1
           restore-keys: |
-            ccache-libretro-heavy-1-${{ matrix.device.id }}-
+            ccache-libretro-heavy-1-${{ matrix.device.arch }}-
 
       - name: Build heavy cores (batch 1)
         id: build
         run: |
-          mkdir -p /tmp/ccache-libretro-heavy-1-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-libretro-heavy-1-${{ matrix.device.arch }}
 
           cat > /tmp/build-heavy.sh << 'SCRIPT'
           set -e
@@ -1844,7 +2116,7 @@ jobs:
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-libretro-heavy-1-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-libretro-heavy-1-${{ matrix.device.arch }}:/ccache \
             -v /tmp/build-heavy.sh:/build.sh:ro \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1862,8 +2134,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-libretro-heavy-1-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-1-${{ matrix.device.id }}-v1-${{ github.run_id }}
+          path: /tmp/ccache-libretro-heavy-1-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-1-${{ matrix.device.arch }}-v1-${{ github.run_id }}
 
       - name: Upload cores
         if: steps.build.outputs.completed == 'true'
@@ -1892,6 +2164,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -1910,15 +2183,15 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-libretro-heavy-2-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-2-${{ matrix.device.id }}-v1
+          path: /tmp/ccache-libretro-heavy-2-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-2-${{ matrix.device.arch }}-v1
           restore-keys: |
-            ccache-libretro-heavy-2-${{ matrix.device.id }}-
+            ccache-libretro-heavy-2-${{ matrix.device.arch }}-
 
       - name: Build heavy cores (batch 2)
         id: build
         run: |
-          mkdir -p /tmp/ccache-libretro-heavy-2-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-libretro-heavy-2-${{ matrix.device.arch }}
 
           cat > /tmp/build-heavy.sh << 'SCRIPT'
           set -e
@@ -1975,7 +2248,7 @@ jobs:
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-libretro-heavy-2-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-libretro-heavy-2-${{ matrix.device.arch }}:/ccache \
             -v /tmp/build-heavy.sh:/build.sh:ro \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -1993,8 +2266,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-libretro-heavy-2-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-2-${{ matrix.device.id }}-v1-${{ github.run_id }}
+          path: /tmp/ccache-libretro-heavy-2-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-2-${{ matrix.device.arch }}-v1-${{ github.run_id }}
 
       - name: Upload cores
         if: steps.build.outputs.completed == 'true'
@@ -2023,6 +2296,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -2041,15 +2315,15 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-libretro-heavy-3-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-3-${{ matrix.device.id }}-v1
+          path: /tmp/ccache-libretro-heavy-3-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-3-${{ matrix.device.arch }}-v1
           restore-keys: |
-            ccache-libretro-heavy-3-${{ matrix.device.id }}-
+            ccache-libretro-heavy-3-${{ matrix.device.arch }}-
 
       - name: Build heavy cores (batch 3)
         id: build
         run: |
-          mkdir -p /tmp/ccache-libretro-heavy-3-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-libretro-heavy-3-${{ matrix.device.arch }}
 
           cat > /tmp/build-heavy.sh << 'SCRIPT'
           set -e
@@ -2107,7 +2381,7 @@ jobs:
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-libretro-heavy-3-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-libretro-heavy-3-${{ matrix.device.arch }}:/ccache \
             -v /tmp/build-heavy.sh:/build.sh:ro \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
@@ -2125,8 +2399,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-libretro-heavy-3-${{ matrix.device.id }}
-          key: ccache-libretro-heavy-3-${{ matrix.device.id }}-v1-${{ github.run_id }}
+          path: /tmp/ccache-libretro-heavy-3-${{ matrix.device.arch }}
+          key: ccache-libretro-heavy-3-${{ matrix.device.arch }}-v1-${{ github.run_id }}
 
       - name: Upload cores
         if: steps.build.outputs.completed == 'true'
@@ -2149,13 +2423,14 @@ jobs:
 
   # Libretro cores - Job 2: Light cores (computers, misc consoles)
   build-libretro-light:
-    needs: prepare
-    if: needs.prepare.outputs.build_libretro_light == 'true'
+    needs: [prepare, build-ppsspp]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_libretro_light == 'true' && (needs.build-ppsspp.result == 'success' || needs.build-ppsspp.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -2174,19 +2449,19 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-libretro-light-${{ matrix.device.id }}
-          key: ccache-libretro-light-${{ matrix.device.id }}-v1
+          path: /tmp/ccache-libretro-light-${{ matrix.device.arch }}
+          key: ccache-libretro-light-${{ matrix.device.arch }}-v1
           restore-keys: |
-            ccache-libretro-light-${{ matrix.device.id }}-
+            ccache-libretro-light-${{ matrix.device.arch }}-
 
       - name: Build light Libretro cores
         id: build
         run: |
-          mkdir -p /tmp/ccache-libretro-light-${{ matrix.device.id }}
+          mkdir -p /tmp/ccache-libretro-light-${{ matrix.device.arch }}
 
           docker run --rm --platform ${{ matrix.device.platform }} \
             -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-libretro-light-${{ matrix.device.id }}:/ccache \
+            -v /tmp/ccache-libretro-light-${{ matrix.device.arch }}:/ccache \
             -e CCACHE_DIR=/ccache \
             -e DEVICE_CFLAGS="${{ matrix.device.cflags }}" \
             -e DEVICE_CXXFLAGS="${{ matrix.device.cxxflags }}" \
@@ -2303,8 +2578,8 @@ jobs:
         uses: actions/cache/save@v4
         if: always()
         with:
-          path: /tmp/ccache-libretro-light-${{ matrix.device.id }}
-          key: ccache-libretro-light-${{ matrix.device.id }}-v1-${{ github.run_id }}
+          path: /tmp/ccache-libretro-light-${{ matrix.device.arch }}
+          key: ccache-libretro-light-${{ matrix.device.arch }}-v1-${{ github.run_id }}
 
       - name: Upload cores
         if: steps.build.outputs.completed == 'true'
@@ -2334,6 +2609,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 1
     steps:
       - name: Download heavy-1 cores
         uses: actions/download-artifact@v4
@@ -2403,14 +2679,17 @@ jobs:
           path: "*.pkg.tar"
           retention-days: 1
 
-  build-setperf:
+  # ===========================================================================
+  # BUILD-SUPPORT: Build setperf + astralemu-deps-repo (short jobs, combined)
+  # ===========================================================================
+  build-support:
     needs: prepare
-    if: needs.prepare.outputs.build_setperf == 'true'
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
       fail-fast: false
+      max-parallel: 3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -2434,7 +2713,7 @@ jobs:
           chmod +x build.sh
           ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}"
 
-      - name: Upload artifact
+      - name: Upload setperf artifact
         if: steps.check.outputs.has_setperf == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -2442,32 +2721,16 @@ jobs:
           path: "packages/setperf/*.pkg.tar"
           retention-days: 1
 
-      - name: Save success marker
+      - name: Save setperf success marker
         if: steps.check.outputs.has_setperf == 'true'
         run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
 
-      - name: Upload success marker
+      - name: Upload setperf success marker
         if: steps.check.outputs.has_setperf == 'true'
         uses: actions/cache/save@v4
         with:
           path: /tmp/marker
           key: success-setperf-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_setperf }}
-
-  # ===========================================================================
-  # BUILD-DEPS-REPO: Build the shared deps repo config meta-package
-  # ===========================================================================
-  build-deps-repo:
-    needs: prepare
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-      fail-fast: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
 
       - name: Build astralemu-deps-repo package
         run: |
@@ -2475,7 +2738,7 @@ jobs:
           chmod +x build.sh
           ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}" "${{ matrix.device.source_distro }}"
 
-      - name: Upload artifact
+      - name: Upload deps-repo artifact
         uses: actions/upload-artifact@v4
         with:
           name: pkg-astralemu-deps-repo-${{ matrix.device.id }}
@@ -2487,19 +2750,18 @@ jobs:
   # Seed device first (builds+deploys shared deps), then rest in parallel
   # ===========================================================================
   update-repo-seed:
-    needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf, build-deps-repo]
+    needs: [prepare, build-azahar, build-dolphin, build-duckstation-phase2, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
     if: >-
       always() &&
       (needs.build-azahar.result == 'success' ||
        needs.build-dolphin.result == 'success' ||
-       needs.build-duckstation.result == 'success' ||
+       needs.build-duckstation-phase2.result == 'success' ||
        needs.build-esde.result == 'success' ||
        needs.build-melonds.result == 'success' ||
        needs.build-ppsspp.result == 'success' ||
        needs.build-xemu.result == 'success' ||
        needs.build-libretro-package.result == 'success' ||
-       needs.build-setperf.result == 'success' ||
-       needs.build-deps-repo.result == 'success')
+       needs.build-support.result == 'success')
     uses: ./.github/workflows/update-repos.yml
     with:
       artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
@@ -2510,22 +2772,22 @@ jobs:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
   update-repo:
-    needs: [prepare, update-repo-seed, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-setperf, build-deps-repo]
+    needs: [prepare, update-repo-seed, build-azahar, build-dolphin, build-duckstation-phase2, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
     if: >-
       always() &&
       fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
       (needs.build-azahar.result == 'success' ||
        needs.build-dolphin.result == 'success' ||
-       needs.build-duckstation.result == 'success' ||
+       needs.build-duckstation-phase2.result == 'success' ||
        needs.build-esde.result == 'success' ||
        needs.build-melonds.result == 'success' ||
        needs.build-ppsspp.result == 'success' ||
        needs.build-xemu.result == 'success' ||
        needs.build-libretro-package.result == 'success' ||
-       needs.build-setperf.result == 'success' ||
-       needs.build-deps-repo.result == 'success')
+       needs.build-support.result == 'success')
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
     uses: ./.github/workflows/update-repos.yml

@@ -46,3 +46,57 @@ devices:
         type: git-repo
         url: https://github.com/theofficialgman/l4t-debs.git
         format: deb
+
+  - id: rpi4
+    name: "Raspberry Pi 4 (Cortex-A72)"
+    arch: arm64
+    platform: linux/arm64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
+    cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
+
+  - id: armv8-2
+    name: "ARMv8.2-A (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
+    arch: arm64
+    platform: linux/arm64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
+    cxxflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
+
+  - id: armv9
+    name: "ARMv9.0-A (Snapdragon 8 Gen 1/2/3, Cortex-X2+)"
+    arch: arm64
+    platform: linux/arm64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=armv9-a+crypto -mtune=cortex-x2"
+    cxxflags: "-O3 -march=armv9-a+crypto -mtune=cortex-x2"
+
+  - id: x86-v2
+    name: "x86-64-v2 (Intel Sandy Bridge+ / AMD Bulldozer+)"
+    arch: amd64
+    platform: linux/amd64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=x86-64-v2"
+    cxxflags: "-O3 -march=x86-64-v2"
+
+  - id: x86-v3
+    name: "x86-64-v3 (Intel Haswell+ / AMD Ryzen / Steam Deck)"
+    arch: amd64
+    platform: linux/amd64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=x86-64-v3"
+    cxxflags: "-O3 -march=x86-64-v3"
+
+  - id: x86-v4
+    name: "x86-64-v4 (Intel Ice Lake-SP+ / AMD Zen 4+)"
+    arch: amd64
+    platform: linux/amd64
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=x86-64-v4"
+    cxxflags: "-O3 -march=x86-64-v4"

@@ -10,7 +10,7 @@ on:
       - 'distros.yml'
       - 'scripts/**'
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '0 3 * * 3'
   workflow_dispatch:
 
 permissions:
