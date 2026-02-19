@@ -374,10 +374,10 @@ jobs:
                   INTCOPY=$(mktemp -d)
                   cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>"$TMPOUT/build.err"; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
                   else
-                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO" >> "$FAIL_LOG"
+                    { echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO"; grep -i 'error:' "$TMPOUT/build.err" 2>/dev/null | tail -5 | sed 's/^/  /'; } >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -434,10 +434,10 @@ jobs:
                   fi
 
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>"$TMPOUT/build.err"; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO" | tee -a "$FAIL_LOG"
+                    { echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO"; grep -i 'error:' "$TMPOUT/build.err" 2>/dev/null | tail -5 | sed 's/^/  /'; } >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -653,10 +653,10 @@ jobs:
                   INTCOPY=$(mktemp -d)
                   cp -a "$intdir"/* "$INTCOPY/"
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>/dev/null; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>"$TMPOUT/build.err"; then
                     cp "$TMPOUT"/* "$TEMP_DIR/" 2>/dev/null || true
                   else
-                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO" >> "$FAIL_LOG"
+                    { echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — temp build for $DISTRO"; grep -i 'error:' "$TMPOUT/build.err" 2>/dev/null | tail -5 | sed 's/^/  /'; } >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
@@ -713,10 +713,10 @@ jobs:
                   fi
 
                   TMPOUT=$(mktemp -d)
-                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>&1; then
+                  if "$BUILD_SCRIPT" "$INTCOPY" "$TMPOUT/" --dep-map "$DEP_MAP" 2>"$TMPOUT/build.err"; then
                     cp "$TMPOUT"/* "$OUTPUT_DIR/" 2>/dev/null || true
                   else
-                    echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO" | tee -a "$FAIL_LOG"
+                    { echo "FAIL: $(cat "$INTCOPY/meta/name" 2>/dev/null) — rebuild for $DISTRO"; grep -i 'error:' "$TMPOUT/build.err" 2>/dev/null | tail -5 | sed 's/^/  /'; } >> "$FAIL_LOG"
                   fi
                   rm -rf "$INTCOPY" "$TMPOUT"
                 ) &
