@@ -473,10 +473,11 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
 
   # Compare versions for existing deps
   incompatible_deps=""
+  declare -A TGT_TO_SRC=()
+  declare -A SRC_VERS=()
   if [[ -n "$existing_deps" ]]; then
     # Map to source names
     source_query=""
-    declare -A TGT_TO_SRC=()
     for dep in $existing_deps; do
       src_name=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
       source_query="$source_query $src_name"
@@ -485,7 +486,6 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
     source_query=$(echo "$source_query" | xargs)
 
     # Batch query source
-    declare -A SRC_VERS=()
     while IFS= read -r line; do
       [[ -z "$line" ]] && continue
       name="${line%%=*}"

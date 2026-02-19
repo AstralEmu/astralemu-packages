@@ -15,6 +15,10 @@ on:
         type: string
         required: true
         description: 'Device ID from devices.yml (e.g. l4t). Used for repo paths and dependency prefix'
+      force_rebuild:
+        type: boolean
+        default: false
+        description: 'Skip all existing-package checks — rebuild everything from scratch'
     secrets:
       GPG_PRIVATE_KEY:
         required: true
@@ -133,15 +137,17 @@ jobs:
           cat own-packages.txt
 
           # Fetch existing package filenames from gh-pages (only new path structure)
-          # CRITICAL: only match files in device/ or deps/ paths — old flat paths
-          # (e.g. pacman/l4t/) are cleaned up during deploy, so matching them would
-          # cause packages to be skipped then deleted.
-          git fetch origin gh-pages 2>/dev/null || true
-          git ls-tree -r --name-only origin/gh-pages 2>/dev/null \
-            | grep -E '\.(deb|rpm|pkg\.tar\.zst)$' \
-            | grep -E '/(device|deps)/' \
-            > existing-repo.txt || touch existing-repo.txt
-          echo "Existing repo: $(wc -l < existing-repo.txt) package files (new paths only)"
+          if [[ "${{ inputs.force_rebuild }}" == "true" ]]; then
+            echo "FORCE REBUILD: skipping existing-repo check — all packages will be rebuilt"
+            touch existing-repo.txt
+          else
+            git fetch origin gh-pages 2>/dev/null || true
+            git ls-tree -r --name-only origin/gh-pages 2>/dev/null \
+              | grep -E '\.(deb|rpm|pkg\.tar\.zst)$' \
+              | grep -E '/(device|deps)/' \
+              > existing-repo.txt || touch existing-repo.txt
+          fi
+          echo "Existing repo: $(wc -l < existing-repo.txt) package files"
 
           # Generate matrix from distros.yml
           MATRIX="["
@@ -781,6 +787,18 @@ jobs:
           }
           DEVICE="${{ inputs.device }}"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
+          # Force rebuild: wipe gh-pages content for this device to start clean
+          if [[ "${{ inputs.force_rebuild }}" == "true" ]]; then
+            echo "FORCE REBUILD: wiping existing gh-pages content for device ${DEVICE}"
+            for fmt in apt dnf pacman; do
+              rm -rf "gh-pages-dir/${fmt}/device/${DEVICE}"
+              rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
+            done
+            # Also wipe deps for this source_distro (will be rebuilt)
+            for fmt in apt dnf pacman; do
+              rm -rf "gh-pages-dir/${fmt}/deps/${SOURCE_DISTRO}"
+            done
+          fi
           # Device repos
           mkdir -p "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/pacman/device/${DEVICE}"
           # Shared deps repos
