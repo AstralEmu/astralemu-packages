@@ -20,7 +20,7 @@ permissions:
   actions: write
 
 env:
-  CACHE_KEY: emu-deps-base-v2
+  CACHE_KEY: emu-deps-base-v3
   BUILD_TIMEOUT: 19800  # 5h30 in seconds (leave 30min for cache save)
 
 jobs:
@@ -206,7 +206,8 @@ jobs:
                 libdecor-0-dev libegl-dev libopengl-dev libdrm-dev \
                 libpipewire-0.3-dev libinput-dev libgudev-1.0-dev \
                 libva-dev libopus-dev \
-                autoconf automake libtool curl wget xz-utils
+                autoconf automake libtool curl wget xz-utils \
+                nasm
 
               apt-get clean
               rm -rf /var/lib/apt/lists/*
@@ -282,7 +283,8 @@ jobs:
               libdecor-0-dev libegl-dev libopengl-dev libdrm-dev \
               libpipewire-0.3-dev libinput-dev libgudev-1.0-dev \
               libva-dev libopus-dev \
-              autoconf automake libtool curl wget xz-utils
+              autoconf automake libtool curl wget xz-utils \
+              nasm
 
             apt-get clean
             rm -rf /var/lib/apt/lists/*
