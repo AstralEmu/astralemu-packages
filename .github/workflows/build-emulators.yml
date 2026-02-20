@@ -18,7 +18,7 @@ permissions:
   actions: write
 
 env:
-  CACHE_KEY: emu-deps-base
+  CACHE_KEY: emu-deps-base-v2
   BUILD_TIMEOUT: 19800  # 5h30 in seconds (leave 30min for cache save)
 
 jobs:
@@ -497,8 +497,8 @@ jobs:
             apt-get clean
             rm -rf /var/lib/apt/lists/*
           '
-          docker commit emu-deps-amd64 emu-deps-image-amd64
-          docker save emu-deps-image-amd64 -o /tmp/emu-deps.tar
+          docker commit emu-deps-amd64 emu-deps-image
+          docker save emu-deps-image -o /tmp/emu-deps.tar
           docker rm emu-deps-amd64
 
       - name: Save amd64 cached image
