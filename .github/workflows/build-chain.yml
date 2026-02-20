@@ -1,0 +1,148 @@
+name: Build Chain
+
+on:
+  workflow_call:
+    inputs:
+      chain_matrix:
+        description: 'JSON array of matrix entries for this chain'
+        required: true
+        type: string
+      cache_key:
+        description: 'Base cache key for Docker images'
+        required: false
+        type: string
+        default: 'emu-deps-base-v2'
+      build_timeout:
+        description: 'Build timeout in seconds'
+        required: false
+        type: string
+        default: '19800'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.entry.device_runner }}
+    strategy:
+      matrix:
+        entry: ${{ fromJSON(inputs.chain_matrix) }}
+      fail-fast: false
+      max-parallel: 3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Restore cached image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/emu-deps.tar
+          key: ${{ inputs.cache_key }}-${{ matrix.entry.device_arch }}
+
+      - name: Load image
+        run: docker load -i /tmp/emu-deps.tar
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}
+          restore-keys: |
+            ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-
+
+      - name: Restore extra cache
+        if: matrix.entry.extra_cache_key != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ matrix.entry.extra_cache_path }}
+          key: ${{ matrix.entry.extra_cache_key }}
+
+      - name: Download aggregated artifacts
+        if: matrix.entry.is_aggregator == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "libretro-cores-*-${{ matrix.entry.device_id }}"
+          path: cores/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Build
+        id: build
+        run: |
+          mkdir -p /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+
+          EXTRA_MOUNT=""
+          if [[ -n "${{ matrix.entry.extra_cache_mount }}" ]]; then
+            mkdir -p "${{ matrix.entry.extra_cache_path }}"
+            EXTRA_MOUNT="-v ${{ matrix.entry.extra_cache_path }}:${{ matrix.entry.extra_cache_mount }}"
+          fi
+
+          docker run --rm --platform ${{ matrix.entry.device_platform }} \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -v /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}:/ccache \
+            $EXTRA_MOUNT \
+            -e VERSION=${{ matrix.entry.version }} \
+            -e COMMIT=${{ matrix.entry.version }} \
+            -e SHORT=${{ matrix.entry.version_short }} \
+            -e CCACHE_DIR=/ccache \
+            -e BUILD_TIMEOUT=${{ inputs.build_timeout }} \
+            -e DEVICE_ID=${{ matrix.entry.device_id }} \
+            -e DEVICE_ARCH=${{ matrix.entry.device_arch }} \
+            -e DEVICE_CFLAGS="${{ matrix.entry.device_cflags }}" \
+            -e DEVICE_CXXFLAGS="${{ matrix.entry.device_cxxflags }}" \
+            emu-deps-image bash /workspace/packages/${{ matrix.entry.emulator_id }}/build.sh
+
+          # Check build-status files (emulator scripts write "completed" on success)
+          EMU_ID="${{ matrix.entry.emulator_id }}"
+          if [[ -f "build-status" ]] && [[ "$(cat build-status)" == "completed" ]]; then
+            echo "completed=true" >> $GITHUB_OUTPUT
+          elif [[ -f "build-status-${EMU_ID##libretro-}" ]] && [[ "$(cat "build-status-${EMU_ID##libretro-}")" == "completed" ]]; then
+            echo "completed=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ matrix.entry.artifact_type }}" == "cores" ]] && ls cores-*/*.so 1>/dev/null 2>&1; then
+            echo "completed=true" >> $GITHUB_OUTPUT
+          elif ls *.pkg.tar 1>/dev/null 2>&1; then
+            echo "completed=true" >> $GITHUB_OUTPUT
+          else
+            echo "completed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}-${{ github.run_id }}
+
+      - name: Save extra cache
+        if: always() && matrix.entry.extra_cache_save == 'true' && matrix.entry.extra_cache_key != ''
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ matrix.entry.extra_cache_path }}
+          key: ${{ matrix.entry.extra_cache_key }}
+
+      - name: Upload pkg artifact
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'pkg'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          path: "*.pkg.tar"
+          retention-days: 1
+
+      - name: Upload cores artifact
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'cores'
+        uses: actions/upload-artifact@v4
+        with:
+          name: libretro-cores-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          path: "cores-*/*.so"
+          retention-days: 1
+
+      - name: Save success marker
+        if: steps.build.outputs.completed == 'true'
+        run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
+
+      - name: Upload success marker
+        if: steps.build.outputs.completed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/marker
+          key: success-${{ matrix.entry.emulator_id }}-${{ matrix.entry.hash }}
