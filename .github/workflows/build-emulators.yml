@@ -2446,7 +2446,7 @@ jobs:
        needs.build-support.result == 'success')
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 1
       matrix:
         device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
     uses: ./.github/workflows/update-repos.yml
