@@ -15,6 +15,7 @@
 #   platform   — Docker platform string
 #   base_image — Docker base image for the build container
 #   source_distro — Distro codename matching the base_image (for dep resolution)
+#   runner     — GitHub Actions runner type (ubuntu-24.04-arm for arm64, ubuntu-24.04 for amd64)
 #   cflags     — C compiler flags (arch targeting + optimizations, WITHOUT LTO)
 #   cxxflags   — C++ compiler flags (usually same as cflags, WITHOUT LTO)
 #   sources    — List of package sources to mirror for this device (optional)
@@ -36,6 +37,7 @@ devices:
     name: "Nintendo Switch (Tegra X1)"
     arch: arm64
     platform: linux/arm64
+    runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
@@ -51,6 +53,7 @@ devices:
     name: "Raspberry Pi 4 (Cortex-A72)"
     arch: arm64
     platform: linux/arm64
+    runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
@@ -60,6 +63,7 @@ devices:
     name: "ARMv8.2-A (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
     arch: arm64
     platform: linux/arm64
+    runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
@@ -69,6 +73,7 @@ devices:
     name: "ARMv9.0-A (Snapdragon 8 Gen 1/2/3, Cortex-X2+)"
     arch: arm64
     platform: linux/arm64
+    runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=armv9-a+crypto -mtune=cortex-x2"
@@ -78,6 +83,7 @@ devices:
     name: "x86-64-v2 (Intel Sandy Bridge+ / AMD Bulldozer+)"
     arch: amd64
     platform: linux/amd64
+    runner: ubuntu-24.04
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=x86-64-v2"
@@ -87,6 +93,7 @@ devices:
     name: "x86-64-v3 (Intel Haswell+ / AMD Ryzen / Steam Deck)"
     arch: amd64
     platform: linux/amd64
+    runner: ubuntu-24.04
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=x86-64-v3"
@@ -96,6 +103,7 @@ devices:
     name: "x86-64-v4 (Intel Ice Lake-SP+ / AMD Zen 4+)"
     arch: amd64
     platform: linux/amd64
+    runner: ubuntu-24.04
     base_image: ubuntu:24.04
     source_distro: noble
     cflags: "-O3 -march=x86-64-v4"
