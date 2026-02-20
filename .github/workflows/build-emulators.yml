@@ -96,7 +96,7 @@ jobs:
           echo "hash_azahar=$(job_hash 'build-azahar')" >> $GITHUB_OUTPUT
           echo "hash_dolphin=$(job_hash 'build-dolphin')" >> $GITHUB_OUTPUT
           echo "hash_duck_deps=$(job_hash 'build-duckstation-deps')" >> $GITHUB_OUTPUT
-          echo "hash_duck=$(job_hash 'build-duckstation-phase1')" >> $GITHUB_OUTPUT
+          echo "hash_duck=$(job_hash 'build-duckstation')" >> $GITHUB_OUTPUT
           echo "hash_esde=$(job_hash 'build-esde')" >> $GITHUB_OUTPUT
           echo "hash_melonds=$(job_hash 'build-melonds')" >> $GITHUB_OUTPUT
           echo "hash_ppsspp=$(job_hash 'build-ppsspp')" >> $GITHUB_OUTPUT
@@ -937,7 +937,7 @@ jobs:
           key: success-duck-deps-${{ needs.prepare.outputs.hash_duck_deps }}
 
   # DuckStation build (uses pre-built dependencies)
-  build-duckstation-phase1:
+  build-duckstation:
     needs: [prepare, build-duckstation-deps]
     if: needs.prepare.outputs.build_duckstation == 'true'
     runs-on: ${{ matrix.device.runner }}
@@ -972,204 +972,6 @@ jobs:
 
       - name: Build DuckStation
         id: build
-        run: |
-          mkdir -p /tmp/ccache-duck-${{ matrix.device.id }}
-
-          docker run --rm --platform ${{ matrix.device.platform }} \
-            -v ${{ github.workspace }}:/workspace \
-            -v /tmp/ccache-duck-${{ matrix.device.id }}:/ccache \
-            -v /tmp/duck-deps:/deps \
-            -e COMMIT=${{ needs.prepare.outputs.duck_commit }} \
-            -e SHORT=${{ needs.prepare.outputs.duck_short }} \
-            -e CCACHE_DIR=/ccache \
-            -e BUILD_TIMEOUT=${{ env.BUILD_TIMEOUT }} \
-            -e DEVICE_ID=${{ matrix.device.id }} \
-            -e DEVICE_ARCH=${{ matrix.device.arch }} \
-            -e DEVICE_CFLAGS="${{ matrix.device.cflags }}" \
-            -e DEVICE_CXXFLAGS="${{ matrix.device.cxxflags }}" \
-            emu-deps-image bash -c '
-              set -e
-
-              export PATH="/usr/lib/ccache:$PATH"
-              export CCACHE_MAXSIZE=5G
-              ccache -z
-
-              # Clone or update source
-              if [[ ! -d /workspace/src-duck ]]; then
-                git clone --recursive https://github.com/stenzek/duckstation.git /workspace/src-duck
-              fi
-
-              cd /workspace/src-duck
-              git fetch --unshallow 2>/dev/null || git fetch origin
-              git checkout "$COMMIT"
-              git submodule update --init --recursive
-
-              mkdir -p build && cd build
-
-              if [[ ! -f build.ninja ]]; then
-                cmake .. -G Ninja \
-                  -DCMAKE_BUILD_TYPE=Release \
-                  -DCMAKE_INSTALL_PREFIX=/usr \
-                  -DCMAKE_PREFIX_PATH=/deps \
-                  -DCMAKE_C_COMPILER=clang \
-                  -DCMAKE_CXX_COMPILER=clang++ \
-                  -DCMAKE_EXE_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \
-                  -DCMAKE_MODULE_LINKER_FLAGS_INIT="-fuse-ld=lld" \
-                  -DCMAKE_SHARED_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \
-                  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-                  -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto=thin" \
-                  -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
-                  -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-                  -DENABLE_WAYLAND=OFF \
-                  -DENABLE_X11=ON
-              fi
-
-              timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
-                EXIT_CODE=$?
-                ccache -s
-                if [[ $EXIT_CODE -eq 124 ]]; then
-                  echo "timeout" > /workspace/build-status
-                  exit 0
-                fi
-                exit $EXIT_CODE
-              }
-
-              # DuckStation has no install target, copy manually
-              mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/lib/duckstation /tmp/pkg/root/usr/share/applications
-
-              cp bin/duckstation-qt /tmp/pkg/root/usr/bin/
-              cp -r bin/resources /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
-
-              # Bundle the custom-built libraries
-              cp /deps/lib/*.so* /tmp/pkg/root/usr/lib/duckstation/ 2>/dev/null || true
-
-              # Set rpath for bundled libs
-              patchelf --set-rpath /usr/lib/duckstation /tmp/pkg/root/usr/bin/duckstation-qt 2>/dev/null || true
-
-              cat > /tmp/pkg/root/usr/share/applications/duckstation.desktop << DESK
-          [Desktop Entry]
-          Name=DuckStation
-          Comment=PlayStation 1 Emulator
-          Exec=duckstation-qt
-          Icon=duckstation
-          Terminal=false
-          Type=Application
-          Categories=Game;Emulator;
-          DESK
-
-              PKG_VERSION="0.0.0+git.${SHORT}"
-              mkdir -p /tmp/pkg/meta
-              echo "duckstation-${DEVICE_ID}" > /tmp/pkg/meta/name
-              echo "${PKG_VERSION}" > /tmp/pkg/meta/version
-              echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-              echo "DuckStation PS1 Emulator (${DEVICE_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
-              echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-              echo "deb" > /tmp/pkg/meta/source_format
-              echo "noble" > /tmp/pkg/meta/source_distro
-              echo "games" > /tmp/pkg/meta/section
-              echo "optional" > /tmp/pkg/meta/priority
-              cat > /tmp/pkg/meta/depends << DEPS
-          libc6
-          libjemalloc2
-          libdbus-1-3
-          libcurl4t64
-          libwayland-client0
-          libudev1
-          DEPS
-              tar cf /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
-
-              ccache -s
-              echo "completed" > /workspace/build-status
-            '
-
-          if [[ -f build-status ]] && [[ "$(cat build-status)" == "completed" ]]; then
-            echo "completed=true" >> $GITHUB_OUTPUT
-          else
-            echo "completed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Save ccache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: /tmp/ccache-duck-${{ matrix.device.id }}
-          key: ccache-duck-${{ matrix.device.id }}-${{ needs.prepare.outputs.duck_short }}-${{ github.run_id }}
-
-      - name: Upload artifact
-        if: steps.build.outputs.completed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-duckstation-${{ matrix.device.id }}
-          path: "*.pkg.tar"
-          retention-days: 1
-
-      - name: Save success marker
-        if: steps.build.outputs.completed == 'true'
-        run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
-
-      - name: Upload success marker
-        if: steps.build.outputs.completed == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: /tmp/marker
-          key: success-duck-${{ needs.prepare.outputs.hash_duck }}
-
-      - name: Save phase1 per-device marker
-        if: steps.build.outputs.completed == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: /tmp/marker
-          key: success-duck-phase1-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_duck }}
-
-  build-duckstation-phase2:
-    needs: [prepare, build-duckstation-phase1]
-    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_duckstation == 'true' && (needs.build-duckstation-phase1.result == 'success' || needs.build-duckstation-phase1.result == 'skipped')
-    runs-on: ${{ matrix.device.runner }}
-    strategy:
-      matrix:
-        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-      fail-fast: false
-      max-parallel: 3
-    steps:
-      - name: Check if phase1 completed for this device
-        id: phase1-done
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/duck-phase1-marker
-          key: success-duck-phase1-${{ matrix.device.id }}-${{ needs.prepare.outputs.hash_duck }}
-          lookup-only: true
-
-      - name: Restore cached image
-        if: steps.phase1-done.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: /tmp/emu-deps.tar
-          key: ${{ env.CACHE_KEY }}-${{ matrix.device.arch }}
-
-      - name: Load image
-        if: steps.phase1-done.outputs.cache-hit != 'true'
-        run: docker load -i /tmp/emu-deps.tar
-
-      - name: Restore ccache
-        if: steps.phase1-done.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/ccache-duck-${{ matrix.device.id }}
-          key: ccache-duck-${{ matrix.device.id }}-${{ needs.prepare.outputs.duck_short }}
-          restore-keys: |
-            ccache-duck-${{ matrix.device.id }}-
-
-      - name: Restore deps cache
-        if: steps.phase1-done.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/duck-deps
-          key: duck-deps-v2-${{ matrix.device.arch }}
-
-      - name: Build DuckStation (phase 2 — continue from ccache)
-        id: build
-        if: steps.phase1-done.outputs.cache-hit != 'true'
         run: |
           mkdir -p /tmp/ccache-duck-${{ matrix.device.id }}
 
@@ -1269,24 +1071,16 @@ jobs:
               tar cf /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
 
               ccache -s
-              echo "completed" > /workspace/build-status
             '
 
-          if [[ -f build-status ]] && [[ "$(cat build-status)" == "completed" ]]; then
-            echo "completed=true" >> $GITHUB_OUTPUT
-          else
-            echo "completed=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Save ccache
-        if: always() && steps.phase1-done.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
+        if: always()
         with:
           path: /tmp/ccache-duck-${{ matrix.device.id }}
           key: ccache-duck-${{ matrix.device.id }}-${{ needs.prepare.outputs.duck_short }}-${{ github.run_id }}
 
       - name: Upload artifact
-        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pkg-duckstation-${{ matrix.device.id }}
@@ -1294,11 +1088,9 @@ jobs:
           retention-days: 1
 
       - name: Save success marker
-        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
         run: mkdir -p /tmp/marker && echo ok > /tmp/marker/ok
 
       - name: Upload success marker
-        if: steps.phase1-done.outputs.cache-hit != 'true' && steps.build.outputs.completed == 'true'
         uses: actions/cache/save@v4
         with:
           path: /tmp/marker
@@ -2617,12 +2409,12 @@ jobs:
   # Seed device first (builds+deploys shared deps), then rest in parallel
   # ===========================================================================
   update-repo-seed:
-    needs: [prepare, build-azahar, build-dolphin, build-duckstation-phase2, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
+    needs: [prepare, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
     if: >-
       always() &&
       (needs.build-azahar.result == 'success' ||
        needs.build-dolphin.result == 'success' ||
-       needs.build-duckstation-phase2.result == 'success' ||
+       needs.build-duckstation.result == 'success' ||
        needs.build-esde.result == 'success' ||
        needs.build-melonds.result == 'success' ||
        needs.build-ppsspp.result == 'success' ||
@@ -2639,13 +2431,13 @@ jobs:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
   update-repo:
-    needs: [prepare, update-repo-seed, build-azahar, build-dolphin, build-duckstation-phase2, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
+    needs: [prepare, update-repo-seed, build-azahar, build-dolphin, build-duckstation, build-esde, build-melonds, build-ppsspp, build-xemu, build-libretro-package, build-support]
     if: >-
       always() &&
       fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
       (needs.build-azahar.result == 'success' ||
        needs.build-dolphin.result == 'success' ||
-       needs.build-duckstation-phase2.result == 'success' ||
+       needs.build-duckstation.result == 'success' ||
        needs.build-esde.result == 'success' ||
        needs.build-melonds.result == 'success' ||
        needs.build-ppsspp.result == 'success' ||
