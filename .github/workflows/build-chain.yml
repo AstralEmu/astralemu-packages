@@ -11,7 +11,7 @@ on:
         description: 'Base cache key for Docker images'
         required: false
         type: string
-        default: 'emu-deps-base-v3'
+        default: 'emu-deps-base-v4'
       build_timeout:
         description: 'Build timeout in seconds'
         required: false
