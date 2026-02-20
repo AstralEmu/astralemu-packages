@@ -752,6 +752,9 @@ jobs:
   deploy:
     needs: [normalize, build-repo-seed, build-repo]
     if: always() && needs.normalize.outputs.count > 0
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -1055,7 +1058,9 @@ jobs:
               git push origin gh-pages && return 0
               echo "Push attempt $attempt failed, rebasing..."
               git fetch --depth=1 origin gh-pages
+              git stash
               git rebase origin/gh-pages
+              git stash pop
             done
             return 1
           }
