@@ -681,17 +681,6 @@ jobs:
           path: /tmp/marker
           key: success-azahar-${{ needs.prepare.outputs.hash_azahar }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   build-dolphin:
     needs: [prepare, build-libretro-heavy-1]
@@ -860,17 +849,6 @@ jobs:
           path: /tmp/marker
           key: success-dolphin-${{ needs.prepare.outputs.hash_dolphin }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   # DuckStation dependencies (Qt6, SDL3, etc.) - built separately for caching
   build-duckstation-deps:
@@ -1471,17 +1449,6 @@ jobs:
           path: /tmp/marker
           key: success-esde-${{ needs.prepare.outputs.hash_esde }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   build-melonds:
     needs: [prepare, build-xemu]
@@ -1625,17 +1592,6 @@ jobs:
           path: /tmp/marker
           key: success-melonds-${{ needs.prepare.outputs.hash_melonds }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   build-ppsspp:
     needs: [prepare, build-azahar]
@@ -1801,17 +1757,6 @@ jobs:
           path: /tmp/marker
           key: success-ppsspp-${{ needs.prepare.outputs.hash_ppsspp }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   build-xemu:
     needs: [prepare, build-esde]
@@ -1961,17 +1906,6 @@ jobs:
           path: /tmp/marker
           key: success-xemu-${{ needs.prepare.outputs.hash_xemu }}
 
-      - name: Trigger retry if timeout
-        if: steps.build.outputs.completed == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build-emulators.yml',
-              ref: 'main'
-            });
 
   # Libretro heavy cores split into 3 jobs to stay under 6h limit
 
