@@ -752,9 +752,6 @@ jobs:
   deploy:
     needs: [normalize, build-repo-seed, build-repo]
     if: always() && needs.normalize.outputs.count > 0
-    concurrency:
-      group: gh-pages-deploy
-      cancel-in-progress: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
