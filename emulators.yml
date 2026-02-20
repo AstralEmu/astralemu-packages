@@ -1,0 +1,182 @@
+# AstralEmu - Emulator build definitions
+#
+# Each entry defines an emulator to build in the CI pipeline.
+# The workflow iterates over this list and auto-assigns build waves
+# based on depends_on topology and power scoring.
+#
+# To add a new emulator:
+#   1. Add an entry below with a unique id
+#   2. Create packages/<id>/build.sh with the build logic
+#   3. Commit and push — the CI will build it automatically
+#
+# Fields:
+#   id              — Unique identifier (must match packages/<id>/build.sh)
+#   repo            — GitHub/GitLab repository (owner/name)
+#   repo_host       — Repository host: github | gitlab
+#   version_source  — How to get the version: github-release | github-commit | gitlab-release | hash-only
+#   version_branch  — Branch to track for commit-based versions (only for github-commit)
+#   tracker_file    — Filename in .trackers/ for version persistence
+#   build_time      — Estimated build time in minutes (for wave scheduling info)
+#   power_arm       — Minimum ARM device power score required to build this emulator (1-5)
+#   power_amd       — Minimum AMD/x86 device power score required (1-5)
+#   true_arm        — Whether this emulator supports ARM architecture
+#   true_amd        — Whether this emulator supports x86/AMD architecture
+#   depends_on      — List of emulator ids that must build before this one (optional)
+#   extra_caches    — Additional cache entries needed (optional)
+#   artifact_type   — Output type: pkg (default, .pkg.tar) | cores (.so files)
+#   is_aggregator   — If true, downloads artifacts from depends_on before building (optional)
+#
+# Power scoring:
+#   Emulators with power_arm > device.power are skipped for ARM devices (same for power_amd/amd64).
+#   This prevents building heavy emulators on weak devices.
+
+emulators:
+  # --- Standalone emulators ---
+  - id: azahar
+    repo: azahar-emu/azahar
+    repo_host: github
+    version_source: github-release
+    tracker_file: azahar-version
+    build_time: 25
+    power_arm: 2
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+
+  - id: dolphin
+    repo: dolphin-emu/dolphin
+    repo_host: github
+    version_source: github-commit
+    version_branch: master
+    tracker_file: dolphin-commit
+    build_time: 40
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+
+  - id: duckstation-deps
+    repo: stenzek/duckstation
+    repo_host: github
+    version_source: github-commit
+    version_branch: master
+    tracker_file: duckstation-commit
+    build_time: 30
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+    extra_caches:
+      - key: "duck-deps-v2-{arch}"
+        path: /tmp/duck-deps
+        mount: /deps
+        save: true
+
+  - id: duckstation
+    repo: stenzek/duckstation
+    repo_host: github
+    version_source: github-commit
+    version_branch: master
+    tracker_file: duckstation-commit
+    build_time: 45
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+    depends_on: [duckstation-deps]
+    extra_caches:
+      - key: "duck-deps-v2-{arch}"
+        path: /tmp/duck-deps
+        mount: /deps
+        save: false
+
+  - id: esde
+    repo: es-de/emulationstation-de
+    repo_host: gitlab
+    version_source: gitlab-release
+    tracker_file: esde-version
+    build_time: 20
+    power_arm: 2
+    power_amd: 2
+    true_arm: true
+    true_amd: true
+
+  - id: melonds
+    repo: melonDS-emu/melonDS
+    repo_host: github
+    version_source: github-release
+    tracker_file: melonds-version
+    build_time: 10
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true
+
+  - id: ppsspp
+    repo: hrydgard/ppsspp
+    repo_host: github
+    version_source: github-release
+    tracker_file: ppsspp-version
+    build_time: 20
+    power_arm: 2
+    power_amd: 2
+    true_arm: true
+    true_amd: true
+
+  - id: xemu
+    repo: xemu-project/xemu
+    repo_host: github
+    version_source: github-release
+    tracker_file: xemu-version
+    build_time: 40
+    power_arm: 5
+    power_amd: 2
+    true_arm: true
+    true_amd: true
+
+  # --- Libretro batches ---
+  - id: libretro-heavy-1
+    version_source: hash-only
+    build_time: 60
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+    artifact_type: cores
+
+  - id: libretro-heavy-2
+    version_source: hash-only
+    build_time: 50
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+    artifact_type: cores
+
+  - id: libretro-heavy-3
+    version_source: hash-only
+    build_time: 50
+    power_arm: 3
+    power_amd: 3
+    true_arm: true
+    true_amd: true
+    artifact_type: cores
+
+  - id: libretro-light
+    version_source: hash-only
+    build_time: 30
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true
+    artifact_type: cores
+
+  - id: libretro-package
+    version_source: hash-only
+    build_time: 2
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true
+    is_aggregator: true
+    depends_on: [libretro-heavy-1, libretro-heavy-2, libretro-heavy-3, libretro-light]
