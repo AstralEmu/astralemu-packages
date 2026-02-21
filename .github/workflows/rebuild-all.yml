@@ -1,0 +1,21 @@
+name: Force Rebuild All
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  mirror:
+    uses: ./.github/workflows/mirror-devices.yml
+    secrets: inherit
+
+  build:
+    needs: mirror
+    if: always()
+    uses: ./.github/workflows/build-emulators.yml
+    with:
+      force: true
+    secrets: inherit
