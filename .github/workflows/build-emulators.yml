@@ -9,16 +9,6 @@ on:
       force:
         type: boolean
         default: false
-  push:
-    paths:
-      - '.github/workflows/build-emulators.yml'
-      - '.github/workflows/build-chain.yml'
-      - '.github/workflows/update-repos.yml'
-      - 'devices.yml'
-      - 'distros.yml'
-      - 'emulators.yml'
-      - 'scripts/**'
-      - 'packages/**'
 
 permissions:
   contents: write
