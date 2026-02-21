@@ -1,14 +1,6 @@
 name: Mirror Package Sources
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/mirror-devices.yml'
-      - '.github/workflows/update-repos.yml'
-      - 'devices.yml'
-      - 'distros.yml'
-      - 'scripts/**'
   schedule:
     - cron: '0 3 * * 3'
   workflow_dispatch:
