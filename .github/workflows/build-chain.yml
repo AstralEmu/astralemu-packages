@@ -127,6 +127,7 @@ jobs:
           name: pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
           path: "*.pkg.tar"
           retention-days: 1
+          overwrite: true
 
       - name: Upload cores artifact
         if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'cores'
@@ -135,6 +136,7 @@ jobs:
           name: libretro-cores-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
           path: "cores-*/*.so"
           retention-days: 1
+          overwrite: true
 
       - name: Save success marker
         if: steps.build.outputs.completed == 'true'

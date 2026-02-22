@@ -203,6 +203,7 @@ jobs:
             pages/
             README.md
           retention-days: 1
+          overwrite: true
 
   # ==================================================================
   # BUILD-REPO-SEED: Single distro (most distant from source) to fill dep cache
@@ -465,6 +466,7 @@ jobs:
           name: repo-${{ inputs.device }}-${{ fromJson(needs.normalize.outputs.seed_entry).distro }}
           path: repo-output/
           retention-days: 1
+          overwrite: true
 
       - name: Upload dep cache
         uses: actions/upload-artifact@v4
@@ -472,6 +474,7 @@ jobs:
           name: dep-cache-${{ inputs.device }}
           path: dep-cache/
           retention-days: 1
+          overwrite: true
 
   # ==================================================================
   # BUILD-REPO: Remaining distros (matrix, reuses dep cache from seed)
@@ -745,6 +748,7 @@ jobs:
           name: repo-${{ inputs.device }}-${{ matrix.distro }}
           path: repo-output/
           retention-days: 1
+          overwrite: true
 
   # ==================================================================
   # DEPLOY: Merge all repo artifacts and push to gh-pages

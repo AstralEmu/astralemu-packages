@@ -14,6 +14,13 @@ cd /workspace/src-duck
 git fetch --depth 1 origin "$COMMIT"
 git checkout "$COMMIT"
 
+# Build zstd >= 1.5.7 (duckstation requires it, Ubuntu 24.04 ships 1.5.5)
+echo "Building zstd from source..."
+git clone --depth 1 --branch v1.5.7 https://github.com/facebook/zstd.git /tmp/zstd-src
+make -C /tmp/zstd-src lib -j"$(nproc)"
+make -C /tmp/zstd-src install PREFIX=/deps
+rm -rf /tmp/zstd-src
+
 # Build dependencies with official script
 echo "Building dependencies with official script..."
 # Remove -system-harfbuzz to use bundled version

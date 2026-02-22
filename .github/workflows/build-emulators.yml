@@ -409,6 +409,7 @@ jobs:
           name: pkg-setperf-${{ matrix.device.id }}
           path: "packages/setperf/*.pkg.tar"
           retention-days: 1
+          overwrite: true
 
       - name: Build astralemu-deps-repo package
         run: |
@@ -422,6 +423,7 @@ jobs:
           name: pkg-astralemu-deps-repo-${{ matrix.device.id }}
           path: "packages/astralemu-deps-repo/*.pkg.tar"
           retention-days: 1
+          overwrite: true
 
   # ===========================================================================
   # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)

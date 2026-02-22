@@ -18,6 +18,7 @@ build_core() {
   local name=$2
   local subdir=${3:-}
   local make_args=${4:-}
+  local pre_make=${5:-}
 
   echo "=== Building $name ==="
   if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
@@ -30,6 +31,7 @@ build_core() {
     fi
   fi
   cd "$name"
+  [[ -n "$pre_make" ]] && eval "$pre_make"
   [[ -n "$subdir" ]] && cd "$subdir"
   make clean 2>/dev/null || true
   timeout ${BUILD_TIMEOUT}s make -j$(nproc) platform=unix $make_args \
@@ -45,7 +47,10 @@ build_core() {
 
 # Batch 2: Flycast, ScummVM
 build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
-build_core scummvm scummvm "backends/platform/libretro"
+# scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
+# Falls back to portable function pointer approach, fully compatible with LTO+PIC
+build_core scummvm scummvm "backends/platform/libretro" "" \
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2
