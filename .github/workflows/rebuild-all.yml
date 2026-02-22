@@ -14,7 +14,7 @@ jobs:
 
   build:
     needs: mirror
-    if: always()
+    if: "!cancelled()"
     uses: ./.github/workflows/build-emulators.yml
     with:
       force: true

@@ -231,7 +231,7 @@ jobs:
   # ===========================================================================
   save-trackers:
     needs: [mirror, update-repo]
-    if: always() && needs.mirror.result == 'success'
+    if: "!cancelled() && needs.mirror.result == 'success'"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
