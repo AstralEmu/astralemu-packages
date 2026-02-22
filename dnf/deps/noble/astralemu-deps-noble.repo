@@ -1,0 +1,6 @@
+[astralemu-deps-noble]
+name=AstralEmu Packages (deps-noble)
+baseurl=https://astralemu.github.io/astralemu-packages/dnf/deps/noble/$releasever/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=https://astralemu.github.io/astralemu-packages/dnf/deps/noble/astralemu.gpg

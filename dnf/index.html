@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Index of /dnf</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; color: #24292e; }
+  h1 { border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; font-size: 1.5em; }
+  table { border-collapse: collapse; width: 100%; }
+  td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; }
+  .icon { width: 24px; text-align: center; }
+  .size { text-align: right; color: #586069; font-family: monospace; }
+  a { text-decoration: none; color: #0366d6; }
+  a:hover { text-decoration: underline; }
+  .readme { margin-top: 24px; line-height: 1.6; }
+  .readme h1, .readme h2, .readme h3 { border-bottom: 1px solid #e1e4e8; padding-bottom: 8px; }
+  .readme code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+  .readme pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; }
+</style>
+</head><body>
+<h1>Index of /dnf</h1>
+<table><tr><td class="icon">&#x1F4C1;</td><td><a href="..">..</a></td><td class="size"></td></tr><tr><td class="icon">&#x1F4C1;</td><td><a href="deps/">deps/</a></td><td class="size"></td></tr><tr><td class="icon">&#x1F4C1;</td><td><a href="device/">device/</a></td><td class="size"></td></tr></table>
+<hr><div class="readme"><p align="center">
+  <img src="https://github.com/AstralEmu/.github/raw/refs/heads/main/profile/banner-astralemu.svg" alt="AstralEmu Packages" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/rebuilt-every%207%20day-f2d974?style=flat-square" alt="Weekly rebuild"/>
+  <img src="https://img.shields.io/badge/LTO-thin-1a1a4e?style=flat-square" alt="LTO"/>
+  <img src="https://img.shields.io/badge/allocator-jemalloc-1a1a4e?style=flat-square" alt="jemalloc"/>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"/>
+</p>
+
+<h1 id="astralemu-packages">AstralEmu Packages</h1>
+<p>Optimized emulator packages for AstralEmu, rebuilt daily from source
+with performance flags and architecture-specific compilation.</p>
+<p>This repository serves packages through <strong>APT</strong>,
+<strong>DNF</strong>, and <strong>Pacman</strong> — matching whichever
+base distro your AstralEmu image uses. The repo is hosted via GitHub
+Pages at
+<code>https://astralemu.github.io/astralemu-packages/</code>.</p>
+<hr />
+<h2 id="whats-included">What's included</h2>
+<h3 id="emulators-standalone">Emulators (standalone)</h3>
+<p>Every major standalone emulator is packaged and rebuilt daily.
+Examples include RetroArch, PPSSPP, Dolphin, PCSX2, Duckstation, Azahar,
+Ryujinx, Eden, RPCS3, AetherSX2, and more — the full list depends on
+what's supported on your target architecture.</p>
+<h3 id="retroarch-cores">RetroArch Cores</h3>
+<p>All RetroArch cores are built individually as separate packages, so
+you only install what you need.</p>
+<h3 id="hardware-dependencies">Hardware Dependencies</h3>
+<p>Device-specific packages that provide kernel modules, firmware, and
+drivers required by embedded targets (RK3588, Snapdragon, Amlogic,
+etc.).</p>
+<h3 id="performance-profiles">Performance Profiles</h3>
+<p>Per-device packages that contain the dynamic tuning rules for the <a
+href="https://github.com/AstralEmu/astralemu#performance-manager">Performance
+Manager</a> — CPU/GPU/RAM governors, clocks, and pinning configs for
+every supported emulator.</p>
+<hr />
+<h2 id="build-optimizations">Build optimizations</h2>
+<p>Every package is compiled with:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Flag</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LTO=thin</code></td>
+<td>Link-time optimization — reduces binary size and improves runtime
+performance</td>
+</tr>
+<tr class="even">
+<td><code>jemalloc</code></td>
+<td>Replaces glibc's allocator for lower fragmentation and better
+throughput</td>
+</tr>
+<tr class="odd">
+<td>Architecture targeting</td>
+<td>Packages are compiled for the exact CPU features of each device
+(NEON, SVE, SSE4, AVX2, etc.)</td>
+</tr>
+</tbody>
+</table>
+<p>Builds run on GitHub Actions and are triggered automatically every 24
+hours, or on-demand when a new emulator release is tagged upstream.</p>
+<h2 id="repository-setup">Repository setup</h2>
+<p>Each device has its own repository for emulator packages, plus a
+shared repository for dependencies grouped by source distribution.
+Replace <code>&lt;device&gt;</code> with your device ID (e.g.
+<code>l4t</code>) and <code>&lt;source_distro&gt;</code> with the source
+distribution (e.g. <code>noble</code>).</p>
+<p>The <code>astralemu-deps-repo</code> meta-package (included in the
+device repo) automatically configures the shared dependency
+repository.</p>
+<h3 id="apt-ubuntu--debian">APT (Ubuntu / Debian)</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://astralemu.github.io/astralemu-packages/apt/device/<span class="op">&lt;</span>device<span class="op">&gt;</span>/astralemu.gpg <span class="kw">|</span> <span class="fu">sudo</span> tee /usr/share/keyrings/astralemu.gpg <span class="op">&gt;</span> /dev/null</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;deb [signed-by=/usr/share/keyrings/astralemu.gpg] https://astralemu.github.io/astralemu-packages/apt/device/&lt;device&gt; </span><span class="va">$(</span><span class="ex">lsb_release</span> <span class="at">-cs</span><span class="va">)</span><span class="st"> main&quot;</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/apt/sources.list.d/astralemu.list</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span></code></pre></div>
+<h3 id="dnf-universal-blue--fedora">DNF (Universal Blue / Fedora)</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf config-manager <span class="at">--add-repo</span> https://astralemu.github.io/astralemu-packages/dnf/device/<span class="op">&lt;</span>device<span class="op">&gt;</span>/astralemu-<span class="op">&lt;</span>device<span class="op">&gt;</span>.repo</span></code></pre></div>
+<h3 id="pacman-arch-linux">Pacman (Arch Linux)</h3>
+<p>Add to <code>/etc/pacman.conf</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[astralemu]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">SigLevel </span><span class="ot">=</span><span class="st"> Optional TrustAll</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Server </span><span class="ot">=</span><span class="st"> https://astralemu.github.io/astralemu-packages/pacman/device/&lt;device&gt;/$arch</span></span></code></pre></div>
+<h3 id="available-devices">Available devices</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Device ID</th>
+<th>Name</th>
+<th>Architecture</th>
+<th>Source Distro</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>l4t</code></td>
+<td>Nintendo Switch (Tegra X1)</td>
+<td>arm64</td>
+<td><code>noble</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="hosting">Hosting</h2>
+<p>This repo has its own GitHub Pages enabled. The built packages and
+repo metadata are served as static files from the <code>gh-pages</code>
+branch:</p>
+<pre><code>https://astralemu.github.io/astralemu-packages/
+├── apt/device/&lt;device&gt;/pool/&lt;distro&gt;/       # emulator packages
+├── apt/device/&lt;device&gt;/dists/&lt;distro&gt;/
+├── apt/deps/&lt;source_distro&gt;/pool/&lt;distro&gt;/  # shared dependencies
+├── apt/deps/&lt;source_distro&gt;/dists/&lt;distro&gt;/
+├── dnf/device/&lt;device&gt;/&lt;version&gt;/&lt;arch&gt;/
+├── dnf/deps/&lt;source_distro&gt;/&lt;version&gt;/&lt;arch&gt;/
+├── pacman/device/&lt;device&gt;/&lt;arch&gt;/
+└── pacman/deps/&lt;source_distro&gt;/&lt;arch&gt;/</code></pre>
+<p>The CI pipeline builds the packages on <code>main</code>, then pushes
+the repo metadata and package files to <code>gh-pages</code> for
+serving.</p>
+<h2 id="build-matrix">Build matrix</h2>
+<p>The CI dynamically generates the build matrix from two config
+files:</p>
+<ul>
+<li><strong><code>devices.yml</code></strong> — Target devices with
+architecture, compiler flags, and package sources to mirror</li>
+<li><strong><code>distros.yml</code></strong> — Target distributions
+(APT, DNF, Pacman) with their versions and mirrors</li>
+</ul>
+<p>Every package is cross-built to all target formats
+(<code>.deb</code>, <code>.rpm</code>, Pacman) with automatic dependency
+resolution. Dependencies missing or incompatible on the target distro
+are fetched from the source distribution, prefixed with its codename
+(e.g. <code>noble-libfoo</code>), and published to a shared dependency
+repository. Devices with the same source distribution share the same
+dependencies.</p>
+<hr />
+<p align="center">
+  <a href="https://github.com/AstralEmu/astralemu">Main Repo</a> •
+  <a href="https://astralemu.github.io">Documentation</a> •
+  <a href="https://github.com/orgs/AstralEmu/discussions">Community</a>
+</p></div>
+</body></html>
