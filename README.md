@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/rebuilt-every%2024h-f2d974?style=flat-square" alt="Daily rebuild"/>
+  <img src="https://img.shields.io/badge/rebuilt-every%207%20day-f2d974?style=flat-square" alt="Weekly rebuild"/>
   <img src="https://img.shields.io/badge/LTO-thin-1a1a4e?style=flat-square" alt="LTO"/>
   <img src="https://img.shields.io/badge/allocator-jemalloc-1a1a4e?style=flat-square" alt="jemalloc"/>
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"/>
@@ -82,9 +82,10 @@ Server = https://astralemu.github.io/astralemu-packages/pacman/device/<device>/$
 
 ### Available devices
 
-| Device ID | Name | Architecture | Source Distro |
-| --------- | ---- | ------------ | ------------- |
-| `l4t` | Nintendo Switch (Tegra X1) | arm64 | `noble` |
+
+| Device ID | Name                       | Architecture | Source Distro |
+| --------- | -------------------------- | ------------ | ------------- |
+| `l4t`     | Nintendo Switch (Tegra X1) | arm64        | `noble`       |
 
 ## Hosting
 
