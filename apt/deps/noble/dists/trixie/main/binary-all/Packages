@@ -1,0 +1,220 @@
+Package: noble-gnome-shell-common
+Version: 46.0-0ubuntu6~24.04.13
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3668
+Depends: dconf-gsettings-backend
+Provides: gnome-shell-common
+Filename: pool/trixie/noble-gnome-shell-common_46.0-0ubuntu6~24.04.13_all.deb
+Size: 247206
+MD5sum: 021328bf8806bad4ca1abfa2ccd3e2f8
+SHA1: b39032f751e0899422ab7ede56bd20cf8483c51c
+SHA256: 4d3e15d98302b7b20235c581faf5e835715a0ae01ae91a58c8db214a0f41318b
+Description: common files for the GNOME graphical shell
+
+Package: noble-gsettings-desktop-schemas
+Version: 46.1-0ubuntu1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 304
+Depends: dconf-gsettings-backend, session-migration
+Provides: gsettings-desktop-schemas
+Filename: pool/trixie/noble-gsettings-desktop-schemas_46.1-0ubuntu1_all.deb
+Size: 34198
+MD5sum: 0e3ba3226f526cdba318466b132016e3
+SHA1: 6f57e2232e900f098f002516edb71541ec5fb75a
+SHA256: e1a4087205063762d3390a426707758f588d9be7e43508b2bad693169658e16c
+Description: GSettings desktop-wide schemas
+
+Package: noble-iso-codes
+Version: 4.16.0-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 22056
+Provides: iso-codes
+Filename: pool/trixie/noble-iso-codes_4.16.0-1_all.deb
+Size: 3476092
+MD5sum: 6290e709eecd2f711bf36a284a7a3ede
+SHA1: 5d19c373f9d49725d9ca46ce0c3852fd57dbba48
+SHA256: fa0e0a98833f5759d4e34db778474fe6d8769561eb389e864aa170c36c862e75
+Description: ISO language, territory, currency, script codes and their translations
+
+Package: noble-keyboard-configuration
+Version: 1.226ubuntu1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 192
+Depends: debconf, liblocale-gettext-perl, xkb-data, xkb-data
+Provides: keyboard-configuration
+Filename: pool/trixie/noble-keyboard-configuration_1.226ubuntu1_all.deb
+Size: 39738
+MD5sum: 0807018e33636300904408435ec2bb8b
+SHA1: 69adf9efdca209fda1e039603ebbdb47a7948e0d
+SHA256: ec18712f6f2cfb7e6623ec1a6fd7fb8c2aed6d4b410ec8895b8cc069e14cf982
+Description: system-wide keyboard preferences
+
+Package: noble-libaudit-common
+Version: 1:3.1.2-2.1build1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 56
+Provides: libaudit-common
+Filename: pool/trixie/noble-libaudit-common_3.1.2-2.1build1.1_all.deb
+Size: 5476
+MD5sum: 8823ce82a2396a4bda6a4e269c449509
+SHA1: 7ece88497ead238fd69d2e3f3d96a17cb1c7028c
+SHA256: 331fb0ae12edc6d91a54733010d924a63a7266b5d50870043c2f46c053f24b7c
+Description: Dynamic library for security auditing - common files
+
+Package: noble-libopenal-data
+Version: 1:1.23.1-4build1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 308
+Provides: libopenal-data
+Filename: pool/trixie/noble-libopenal-data_1.23.1-4build1_all.deb
+Size: 159972
+MD5sum: 5fbdc5f482ec7c78640ca6b644bde9ef
+SHA1: 072d39635c5e4ad9208d677349c8f9c7f1e4dbde
+SHA256: 18dcbad5be6e07ebeb88a9fd0c5c3e5178765d6cf17125b086be7bb390c682db
+Description: Software implementation of the OpenAL audio API (data files)
+
+Package: noble-pipewire-audio
+Version: 1.0.5-1ubuntu3.2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 40
+Depends: libspa-0.2-bluetooth, pipewire-alsa, pipewire-pulse, wireplumber
+Provides: pipewire-audio
+Filename: pool/trixie/noble-pipewire-audio_1.0.5-1ubuntu3.2_all.deb
+Size: 3694
+MD5sum: ee3d6c16d0a9d9d430668e5e75bb5c8c
+SHA1: dc4b820184e6111f37336f0eda32e60402c5852e
+SHA256: d4ac02a207c2d88569b871d34ef7d05159613027759958b8a5e9c4283af963a5
+Description: recommended set of PipeWire packages for a standard audio desktop use
+
+Package: noble-python3-certifi
+Version: 2023.11.17-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 388
+Depends: ca-certificates, python3:any
+Provides: python3-certifi
+Filename: pool/trixie/noble-python3-certifi_2023.11.17-1_all.deb
+Size: 156750
+MD5sum: a761f0e6ee7c5c4f2ac8b44672d71345
+SHA1: 8f97f4c1c423f62cc3c83038a63c8150f973131a
+SHA256: b5479cd1d96a8ccd2a437a187ea21a597d31f12e86dd97bc201f193479e88e26
+Description: root certificates for validating SSL certs and verifying TLS hosts (python3)
+
+Package: noble-python3-idna
+Version: 3.6-2ubuntu0.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 400
+Depends: python3:any
+Provides: python3-idna
+Filename: pool/trixie/noble-python3-idna_3.6-2ubuntu0.1_all.deb
+Size: 47528
+MD5sum: 41410af230efd1921815336c3ef6c4ba
+SHA1: 043815561e312e462a14d7a198241de3e3145d03
+SHA256: ef3c34767893a624d405a96bafd590cf8faf36ea57df08cda6713afd46c9279c
+Description: Python IDNA2008 (RFC 5891) handling (Python 3)
+
+Package: noble-python3-mutagen
+Version: 1.46.0-2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 860
+Depends: python3:any
+Provides: python3-mutagen
+Filename: pool/trixie/noble-python3-mutagen_1.46.0-2_all.deb
+Size: 122316
+MD5sum: 7497e2ac3ca47bcc80dc685df0403f4c
+SHA1: 3c2caa6358d28183d40f3ee1e7bf3ade33455383
+SHA256: 8f02001038afe2d79b5d9d1a41ba436453dd5422cc9b65e5e0306c15b8703f4f
+Description: audio metadata editing library (Python 3)
+
+Package: noble-python3-requests
+Version: 2.31.0+dfsg-1ubuntu1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 300
+Depends: python3-certifi, python3-chardet, python3-idna, python3-urllib3, python3:any, ca-certificates
+Provides: python3-requests
+Filename: pool/trixie/noble-python3-requests_2.31.0+dfsg-1ubuntu1.1_all.deb
+Size: 49438
+MD5sum: 573ebc5aa05db03383df0b6650dd0cd3
+SHA1: a6cf9272317adc0a5f539e716b926dfbf51f014a
+SHA256: 3f8cb55798f508c95f3672c700f5c74b524a658bf77deb81cc8bc60fa626cc37
+Description: elegant and simple HTTP library for Python3, built for human beings
+
+Package: noble-python3-urllib3
+Version: 2.0.7-1ubuntu0.6
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 540
+Depends: python3:any
+Provides: python3-urllib3
+Filename: pool/trixie/noble-python3-urllib3_2.0.7-1ubuntu0.6_all.deb
+Size: 93776
+MD5sum: 831a07cb55017c3e7e8fe976e98de5c8
+SHA1: d24e46178de528c545e8d8c51fca19a4a0e8a241
+SHA256: f1b2824bd1e67c0a6d081076ea29ab2a18cb391c43d60c8810f80ba7e9e4c509
+Description: HTTP library with thread-safe connection pooling for Python3
+
+Package: noble-python3-websockets
+Version: 10.4-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 480
+Depends: python3:any
+Provides: python3-websockets
+Filename: pool/trixie/noble-python3-websockets_10.4-1_all.deb
+Size: 62510
+MD5sum: 8e9524318b6df6ec9ca08a64cc3b9a70
+SHA1: 480bb1585c10ab1341b659c2eff4f0f98ae357e8
+SHA256: 11596768e258e14cb8a43cf501ff2a7c6881335eca9e71f496c53dc597c36de4
+Description: implementation of the WebSocket Protocol (RFC 6455)
+
+Package: noble-ubuntu-wallpapers
+Version: 24.04.2
+Architecture: all
+Maintainer: Ubuntu Artwork Team <ubuntu-art@lists.ubuntu.com>
+Installed-Size: 9364
+Depends: ubuntu-wallpapers-noble
+Provides: ubuntu-wallpapers
+Filename: pool/trixie/noble-ubuntu-wallpapers_24.04.2_all.deb
+Size: 9456202
+MD5sum: eb406c90cf47bae3bfa256f4bfd6a19b
+SHA1: 3d4d2c6e2d353bca73ac9e1055e2ed2835221df0
+SHA256: ab192272059dae7f79e28f8a3c7375843fa935c4d385dbb480ba7827da829f40
+Description: Ubuntu Wallpapers
+
+Package: noble-x11proto-dev
+Version: 2023.2-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2076
+Depends: xorg-sgml-doctools
+Provides: x11proto-dev
+Filename: pool/trixie/noble-x11proto-dev_2023.2-1_all.deb
+Size: 597322
+MD5sum: afb7001c0c79e3e777cb9d6d8cfd29ea
+SHA1: 0f46b4569239cae7259cc6c9341973ec43ce13a6
+SHA256: 5bdb2ec7c892b824fd0f51201680f86ee571ba98537df740a0d1ad06082d8c21
+Description: X11 extension protocols and auxiliary headers
+
+Package: noble-xkb-data
+Version: 2.41-2ubuntu1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4136
+Provides: xkb-data
+Filename: pool/trixie/noble-xkb-data_2.41-2ubuntu1.1_all.deb
+Size: 390390
+MD5sum: 30538bfc765ab833dc1ff7cf9d2d98d5
+SHA1: 84ab61035377c388f93cf7dd490e642faf24ef3a
+SHA256: c11e1a8fce673196c14443b5ec9766aed2a498c4043de2a2c43304876b660dd7
+Description: X Keyboard Extension (XKB) configuration data
+

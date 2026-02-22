@@ -1,0 +1,1069 @@
+Package: cuda-cudart-10-0
+Version: 10.0.326-1
+Architecture: arm64
+Maintainer: cudatools <cudatools@nvidia.com>
+Installed-Size: 1608
+Depends: cuda-license-10-0
+Filename: pool/noble/cuda-cudart-10-0_10.0.326-1_arm64.deb
+Size: 103368
+MD5sum: d7a3aa49ce6ece94e6905b037563437e
+SHA1: 4741e8ec1558e1642b90d65080b9152c246e17dc
+SHA256: ddae7cf4b942810f17c59ea95c6653253fca6262612c4dbaad9145a0fc05903e
+Description: CUDA Runtime native Libraries
+
+Package: cuda-license-10-0
+Version: 10.0.326-1
+Architecture: arm64
+Maintainer: cudatools <cudatools@nvidia.com>
+Installed-Size: 120
+Filename: pool/noble/cuda-license-10-0_10.0.326-1_arm64.deb
+Size: 15000
+MD5sum: 70cf84242100b4ace9ed89ede0560d6d
+SHA1: 399acf4d51af777ec33a6cd9867338113d9186ef
+SHA256: c0d91f93163885fb1507092e65d2d7fbe4fed68f40dc7033e29dbdc23ae4b86e
+Description: CUDA licenses
+
+Package: ffmpeg
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2732
+Depends: libavcodec60, libavdevice60, libavfilter9, libavformat60, libavutil58, libc6, libpostproc57, libsdl2-2.0-0, libswresample4, libswscale7
+Filename: pool/noble/ffmpeg_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 1889222
+MD5sum: 11df5b2e990819166f57f535afbc5b30
+SHA1: 1bf96fb1afc7bddabc91bbffe617e2a7e43c3d63
+SHA256: c978e03087ab2d7831054804759967fb313f3a66bdf4ad8e9240f59d813999b2
+Description: Tools for transcoding, streaming and playing of multimedia files
+
+Package: ffmpeg-doc
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 37848
+Depends: libjs-jquery, libjs-bootstrap
+Filename: pool/noble/ffmpeg-doc_6.1.1-3ubuntu5l4t2_all.deb
+Size: 2060830
+MD5sum: 58c347b80c08c71167ab91efcdc9cba3
+SHA1: 716146c1a7280527311a787b3f8def72ec669c72
+SHA256: 840055bf476a7e344ce3a52ab2d4dd73eebc43bc02280004f37a19c693fb4ce7
+Description: Documentation of the FFmpeg multimedia framework
+
+Package: joycond
+Version: 0.6-1
+Architecture: arm64
+Maintainer: Daniel J. Ogorchock, CTCaer
+Installed-Size: 192
+Depends: libevdev2, libudev1
+Filename: pool/noble/joycond_0.6-1_arm64.deb
+Size: 44882
+MD5sum: 22b72b3766c38bd718dc216f6313eed7
+SHA1: 163ad344da918b165abe68739380d0c0511f1ec6
+SHA256: 4a084f221c834c3772122d3a5b107ab140b146fd129206d050d1742350cecd03
+Description: Pairs joy-cons together into a virtual controller
+
+Package: libavcodec-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 20872
+Depends: libavcodec60, libavutil-dev, libswresample-dev
+Filename: pool/noble/libavcodec-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 6488456
+MD5sum: 2a90e200b6157a61f8532c25a546b894
+SHA1: 8b6e3f18ab36a2450aa78bfa454e30c4ec0b44d0
+SHA256: 2e688b7c84be2ce6bc614ccf44e59c10b7cd8387618c4ba40ddbd278439f6b8b
+Description: FFmpeg library with de/encoders for audio/video codecs - development files
+
+Package: libavcodec-extra
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 80
+Depends: libavcodec-extra60
+Filename: pool/noble/libavcodec-extra_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 23922
+MD5sum: 0e34671ebd30ed178137e8e78bfc009c
+SHA1: 80bb46262784e098ac86ab64124e24cbde0ae447
+SHA256: f1c1c4a0b2d298c8b77477463d8346340f32375316c699e06d7216d48f72d0ab
+Description: FFmpeg library with extra codecs (metapackage)
+
+Package: libavcodec-extra60
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 28404
+Depends: libaom3, libaribb24-0t64, libavutil58, libc6, libcairo2, libcodec2-1.2, libdav1d7, libglib2.0-0t64, libgsm1, libjxl0.7, liblzma5, libmp3lame0, libopencore-amrnb0, libopencore-amrwb0, libopenjp2-7, libopus0, librav1e0, librsvg2-2, libshine3, libsnappy1v5, libspeex1, libsvtav1enc1d1, libswresample4, libtheora0, libtwolame0, libv4l-0t64, libva2, libvo-amrwbenc0, libvorbis0a, libvorbisenc2, libvpx9, libwebp7, libwebpmux3, libx264-164, libx265-199, libxvidcore4, libzvbi0t64, zlib1g
+Filename: pool/noble/libavcodec-extra60_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 11563526
+MD5sum: 17407b56c82a366c7565971300506f0a
+SHA1: a1a7fceb906b71e873ecca5ad536c7a53bdea3bb
+SHA256: 79e13c25677416c2155794fdbd3ed481108baa0a4375525384f19eada871e0dc
+Description: FFmpeg library with additional de/encoders for audio/video codecs
+
+Package: libavcodec60
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 28404
+Depends: libaom3, libavutil58, libc6, libcairo2, libcodec2-1.2, libdav1d7, libglib2.0-0t64, libgsm1, libjxl0.7, liblzma5, libmp3lame0, libopenjp2-7, libopus0, librav1e0, librsvg2-2, libshine3, libsnappy1v5, libspeex1, libsvtav1enc1d1, libswresample4, libtheora0, libtwolame0, libv4l-0t64, libva2, libvorbis0a, libvorbisenc2, libvpx9, libwebp7, libwebpmux3, libx264-164, libx265-199, libxvidcore4, libzvbi0t64, zlib1g
+Filename: pool/noble/libavcodec60_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 11625372
+MD5sum: 7b0ac8aaf075967aa633169331de8f4b
+SHA1: db031736864810a5fbdba00a0c10410d52d82708
+SHA256: d683f9fd3224080214f0e5fbb4e555eb14480472a1d841714bb764da6642a1d3
+Description: FFmpeg library with de/encoders for audio/video codecs - runtime files
+
+Package: libavdevice-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 480
+Depends: libavcodec-dev, libavdevice60, libavfilter-dev, libavformat-dev, libavutil-dev, libpostproc-dev, libswscale-dev, libswresample-dev
+Filename: pool/noble/libavdevice-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 105644
+MD5sum: 666841668c3fff1b983309cc027430d6
+SHA1: dad91acfe0917bb1e2af748e37dc8b0f729fe92d
+SHA256: 1bead1cd44ebf70653a74273bb1979b342f344d81b94dd8593170c47b2bf5e24
+Description: FFmpeg library for handling input and output devices - development files
+
+Package: libavdevice60
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 608
+Depends: libasound2t64, libavc1394-0, libavcodec60, libavfilter9, libavformat60, libavutil58, libc6, libcaca0, libcdio-cdda2t64, libcdio-paranoia2t64, libdc1394-25, libdrm2, libgl1, libiec61883-0, libjack-jackd2-0, libopenal1, libpulse0, libraw1394-11, libsdl2-2.0-0, libv4l-0t64, libx11-6, libxcb-shape0, libxcb-shm0, libxcb-xfixes0, libxcb1, libxext6, libxv1
+Filename: pool/noble/libavdevice60_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 89526
+MD5sum: 922bdf2bdb22106ad60ab070eb606e45
+SHA1: 893c71831cbcae96eb31b9e792c03849c1e05a69
+SHA256: 1a02eea9470bae11843d53759c1b6c969736cbacad28309450c14ea1033bb36d
+Description: FFmpeg library for handling input and output devices - runtime files
+
+Package: libavfilter-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 8696
+Depends: libavcodec-dev, libavfilter9, libavformat-dev, libavutil-dev, libpostproc-dev, libswresample-dev, libswscale-dev
+Filename: pool/noble/libavfilter-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 2219372
+MD5sum: 02752bbab4ac9e7ad32fadb23e15f59a
+SHA1: b48a4b903a67b58351a1031a28cb1b05db8122f7
+SHA256: 6fdf821ac71a9ad0d4dc7571563c3f0c28d52593229b3cbb13f34c844bee64eb
+Description: FFmpeg library containing media filters - development files
+
+Package: libavfilter-extra
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 80
+Depends: libavfilter-extra9
+Filename: pool/noble/libavfilter-extra_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 23918
+MD5sum: c0ead086ce6ca214e1bac19a617d523e
+SHA1: 7ac1a446d5a5b5767e950c8b777191dbc4329dce
+SHA256: 5c33e1c6cbc48fe102c35d38bf926c399d91cc18facc873189056e00f2be4fb7
+Description: FFmpeg library with extra filters (metapackage)
+
+Package: libavfilter-extra9
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 24820
+Depends: libass9, libavcodec60, libavformat60, libavutil58, libbs2b0, libc6, libflite1, libfontconfig1, libfreetype6, libfribidi0, libharfbuzz0b, liblilv-0-0, libmysofa1, libplacebo338, libpocketsphinx3, libpostproc57, librubberband2, libsphinxbase3t64, libstdc++6, libswresample4, libswscale7, libtesseract5, libva2, libvidstab1.1, libzimg2, libzmq5, ocl-icd-libopencl1, ocl-icd-libopencl1, zlib1g
+Filename: pool/noble/libavfilter-extra9_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 8252300
+MD5sum: b7a65cbbe14d4c23091fccbede00d5d6
+SHA1: 6574577447415819043c5bec9a3652fe15ab6b4b
+SHA256: 7f293ca13f04338a5f6c0fa4318311dbc22f9049aa73b26238dca95d43764b35
+Description: FFmpeg library with extra media filters - runtime files
+
+Package: libavfilter9
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 24948
+Depends: libass9, libavcodec60, libavformat60, libavutil58, libbs2b0, libc6, libflite1, libfontconfig1, libfreetype6, libfribidi0, libharfbuzz0b, liblilv-0-0, libmysofa1, libplacebo338, libpocketsphinx3, libpostproc57, librubberband2, libsphinxbase3t64, libstdc++6, libswresample4, libswscale7, libva2, libvidstab1.1, libzimg2, libzmq5, ocl-icd-libopencl1, ocl-icd-libopencl1, zlib1g
+Filename: pool/noble/libavfilter9_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 8164690
+MD5sum: 89365c106231124579746dfe5c361820
+SHA1: 7387cb5101a86a5a6f01f528ab70d2b9532ec6cc
+SHA256: f2688812b8dfcb890fd2b0e5ffc157f40f6b881148ca282ca8efa82da38ee55d
+Description: FFmpeg library containing media filters - runtime files
+
+Package: libavformat-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 6052
+Depends: libavcodec-dev, libavformat60, libavutil-dev, libswresample-dev
+Filename: pool/noble/libavformat-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 1479904
+MD5sum: 32a257ab73f3f7bef198faee67dcfc81
+SHA1: 28912a1eea4a748ceae51f575d6540b4215698df
+SHA256: 8c397209d0f7c5d86c040b8a9214c9d87c07e0efe9753ab6532de625f1849559
+Description: FFmpeg library with (de)muxers for multimedia containers - development files
+
+Package: libavformat-extra
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 80
+Depends: libavformat-extra60
+Filename: pool/noble/libavformat-extra_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 23920
+MD5sum: 2294d6da3b356e5d9443b6e2c03fa99e
+SHA1: b7e8bedf0ba18b6d8cb287c1fa6f234d84c35316
+SHA256: ba9a990f1fffe54959f21c6411b971b17369844d09ac71b60707e860c2ea0fbe
+Description: FFmpeg library with extra (de)muxers (metapackage)
+
+Package: libavformat-extra60
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 5868
+Depends: libavcodec60, libavutil58, libbluray2, libbz2-1.0, libc6, libchromaprint1, libgme0, libgnutls30t64, libopenmpt0t64, librabbitmq4, librist4, libsmbclient0, libsrt1.5-gnutls, libssh-gcrypt-4, libxml2, libzmq5, zlib1g
+Filename: pool/noble/libavformat-extra60_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 1197676
+MD5sum: fd429072fc28a514922e926ede56dda7
+SHA1: 9fbe3186a372dfe604317b5152ab1949a578c2d9
+SHA256: 7155d8c1b3c5ceff898856d91f7cbf658ad4699f15e1ba330a0c8b10407e1f80
+Description: FFmpeg library with additional (de)muxers for multimedia containers
+
+Package: libavformat60
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 5856
+Depends: libavcodec60, libavutil58, libbluray2, libbz2-1.0, libc6, libchromaprint1, libgme0, libgnutls30t64, libopenmpt0t64, librabbitmq4, librist4, libsrt1.5-gnutls, libssh-gcrypt-4, libxml2, libzmq5, zlib1g
+Filename: pool/noble/libavformat60_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 1196524
+MD5sum: ff73a4761cc320a55ee05dd767becec3
+SHA1: e025802ef26fbc7d3cba26296b3461c8d94c01b3
+SHA256: 5788f45075a02efe557ee1be7d975820f58991b173e6b3107f54b4c05dc2c353
+Description: FFmpeg library with (de)muxers for multimedia containers - runtime files
+
+Package: libavutil-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2436
+Depends: libavutil58
+Filename: pool/noble/libavutil-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 540406
+MD5sum: 9ca4008db37e2d0f2a715c4f05994561
+SHA1: b94ea10cb83287d7ea50b9b6e503e0362172cb3a
+SHA256: 5c7a78317917f853e6392f9f84b4e99a8db63054f76a1a8f133029e6165d621c
+Description: FFmpeg library with functions for simplifying programming - development files
+
+Package: libavutil58
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2028
+Depends: libc6, libdrm2, libva-drm2, libva-x11-2, libva2, libvdpau1, libx11-6, ocl-icd-libopencl1, ocl-icd-libopencl1
+Filename: pool/noble/libavutil58_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 382292
+MD5sum: 7b6f4ea906324802383a1ae5708fdb8f
+SHA1: 23087c12dcb1761bd6a7d56b3eb8fa18e7bce0ea
+SHA256: 1e14cc376bc492fcef4e108e171e857eb0c5f8162fc3bb44b779c5058cbba031
+Description: FFmpeg library with functions for simplifying programming - runtime files
+
+Package: libffi6
+Version: 3.2.1-4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6
+Filename: pool/noble/libffi6_3.2.1-4_arm64.deb
+Size: 17390
+MD5sum: e9b397599ec94d056f981cd30d207df3
+SHA1: ccea094a2d162428e669c7c71da5076f9959adf0
+SHA256: b96ab4a2ba4a6c025aba6a03ec440d086e77f924f3cbef910442518d15b60af4
+Description: Foreign Function Interface library runtime
+
+Package: libplymouth-dev
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 908
+Depends: libplymouth5
+Filename: pool/noble/libplymouth-dev_22.02.122-3ubuntu2_arm64.deb
+Size: 131002
+MD5sum: a44f14f31d7885ca93c2276e5e2a2809
+SHA1: 8504db6fab21e16a6fba788ad8a50698182efea7
+SHA256: 206b3273a20065d505a23ffc5962c3db83d5637d812f62c6f5624602616807d9
+Description: graphical boot animation and logger - development files
+
+Package: libplymouth5
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 860
+Depends: libc6, libpng16-16, libudev1
+Filename: pool/noble/libplymouth5_22.02.122-3ubuntu2_arm64.deb
+Size: 106450
+MD5sum: c4e4d026ccd221882020501e194d7af7
+SHA1: 69efd0b3339c3111f87cdc47c77781d9954e0729
+SHA256: 136f247aaced5d36d75b5f9688220582ad01993d1d3ea97b77b5df4d979e6e2a
+Description: graphical boot animation and logger - shared libraries
+
+Package: libpostproc-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libavutil-dev, libpostproc57
+Filename: pool/noble/libpostproc-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 49440
+MD5sum: 95d36aad90c3e4d08fd466dcaaa0d042
+SHA1: 4c6242fa8336dfaac8212324956ebe7ac5792cc1
+SHA256: 778297ff06a9404f32deac5037dca6e5e850b776574ffd40810ec0bbc9c6635a
+Description: FFmpeg library for post processing - development files
+
+Package: libpostproc57
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 236
+Depends: libavutil58, libc6
+Filename: pool/noble/libpostproc57_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 48702
+MD5sum: 82ed82a0c833ccca1e468d284100301b
+SHA1: 720c663ad05f8ca39ee231a6e255ee8955496d09
+SHA256: 29bb02342936137564920eb623cbd008ed4bbed39f52f443f91d20178aaf8111
+Description: FFmpeg library for post processing - runtime files
+
+Package: libswresample-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 320
+Depends: libavutil-dev, libswresample4
+Filename: pool/noble/libswresample-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 77724
+MD5sum: 15130fd18567188cfcf30e8a11a4f99f
+SHA1: aca95b58cda77f85431ec4bae8ade8a28c1b37cc
+SHA256: d3418fb5f6a9084ed067fa839051cb10d7d73878f27b64cb04d0cfe3cda75325
+Description: FFmpeg library for audio resampling, rematrixing etc. - development files
+
+Package: libswresample4
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 364
+Depends: libavutil58, libc6, libsoxr0
+Filename: pool/noble/libswresample4_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 65370
+MD5sum: 080eeef67314bb93408017b9c3cda025
+SHA1: 23956fbdc2c27b200c1009ba07bff8a5ef22996d
+SHA256: 3be5f9f42eb2591b5674b894bf1853af6f1ccc4dd1f177765d022b4d18b4cf71
+Description: FFmpeg library for audio resampling, rematrixing etc. - runtime files
+
+Package: libswscale-dev
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 824
+Depends: libavutil-dev, libswscale7
+Filename: pool/noble/libswscale-dev_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 206498
+MD5sum: 7e5dd61532063b035f821729eebd1025
+SHA1: 2baacdeea2e19d9f9af84e902600368a64398f25
+SHA256: ae889cc3c6449fe46c56a3300274ebb338aecb62e7cf0f55fd5555de8a18d690
+Description: FFmpeg library for image scaling and various conversions - development files
+
+Package: libswscale7
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1132
+Depends: libavutil58, libc6
+Filename: pool/noble/libswscale7_6.1.1-3ubuntu5l4t2_arm64.deb
+Size: 183020
+MD5sum: 3acbf59faf85b695cda080e2a634567f
+SHA1: 2ea6599606f2c992ebb2690b3dde6a9339c8262c
+SHA256: 3b6ef777d97ab68cd021c0fe21bcd0230f5704c59e8511a41d54e4a99093dcd3
+Description: FFmpeg library for image scaling and various conversions - runtime files
+
+Package: libwidevinecdm0
+Version: 4.10.2662.3+1
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 10188
+Depends: libc6, libnspr4
+Filename: pool/noble/libwidevinecdm0_4.10.2662.3+1_arm64.deb
+Size: 7784424
+MD5sum: 1f2364cf20bd036e34cd710f84baf50d
+SHA1: 9f8bc706ef3336bdf5c755944fa494d311eaa5eb
+SHA256: 700ae27a39652a5f802368b457d9f0cab41ec91480f913b883ff6d2266d728b6
+Description: Widevine CDM
+
+Package: libx11-6
+Version: 2:1.8.7-1-l4t
+Architecture: arm64
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 2692
+Depends: libc6, libxcb1, libx11-data
+Filename: pool/noble/libx11-6_1.8.7-1-l4t_arm64.deb
+Size: 637632
+MD5sum: af3dd49d65c9faa711cc81b8acf5609d
+SHA1: 580a3ff612f7ecfa127a840461dfd705cc3945fd
+SHA256: fe7b55ee10a0c7defc81ef71c034cd3357d0714e5082a46bfa82e71bf4184220
+Description: X11 client-side library
+
+Package: libx11-data
+Version: 2:1.8.7-1-l4t
+Architecture: all
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 2016
+Filename: pool/noble/libx11-data_1.8.7-1-l4t_all.deb
+Size: 111426
+MD5sum: 5e1a0c8e824d09f08ecb21b13809e73d
+SHA1: 69c2061dd798e83c865b446794b979a84c199b95
+SHA256: b52fe23d2f9cae0a0318fa03adee4065204becc6a8c48f2b3dc85e1a0fa02ceb
+Description: X11 client-side library
+
+Package: libx11-dev
+Version: 2:1.8.7-1-l4t
+Architecture: arm64
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 2656
+Depends: libx11-6, libxau-dev, libxdmcp-dev, x11proto-dev, xtrans-dev, libxcb1-dev
+Filename: pool/noble/libx11-dev_1.8.7-1-l4t_arm64.deb
+Size: 742886
+MD5sum: ccdebeda13a81f72ee048adbbd8b397c
+SHA1: 08b8620ab6046ae659c3032bab91ad3d1c545a1f
+SHA256: b0021935ac3d08bbc45f6ed87f418ec26d63aeb2becadbdb1b2f871cf180f280
+Description: X11 client-side library (development headers)
+
+Package: libx11-doc
+Version: 2:1.8.7-1-l4t
+Architecture: all
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 12140
+Filename: pool/noble/libx11-doc_1.8.7-1-l4t_all.deb
+Size: 1989624
+MD5sum: 8e0d6ad6e84a0da6e665d24e4a0d4ef3
+SHA1: dbf5ce2c35fbe9c602b8a3b139eff0e03341b42a
+SHA256: 8cd5ab209b4f35ca18f83a7bd80d3d5e99df1cbe8ec99c131761aafc71440803
+Description: X11 client-side library (development documentation)
+
+Package: libx11-xcb-dev
+Version: 2:1.8.7-1-l4t
+Architecture: arm64
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 128
+Depends: libx11-xcb1, libxcb1-dev, libx11-dev
+Filename: pool/noble/libx11-xcb-dev_1.8.7-1-l4t_arm64.deb
+Size: 11552
+MD5sum: 4e0782b8f48ed7833148d872c0049353
+SHA1: 79d0721b718878444e11d2362f85597ceed6e82b
+SHA256: ce5d14c9d5aee9eaff5e62396d0d78a9863c34f01bde37802e76424eac166e45
+Description: Xlib/XCB interface library (development headers)
+
+Package: libx11-xcb1
+Version: 2:1.8.7-1-l4t
+Architecture: arm64
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 224
+Depends: libx11-6
+Filename: pool/noble/libx11-xcb1_1.8.7-1-l4t_arm64.deb
+Size: 9500
+MD5sum: aea8e79070e86b66a82e4fbd2b5a337c
+SHA1: f544d5fa6082d5f4ad1b17a23f1b62e91e9ae34c
+SHA256: a6a2b966e316948987b09b91e5376ddaf4422d2e4d92f8a26d42bd2692416a4a
+Description: Xlib/XCB interface library
+
+Package: nintendo-switch-meta
+Version: 1.0-10+24.04
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 40
+Depends: switch-dock-handler, switch-alsa-ucm2, switch-touch-rules, switch-l4t-configs, switch-dconf-customizations, joycond, switch-joystick-mouse, switch-bsp, switch-flatpak, switch-l4t-repo
+Filename: pool/noble/nintendo-switch-meta_1.0-10+24.04_arm64.deb
+Size: 1908
+MD5sum: 38b7458684ffb6e29c4e413d9c1b15d9
+SHA1: 14e2f65fb5fe12972a87f75f74000e059ca7ca14
+SHA256: 4accd532fad70cbbf2d384fe67fbd7caeaae6cd8433f4b0b3754a86350b03628
+Description: Metapackage for all Nintendo Switch configuration packages
+
+Package: nvidia-bsp-32-3
+Version: 1.0-6
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Depends: nvidia-l4t-configs, nvidia-l4t-init, nvidia-l4t-firmware, nvidia-l4t-core, nvidia-l4t-3d-core, nvidia-l4t-cuda, nvidia-l4t-multimedia, nvidia-l4t-multimedia-utils, nvidia-l4t-oem-config, notify-osd
+Filename: pool/noble/nvidia-bsp-32-3_1.0-6_all.deb
+Size: 1864
+MD5sum: 8a62097eb566b37efa907a12e07585e8
+SHA1: aa93c5ff48cc5db4e90e75e83c47c8128689faa1
+SHA256: 94711c1f5af5198e9677f8498a471b7075ee785d6c1c1fb0e2db44d3ad513869
+Description: L4T BSP 32.3.1 Meta Package
+
+Package: nvidia-l4t-3d-core
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 77200
+Depends: libc6, libegl1, libgcc1, libstdc++6, libx11-6, libxext6, nvidia-l4t-core, nvidia-l4t-firmware, nvidia-l4t-init, nvidia-l4t-wayland, nvidia-l4t-x11
+Filename: pool/noble/nvidia-l4t-3d-core_32.3.1-20191209225816_arm64.deb
+Size: 22701314
+MD5sum: 0a82455e7ab60f01d4a754ca75a028da
+SHA1: 867cee7b8d010817339ac37b1d2a31df2d10f735
+SHA256: c6460fe891e56fe4316829e205bfade62142c1b0d7ef01e43c6822c80589768d
+Description: NVIDIA GL EGL Package
+
+Package: nvidia-l4t-ccp-t210ref
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 56
+Filename: pool/noble/nvidia-l4t-ccp-t210ref_32.3.1-20191209225816_arm64.deb
+Size: 5604
+MD5sum: 9076afd0e3d7dcb814b279c0a0db41ab
+SHA1: e87de1a1d4d909197abc6c62612a4d7cd926e3ee
+SHA256: 2384b532f66fb2cea76b95a1c6f9cffb36291ae7115b318bf09427646be8f562
+Description: NVIDIA Compatibility Checking Package
+
+Package: nvidia-l4t-configs
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 1592
+Filename: pool/noble/nvidia-l4t-configs_32.3.1-20191209225816_arm64.deb
+Size: 1412914
+MD5sum: a2953fe669f942e656723667ca761468
+SHA1: 0dd621732a72a84e10911c035fc001dd928bc118
+SHA256: 77ff5ad6e3c19ebe8538439eb44d0aae1841de2cc3e5e6f12158090b96118d44
+Description: NVIDIA configs debian package
+
+Package: nvidia-l4t-core
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 2684
+Depends: libc6, libegl1, libexpat1, libgcc1, libstdc++6
+Filename: pool/noble/nvidia-l4t-core_32.3.1-20191209225816_arm64.deb
+Size: 802530
+MD5sum: 891458a639bc18fff8ee55dc213820d9
+SHA1: e1e988cf039b9ce567c1ccdb0620b676251d56c9
+SHA256: 90ee87ccb0d4f8c2bc38bf6daaee33dbc264147bc8689d6e4a3564057e7b3cc4
+Description: NVIDIA Core Package
+
+Package: nvidia-l4t-cuda
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 46204
+Depends: libc6, nvidia-l4t-3d-core, nvidia-l4t-core
+Filename: pool/noble/nvidia-l4t-cuda_32.3.1-20191209225816_arm64.deb
+Size: 6493662
+MD5sum: 8bd4c4e2fee9ea6bf3393d540a98aa04
+SHA1: 1c2c29fdd2604753f1e72ef2488a81656b9b72e0
+SHA256: ffdb4c50593f2815b92d499e3840e67aa080905279cdbd69ae5db4dc30d2311d
+Description: NVIDIA CUDA Package
+
+Package: nvidia-l4t-firmware
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 2120
+Depends: libc6, libgcc1, libstdc++6, nvidia-l4t-core
+Filename: pool/noble/nvidia-l4t-firmware_32.3.1-20191209225816_arm64.deb
+Size: 860208
+MD5sum: 61d1d8c276874caf9c9e6cc804bb5f50
+SHA1: c3159b1970a91455b267fcca50188770649541c3
+SHA256: 51407ea978e4c731b92929186f7b535a3cec0a696626c84e3e7744d242e0a1d0
+Description: NVIDIA Firmware Package
+
+Package: nvidia-l4t-init
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 528
+Depends: libc6, libstdc++6, nvidia-l4t-core
+Filename: pool/noble/nvidia-l4t-init_32.3.1-20191209225816_arm64.deb
+Size: 44554
+MD5sum: a5626388b6855a83d7154b4d5606ec53
+SHA1: 738af7e1285a5f9d5b1c9fc9e524e95436b9eb24
+SHA256: ab4900bc27d1baab1dc00bd979e1b4b22d10fbf9295d7ea32b87d280f8a176c5
+Description: NVIDIA Init debian package
+
+Package: nvidia-l4t-multimedia
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 17536
+Depends: libasound2, libc6, libcairo2, libdatrie1, libegl1, libexpat1, libfontconfig1, libgcc1, libgles2, libglib2.0-0, libglvnd0, libgstreamer1.0-0, libgstreamer-plugins-bad1.0-0, libgstreamer-plugins-base1.0-0, libharfbuzz0b, libpango-1.0-0, libpangocairo-1.0-0, libpangoft2-1.0-0, libpcre3, libpixman-1-0, libstdc++6, libx11-6, libxau6, libxcb1, libxdmcp6, libxext6, libxrender1, zlib1g, nvidia-l4t-3d-core, nvidia-l4t-core, nvidia-l4t-cuda, nvidia-l4t-multimedia-utils
+Filename: pool/noble/nvidia-l4t-multimedia_32.3.1-20191209225816_arm64.deb
+Size: 4018700
+MD5sum: d96afd225e768e4622b5626cc3b06759
+SHA1: b95e493746fd676e44d84b407f209294295285fe
+SHA256: b1d0e03284e3a1bc86153b832688ee6be962d27c363b15fca4a4d21709d617eb
+Description: NVIDIA Multimedia Package
+
+Package: nvidia-l4t-multimedia-utils
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 144
+Depends: libc6, libcairo2, libdatrie1, libegl1, libexpat1, libfontconfig1, libgcc1, libgles2, libglib2.0-0, libglvnd0, libharfbuzz0b, libpangoft2-1.0-0, libpcre3, libpixman-1-0, libstdc++6, libx11-6, libxau6, libxcb1, libxdmcp6, libxext6, libxrender1, zlib1g, nvidia-l4t-core
+Filename: pool/noble/nvidia-l4t-multimedia-utils_32.3.1-20191209225816_arm64.deb
+Size: 19130
+MD5sum: 04624c42d7b168677944e8b22709a95c
+SHA1: 3ee314ca64a53fbbf92abba10fa9c6b095e68059
+SHA256: df4bcbac570a5ee94f47d0607a062c685e8186e815be4e1b4f59ee588a49eef4
+Description: NVIDIA Multimedia Package
+
+Package: nvidia-l4t-oem-config
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 164
+Depends: nvidia-l4t-core
+Filename: pool/noble/nvidia-l4t-oem-config_32.3.1-20191209225816_arm64.deb
+Size: 12836
+MD5sum: c86e76a33081f295338a0c0d8fcb3e3f
+SHA1: 61146f6031f0d3c1e1e8b89e8011a45ad7678e2d
+SHA256: 400b6fbd5d523c99130e47f49e38abe3ddab2778c23f875d6f8721f7b0b34eb2
+Description: NVIDIA OEM-Config Package
+
+Package: nvidia-l4t-wayland
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 108
+Depends: libc6, libffi6, libwayland-client0, libwayland-server0
+Filename: pool/noble/nvidia-l4t-wayland_32.3.1-20191209225816_arm64.deb
+Size: 20258
+MD5sum: 920f3506316c83261dfa4cb5e7f9a071
+SHA1: de53d8311e48e2ab2a4cd28da334f45b9321ba0e
+SHA256: d6e8cbeb5ddcf8b10f09ec8263237e9ff9247f773e920e5dd6e8980dcd978668
+Description: NVIDIA Wayland Package
+
+Package: nvidia-l4t-x11
+Version: 32.3.1-20191209225816
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 56
+Depends: libc6, nvidia-l4t-firmware, nvidia-l4t-init
+Filename: pool/noble/nvidia-l4t-x11_32.3.1-20191209225816_arm64.deb
+Size: 4364
+MD5sum: 3d57d418677f026267b9e0d7a84de7b4
+SHA1: dc8cca5ad6c1385bff7c09b0ee9e5dfed5d3a4ab
+SHA256: 2ba79d01eaf9ba96947cf3d2815a27f3e27fc5f0a4b2ee9b98d4c2e7213074c8
+Description: NVIDIA X11 Package
+
+Package: onboard
+Version: 1.4.2-1
+Architecture: arm64
+Maintainer: Uwe Niethammer <uwe@dr-niethammer.de>
+Installed-Size: 2476
+Depends: gir1.2-gdkpixbuf-2.0, gir1.2-glib-2.0, gir1.2-gtk-3.0, gir1.2-pango-1.0, iso-codes, librsvg2-common, onboard-common, onboard-common, python3-cairo, python3-dbus, python3-gi-cairo, dconf-gsettings-backend, python3, python3, python3:any, libc6, libcairo2, libcanberra0t64, libdconf1, libgcc-s1, libglib2.0-0t64, libgtk-3-0t64, libhunspell-1.7-0, libstdc++6, libudev1, libx11-6, libxi6, libxkbfile1, libxtst6
+Filename: pool/noble/onboard_1.4.2-1_arm64.deb
+Size: 398932
+MD5sum: 479fbfb4eb0e9b0d7641aa242a7622a4
+SHA1: 350bf06d352ef68d653248b256b00dc9486aa45f
+SHA256: 1b950978fca3d1ef1c81cc741784f80d5f56a134ef3db860590b5f5d66b11850
+Description: Simple On-screen Keyboard
+
+Package: onboard-common
+Version: 1.4.2-1
+Architecture: all
+Maintainer: Uwe Niethammer <uwe@dr-niethammer.de>
+Installed-Size: 4484
+Depends: python3
+Filename: pool/noble/onboard-common_1.4.2-1_all.deb
+Size: 606176
+MD5sum: 9913502d2463687782b93bc36399dacb
+SHA1: 85095c00a15a08e305589878b980e3ec04ba61ca
+SHA256: 88d42366cb363b5712af65aa87b538afc9b55e52c33271f9fba9481729608981
+Description: Simple On-screen Keyboard (common files)
+
+Package: onboard-data
+Version: 1.4.2-1
+Architecture: all
+Maintainer: Uwe Niethammer <uwe@dr-niethammer.de>
+Installed-Size: 28920
+Depends: onboard, onboard
+Filename: pool/noble/onboard-data_1.4.2-1_all.deb
+Size: 5221314
+MD5sum: 26119743b318a1f006570b5cbafc16b5
+SHA1: 15e775e030aa57c7cc3afc2a364dcf8c338e3f06
+SHA256: e54dc42b6d16ec5ca7c9a1b46e7b34bf5d5b3248257505e5b1ef64f9b3a08f7a
+Description: Language model files for the word suggestion feature of Onboard
+
+Package: plymouth
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1184
+Depends: init-system-helpers, sysvinit-utils, systemd, udev, libc6, libdrm2, libplymouth5
+Filename: pool/noble/plymouth_22.02.122-3ubuntu2_arm64.deb
+Size: 127054
+MD5sum: 605e4b4e742c15a9905a0ea4e97e2ff9
+SHA1: 17869c7219271ef351aeda3c63d75007decac250
+SHA256: 5714669298b61b48b12d56a01939afe7bcfa2b57f384c66ce71dab34932b29a0
+Description: boot animation, logger and I/O multiplexer
+
+Package: plymouth-label
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: plymouth, libc6, libcairo2, libglib2.0-0, libpango-1.0-0, libpangocairo-1.0-0, libplymouth5, fonts-ubuntu, fontconfig-config
+Filename: pool/noble/plymouth-label_22.02.122-3ubuntu2_arm64.deb
+Size: 5974
+MD5sum: ab6faa357e5a0642cd6fa69dcc8c71e1
+SHA1: f441739d4738c14c76b419eb22287de36d38a96f
+SHA256: 62d1f917862ea36a59397e36f0e398e25ac0ac95fc025f6362dc0e9834166f8e
+Description: boot animation, logger and I/O multiplexer - label control
+
+Package: plymouth-label-ft
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: plymouth, libc6, libfreetype6, libplymouth5
+Filename: pool/noble/plymouth-label-ft_22.02.122-3ubuntu2_arm64.deb
+Size: 6128
+MD5sum: cb050b0698265dbc6359486a3b13441f
+SHA1: db836386448c640661384635617fd78ec3550660
+SHA256: e358775b866421e071f21c46dae28769f4fd6ecb894aaa1a9b7857203fd85d1d
+Description: boot animation, logger and I/O multiplexer - label-ft control
+
+Package: plymouth-theme-spinner
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 540
+Depends: libc6, libplymouth5, plymouth, plymouth-label, lsb-release
+Filename: pool/noble/plymouth-theme-spinner_22.02.122-3ubuntu2_arm64.deb
+Size: 104542
+MD5sum: e98882e36a7ff104664497327e40ae73
+SHA1: f99f0dfba0baf9cccb3360e0eceb18608dbd5282
+SHA256: 8f84021db14bb04adb2499e5a5fa25d55cf5468d08b0ab911c429ef7368d01bc
+Description: boot animation, logger and I/O multiplexer - spinner theme
+
+Package: plymouth-theme-ubuntu-text
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 128
+Depends: libc6, libplymouth5, plymouth, lsb-release
+Filename: pool/noble/plymouth-theme-ubuntu-text_22.02.122-3ubuntu2_arm64.deb
+Size: 9034
+MD5sum: d0bbeda03049241183924ac549199fcc
+SHA1: b9c5b5f5fa651ea43cc3dc8d6ddadeeaa7cef64f
+SHA256: ec15fc48ed9838a854f2aecdff8b6a03b9ac11651aa90adb7e4a40ef9dd7dead
+Description: boot animation, logger and I/O multiplexer - ubuntu text theme
+
+Package: plymouth-themes
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1152
+Depends: plymouth, plymouth-label, plymouth-theme-spinner, libc6, libplymouth5
+Filename: pool/noble/plymouth-themes_22.02.122-3ubuntu2_arm64.deb
+Size: 553394
+MD5sum: f273069a6fc352c2a52ba0d95ad9892c
+SHA1: 0fbae5558cef145c1e539ad47adb5873b7297742
+SHA256: ea85ce740839e3e817f36b5b059a783970e1305c34fbfcdd4ed7f0752841471d
+Description: boot animation, logger and I/O multiplexer - themes
+
+Package: plymouth-x11
+Version: 22.02.122-3ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: plymouth, libc6, libcairo2, libglib2.0-0, libgtk-3-0, libplymouth5
+Filename: pool/noble/plymouth-x11_22.02.122-3ubuntu2_arm64.deb
+Size: 7788
+MD5sum: 18a491699d0fbc695fb9041d037ebb2f
+SHA1: 5b56f945eb59bd3705f189d09710df76bb10365a
+SHA256: 263ec587466895110a1cc089e5a063c9f9c120dee666720eb0290501b28655e5
+Description: boot animation, logger and I/O multiplexer - X11 renderer
+
+Package: qt6-gtk2-platformtheme
+Version: 0.2-1+24.04
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 456
+Depends: libc6, libgcc-s1, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libgtk2.0-0t64, libpango-1.0-0, libqt6core6t64, libqt6gui6t64, libqt6widgets6t64, libstdc++6, libx11-6, qt6-base-abi
+Filename: pool/noble/qt6-gtk2-platformtheme_0.2-1+24.04_arm64.deb
+Size: 105944
+MD5sum: 54cdd04d2ea9bdb04a92e29963721ab2
+SHA1: f206adb242c446816e34497d381f42257dc9602b
+SHA256: fee57198320f3ddafba0be38039f5a0b9da6971815e216bef544646bfd5f04e7
+Description: Qt 6 extra widget styles - GTK+ 2 Platform theme
+
+Package: switch-alsa-ucm2
+Version: 1.0-1+24.04
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 84
+Depends: libasound2-data
+Filename: pool/noble/switch-alsa-ucm2_1.0-1+24.04_all.deb
+Size: 4108
+MD5sum: 57bcdb5e01f3c2779015ff23dbba2b8b
+SHA1: cf70d89bc188d73557ffe8d7ec84a8269585aab3
+SHA256: 246f4cc914ae0d797fea53339dc097dee580fdfb57b7c2adbc51329cf636aeaa
+Description: ALSA UCM2 configuration for the Nintendo Switch
+
+Package: switch-bsp
+Version: 5.1.2-26+24.04
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 185740
+Filename: pool/noble/switch-bsp_5.1.2-26+24.04_all.deb
+Size: 41960472
+MD5sum: 6d700e3ca4ead9d5dc3b7fe88b1bfd46
+SHA1: 758aef409a1ad2e455d4b5bce235c6bfb999b86e
+SHA256: b5f8692fb07d87af7505d2162d5faaab0c08b0e78c0d20c96cbad5f06615a7b5
+Description: Switch L4T Bootstack and Kernel Support
+
+Package: switch-dconf-customizations
+Version: 1.0-5
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 80
+Depends: dconf-cli
+Filename: pool/noble/switch-dconf-customizations_1.0-5_all.deb
+Size: 2488
+MD5sum: 9a2d7d0ec9f9bc21f0481d62e89c5031
+SHA1: 73c1bbf1c8f968a548471a31803263146adbefdf
+SHA256: 0da5c996e8cc37ed3e3bc8e28788ab357cbae7b36f94ed33fdbb9e4f9fdd3a47
+Description: Application configs for the Nintendo Switch
+
+Package: switch-dock-handler
+Version: 2.2-1
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 176
+Depends: x11-xserver-utils, pulseaudio-utils, v4l-utils
+Filename: pool/noble/switch-dock-handler_2.2-1_all.deb
+Size: 5188
+MD5sum: 9aa23f24812d769f17d1182a5efdbe98
+SHA1: fd1fb2325a699b1e06f34a8a255e7956130608f5
+SHA256: 0f0bc10d6fd8a7538a13bd763ae8d3ef6f423cd4c5940ea4975813519f12ed73
+Description: Scripts to switch display and audio source when docked
+
+Package: switch-flatpak
+Version: 1.0-5
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 18332
+Depends: gnome-software-plugin-flatpak
+Filename: pool/noble/switch-flatpak_1.0-5_arm64.deb
+Size: 18725130
+MD5sum: e9c2c3f29b9e258eb78d4945c8be01e5
+SHA1: 5aa2db2e1bf57116bd2f0558fe6ab94922acb629
+SHA256: c6b6b7d3c7b1ffbd2617e653252b26e4e300f991c9368ec6bf192c1b249b25a3
+Description: Switch L4T Flatpak Support
+
+Package: switch-gnome
+Version: 1.0-6+24.04
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 48
+Depends: gnome-shell, gnome-software-plugin-flatpak, qt5-gtk2-platformtheme, qt6-gtk2-platformtheme, fuse3, libfuse2, wireplumber, pipewire, pipewire-audio
+Filename: pool/noble/switch-gnome_1.0-6+24.04_arm64.deb
+Size: 1842
+MD5sum: acfa10b01bf34df622e730b48948f89d
+SHA1: 7143a7baf0b26fef18fa7ef7f3df53db95e22557
+SHA256: a72c58360a3e3b1fd1da2d973ea1ec63fb4d3e3c6bc52de63a2fa4171bc19d24
+Description: Metapackage for GNOME only Nintendo Switch configuration packages
+
+Package: switch-joystick-mouse
+Version: 1.2-1
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 44
+Filename: pool/noble/switch-joystick-mouse_1.2-1_all.deb
+Size: 2156
+MD5sum: b44ed9b6098eac8723c60c564bbb8d79
+SHA1: 83a40e73eb42783cf19efe654d05199c9b5bc5ec
+SHA256: 81f6612ba3dcda7b9fe9191de2e5b378adc82f0d51ff808f20d10c485e3aa1fe
+Description: Mouse/Keyboard mappings for Nintendo Switch
+
+Package: switch-kde
+Version: 1.0-10+24.04
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 92
+Depends: plasma-desktop, sddm, switch-sddm-rule, onboard, plasma-discover-backend-flatpak, fuse3, libfuse2, wireplumber, pipewire, pipewire-audio
+Filename: pool/noble/switch-kde_1.0-10+24.04_arm64.deb
+Size: 4998
+MD5sum: adba1e28839f1803f417735994e4b589
+SHA1: 34135ff0b6a5ff2da2fe90f0d2c276b73651a26b
+SHA256: 01d0f5c05fbd2ae0d15ae8ee833b8a8383e2904d9a5ec0d059cbd7db5470f5c6
+Description: Metapackage for KDE only Nintendo Switch configuration packages
+
+Package: switch-l4t-configs
+Version: 1.5-18+24.04
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 1848
+Depends: yad, libhidapi-hidraw0, imagemagick
+Filename: pool/noble/switch-l4t-configs_1.5-18+24.04_all.deb
+Size: 520540
+MD5sum: 5e60cf820515fa9ead7c7dd4dc262f0b
+SHA1: cdd0f298380d380640b085e3147daed25d7eaf52
+SHA256: ffd92339a1d9f18176112155528b61f48adb5226c26ac8f063b2508f22395133
+Description: L4T Configs for Nintendo Switch
+
+Package: switch-l4t-repo
+Version: 1.0-0+24.04
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Filename: pool/noble/switch-l4t-repo_1.0-0+24.04_all.deb
+Size: 1962
+MD5sum: 83c516734b27f3503f0a95f4d6f4a6bb
+SHA1: 73a5c6cb8d633f7596f07f3a064bdef747b35dc5
+SHA256: 3378185b3f625729a2b2285392920aa9849a794dc559fc96dc647731763a9182
+Description: L4T Apt Repo and Key
+
+Package: switch-multimedia
+Version: 1.1-1+24.04
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Depends: mpv, smplayer, smplayer-themes, yt-dlp, libwidevinecdm0
+Filename: pool/noble/switch-multimedia_1.1-1+24.04_arm64.deb
+Size: 1842
+MD5sum: e81064b9e32c3c025f2725d05257c8cb
+SHA1: fab103fc90cb687505a9cee47d16dc6db11abeb9
+SHA256: 3d372eb731d9e38ccdb9459b5cd92b8280ab6cb6d00e67faa6044e492ddfee28
+Description: Metapackage for all Nintendo Switch Multimedia Packages
+
+Package: switch-sddm-rule
+Version: 1.0-1
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 48
+Filename: pool/noble/switch-sddm-rule_1.0-1_all.deb
+Size: 1578
+MD5sum: 18e81adbec861a2838ffa9970f95f9b5
+SHA1: c9e809d79b78a40c4b6cd6a015be5f4421ecd787
+SHA256: c87dbdf14d655aa561fcf2168052b7808412f405caec12905fc0c319261e78a5
+Description: Udev rules to allow sddm to initialize on Tegra Drivers
+
+Package: switch-touch-rules
+Version: 1.3-0ubuntu2
+Architecture: all
+Maintainer: Billy Laws <blaws05@gmail.com>
+Installed-Size: 68
+Depends: udev, libinput10
+Filename: pool/noble/switch-touch-rules_1.3-0ubuntu2_all.deb
+Size: 2194
+MD5sum: e29853d5e360cab6f72404b62e08480b
+SHA1: d4875dd600f7f73c42587154729698f19b3ef7ad
+SHA256: bbe1f41bb909bd389d5ef71f493a2051cf4176c729f9e8df421515401997f50d
+Description: Udev rules to rotate touchscreen on the Nintendo Switch
+
+Package: switch-unity
+Version: 1.0-8
+Architecture: arm64
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 64
+Depends: unity, lightdm, onboard, gnome-software-plugin-flatpak, qt5-gtk2-platformtheme, qt6-gtk2-platformtheme, fuse3, libfuse2
+Filename: pool/noble/switch-unity_1.0-8_arm64.deb
+Size: 2084
+MD5sum: f826fd09e6d55238394ef4dd196526d4
+SHA1: a3cc996b5fa06a6bc1d03479949202725abc11d9
+SHA256: c728d34c1bc5f0b2acf5362a9d2b4acdc8a582ea7011e57db300ea7b1a2abd17
+Description: Metapackage for Unity only Nintendo Switch configuration packages
+
+Package: xserver-xorg-core
+Version: 2:1.20.13-1ubuntu1~20.04.8
+Architecture: arm64
+Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
+Installed-Size: 3900
+Depends: xserver-common, keyboard-configuration, udev, libegl1, libaudit1, libbsd0, libc6, libdbus-1-3, libdrm2, libepoxy0, libgbm1, libgcrypt20, libgl1, libpciaccess0, libpixman-1-0, libselinux1, libsystemd0, libudev1, libunwind8, libxau6, libxdmcp6, libxfont2, libxshmfence1
+Filename: pool/noble/xserver-xorg-core_1.20.13-1ubuntu1~20.04.8_arm64.deb
+Size: 1425158
+MD5sum: 9a27ddb922e06a5d71186b854d292ff1
+SHA1: 89b3b1687b2fe56ae3a24114b76ae09e1cc14c45
+SHA256: 6e98077df53afd106cbf1470f8d93a529b64c06368a62e3d2ec793830c355618
+Description: Xorg X server - core server
+
+Package: xserver-xorg-dev
+Version: 2:1.20.13-1ubuntu1~20.04.8
+Architecture: arm64
+Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
+Installed-Size: 1652
+Depends: libpixman-1-dev, x11proto-dev, libxfont-dev, libxkbfile-dev, libpciaccess-dev, mesa-common-dev
+Filename: pool/noble/xserver-xorg-dev_1.20.13-1ubuntu1~20.04.8_arm64.deb
+Size: 201550
+MD5sum: e7fe1318dc6a09071508c3b4d4e6745d
+SHA1: 8147c78ff6a7a3b58dff69c28adeb87577e3f08c
+SHA256: 581373a6f1827b709197fc2faf9f28657b382b5bf44229651bd36487e6550bb2
+Description: Xorg X server - development files
+
+Package: xserver-xorg-input-joystick
+Version: 2:1.6.4-1.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 344
+Depends: libc6, xorg-input-abi-24, xserver-xorg-core
+Filename: pool/noble/xserver-xorg-input-joystick_1.6.4-1.3_arm64.deb
+Size: 101104
+MD5sum: 26ab7f318c544ea737197767a57675b8
+SHA1: a4c4fa0e2e2dbf448f4a84db71c5e4cf87734b39
+SHA256: f31ff3b9cf7fbf1e2c15ae47258b4509c6a9cb6abe69ab3fd359e326eb01116e
+Description: X.Org X server -- joystick input driver
+
+Package: xserver-xorg-input-libinput
+Version: 1.2.1-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 156
+Depends: libc6, libinput10, xorg-input-abi-24, xserver-xorg-core
+Filename: pool/noble/xserver-xorg-input-libinput_1.2.1-1_arm64.deb
+Size: 35600
+MD5sum: fb493f509d2b410eac6a2139fc381306
+SHA1: 4d2f3b5a4fc96478f60bb1401e7a620bb6dfe856
+SHA256: 9a59cc007cb83a83915b42fa7c638c4baa9429d0669687a1aa82bdc2bd175258
+Description: X.Org X server -- libinput input driver
+
+Package: xserver-xorg-input-libinput-dev
+Version: 1.2.1-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 64
+Filename: pool/noble/xserver-xorg-input-libinput-dev_1.2.1-1_all.deb
+Size: 4816
+MD5sum: f980ca908a81bd6a63aa32ecb7ae6780
+SHA1: 06e7988b74fa31f439d445dad1f636ff7573e167
+SHA256: 5dbb5888d1c670d1e84b6589b18b2a1b31e199a38baeb6060231416c6c59da20
+Description: X.Org X server -- libinput input driver (development headers)
+
+Package: xserver-xorg-video-fbdev
+Version: 1:0.5.0-1ubuntu1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 88
+Depends: libc6, xorg-video-abi-24, xserver-xorg-core
+Filename: pool/noble/xserver-xorg-video-fbdev_0.5.0-1ubuntu1_arm64.deb
+Size: 12204
+MD5sum: f8917a6d9d0ef5cca722e6e4edbcfac7
+SHA1: 0e6ea62977408e62cb4fb6b2b87b993a040419e2
+SHA256: 14889523b570d35ce7df127517179bf8f4359bc842d34c2caf21d9be9be756e7
+Description: X.Org X server -- fbdev display driver
+
+Package: yt-dlp
+Version: 2023.11.16-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 12008
+Depends: python3-brotli, python3-certifi, python3-mutagen, python3-pycryptodome, python3-requests, python3-urllib3, python3-websockets, python3:any, python3-pkg-resources
+Filename: pool/noble/yt-dlp_2023.11.16-1_all.deb
+Size: 1795914
+MD5sum: bebb1b87fb4d432f38a5ab41602e11e0
+SHA1: 22c215e4fea408398da725409b081b6255317f0d
+SHA256: 73a12eef52666e9c95b8ca125b82bbc77727f356b7b760b738a320437deaebbe
+Description: downloader of videos from YouTube and other sites
+

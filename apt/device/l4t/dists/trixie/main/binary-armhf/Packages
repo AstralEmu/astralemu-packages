@@ -1,0 +1,318 @@
+Package: ffmpeg-doc
+Version: 9:6.1.1-3ubuntu5l4t2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 37848
+Depends: libjs-jquery, libjs-bootstrap
+Filename: pool/trixie/ffmpeg-doc_6.1.1-3ubuntu5l4t2_all.deb
+Size: 2060720
+MD5sum: f43e1583a32e37ddbee6ea7e37572bd4
+SHA1: 9270968268ee3822e3c1ed12e122f274c727727d
+SHA256: fd2bcbe78f9a11d409ccc4bf11316f5e38b71a258b9dab4dd32f9e48b9b92a07
+Description: Documentation of the FFmpeg multimedia framework
+
+Package: libx11-6
+Version: 2:1.8.7-1-l4t
+Architecture: armhf
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 1932
+Depends: noble-libc6, noble-libxcb1, libx11-data
+Filename: pool/trixie/libx11-6_1.8.7-1-l4t_armhf.deb
+Size: 576562
+MD5sum: f4c3b35e5f5496095860274ff3e96d89
+SHA1: 1229dd732ff5eaa2bee20d62b263fd8300fd9dcd
+SHA256: 2043af88555c5fb94133b7c31f3aba776ae70cbb294288528787c75b6e95532c
+Description: X11 client-side library
+
+Package: libx11-data
+Version: 2:1.8.7-1-l4t
+Architecture: all
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 2016
+Filename: pool/trixie/libx11-data_1.8.7-1-l4t_all.deb
+Size: 111516
+MD5sum: c241fc34df83be5d3cf6ae47c769797d
+SHA1: 085bcfc0240f0c385bb39e4d8182f3d14a1f9b5d
+SHA256: c9f1f177f016470ad4c209fd7c8556d7a6ea37791b2cdb9ad97f7686e10102fd
+Description: X11 client-side library
+
+Package: libx11-dev
+Version: 2:1.8.7-1-l4t
+Architecture: armhf
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 1836
+Depends: libx11-6, libxau-dev, libxdmcp-dev, noble-x11proto-dev, xtrans-dev, noble-libxcb1-dev
+Filename: pool/trixie/libx11-dev_1.8.7-1-l4t_armhf.deb
+Size: 671592
+MD5sum: b24c64b6244ea818fe2587bfa7099738
+SHA1: ba4f5744d2fefe8838bcd762ee9cdfb4700d9bf3
+SHA256: b98045f8786dc4853b6eca7d5d6709db695349695a547d744bd31d918f6c0f0d
+Description: X11 client-side library (development headers)
+
+Package: libx11-doc
+Version: 2:1.8.7-1-l4t
+Architecture: all
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 12140
+Filename: pool/trixie/libx11-doc_1.8.7-1-l4t_all.deb
+Size: 1989688
+MD5sum: e6d0bf4a38be80c24af8d6a25ee42b68
+SHA1: 8c9f468eb44dc0d7d9af80c180d88d6616ec8b4d
+SHA256: dd6be127139a276c97cb426e8c4e2572a47a172d832526606b24361482aa4073
+Description: X11 client-side library (development documentation)
+
+Package: libx11-xcb-dev
+Version: 2:1.8.7-1-l4t
+Architecture: armhf
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 128
+Depends: libx11-xcb1, noble-libxcb1-dev, libx11-dev
+Filename: pool/trixie/libx11-xcb-dev_1.8.7-1-l4t_armhf.deb
+Size: 11450
+MD5sum: 450bd83fb9e9cc1ba0001d15454fd0c7
+SHA1: c4f06702d0ca86c96737fa1dd3f94e487920e6d9
+SHA256: 5e94ee8b037b12f0ba15f53d3a392d10530744a4a343940db82f558a04cae5d1
+Description: Xlib/XCB interface library (development headers)
+
+Package: libx11-xcb1
+Version: 2:1.8.7-1-l4t
+Architecture: armhf
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Installed-Size: 104
+Depends: libx11-6
+Filename: pool/trixie/libx11-xcb1_1.8.7-1-l4t_armhf.deb
+Size: 9296
+MD5sum: 7680fe5015947b0a3ef2e6891018339b
+SHA1: 2706a9cfceacc6006c2f3fbdd50ef1ab5a4c1d5b
+SHA256: 2221709dfa49fe11e717515c56ccac8a784647149ba5abe0dc535e4b198b497d
+Description: Xlib/XCB interface library
+
+Package: nvidia-bsp-32-3
+Version: 1.0-6
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Depends: nvidia-l4t-configs, nvidia-l4t-init, nvidia-l4t-firmware, nvidia-l4t-core, nvidia-l4t-3d-core, nvidia-l4t-cuda, nvidia-l4t-multimedia, nvidia-l4t-multimedia-utils, nvidia-l4t-oem-config, notify-osd
+Filename: pool/trixie/nvidia-bsp-32-3_1.0-6_all.deb
+Size: 1858
+MD5sum: 2e12ecba5a08b27777f8029ab7e1237f
+SHA1: 6a2ecf79c120bf5ffddacb2926de55a6ca1ef601
+SHA256: 3cee732797eb63c846cbe1bb8c2f62c74fe7ae3db0d3c76417962f6e54d6a406
+Description: L4T BSP 32.3.1 Meta Package
+
+Package: onboard-common
+Version: 1.4.2-1
+Architecture: all
+Maintainer: Uwe Niethammer <uwe@dr-niethammer.de>
+Installed-Size: 4484
+Depends: noble-python3
+Filename: pool/trixie/onboard-common_1.4.2-1_all.deb
+Size: 606800
+MD5sum: 160b5fa54654cdf42d65a6fb3dc3688d
+SHA1: 2c549623db24035a135450d45cb32c4bd86f7521
+SHA256: 2e5a32ca3bef1becea93c65b0e870133630e3f1457d7cc683a494a055896b003
+Description: Simple On-screen Keyboard (common files)
+
+Package: onboard-data
+Version: 1.4.2-1
+Architecture: all
+Maintainer: Uwe Niethammer <uwe@dr-niethammer.de>
+Installed-Size: 28924
+Depends: onboard, onboard
+Filename: pool/trixie/onboard-data_1.4.2-1_all.deb
+Size: 5221224
+MD5sum: b5f68350968215aca2feb1464cefe618
+SHA1: 233d4d00a8ace7b889e400620428556d6ae159be
+SHA256: 14ac898b355821bebefbfb885e613d009db3ee47c0e8e7d62efe137692ff956d
+Description: Language model files for the word suggestion feature of Onboard
+
+Package: switch-alsa-ucm2
+Version: 1.0-1+24.04
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 84
+Depends: libasound2-data
+Filename: pool/trixie/switch-alsa-ucm2_1.0-1+24.04_all.deb
+Size: 4116
+MD5sum: b5c24a853cdbbbeeb9f31b73539f9563
+SHA1: 47f381505b1425d0cb17afdb9ebe241cb36dbb35
+SHA256: 04e319f7e69a95621ac01233e5272042cbb986a61b0b5abc4dc2db579d071299
+Description: ALSA UCM2 configuration for the Nintendo Switch
+
+Package: switch-bsp
+Version: 5.1.2-26+24.04
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 185740
+Filename: pool/trixie/switch-bsp_5.1.2-26+24.04_all.deb
+Size: 41960092
+MD5sum: df3ea067583f3ddbe4f74d7aa5023200
+SHA1: e346af3b7c3061453c69ec8ccdfb7601f2ce738c
+SHA256: 47e255793602a3ea9ee1d77d385196c5f2ab6f8bfebac6627c1bf42b5b2ddc6c
+Description: Switch L4T Bootstack and Kernel Support
+
+Package: switch-dconf-customizations
+Version: 1.0-5
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 80
+Depends: dconf-cli
+Filename: pool/trixie/switch-dconf-customizations_1.0-5_all.deb
+Size: 2486
+MD5sum: b4c5af6c91b79e06d751580154ced058
+SHA1: 93575424804835b227ae7a09291885d86e719570
+SHA256: 8a7195c13e2b35e97386810e179c63ed463b97073cdd96fd9401e9b247c81adb
+Description: Application configs for the Nintendo Switch
+
+Package: switch-dock-handler
+Version: 2.2-1
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 176
+Depends: x11-xserver-utils, pulseaudio-utils, noble-v4l-utils
+Filename: pool/trixie/switch-dock-handler_2.2-1_all.deb
+Size: 5188
+MD5sum: 0e3280390551e552a83e9b10a9f28da6
+SHA1: 047a3d26477f11b376a4bfc05edd67ce7e5422ee
+SHA256: b7cca89aa8469ee84bf013bdd5ef9259b368c40f3a2e52ebea9119682706259c
+Description: Scripts to switch display and audio source when docked
+
+Package: switch-joystick-mouse
+Version: 1.2-1
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 44
+Filename: pool/trixie/switch-joystick-mouse_1.2-1_all.deb
+Size: 2158
+MD5sum: 168f508a2031d850b37a116740ba5285
+SHA1: 45e7c59651021d4594c5302032a76a6c60648766
+SHA256: 798e9bc75e734634b31976ca0eb89cae51e5f2088ed7c8a3c78105d763f0ed8a
+Description: Mouse/Keyboard mappings for Nintendo Switch
+
+Package: switch-l4t-configs
+Version: 1.5-18+24.04
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 1848
+Depends: yad, libhidapi-hidraw0, imagemagick
+Filename: pool/trixie/switch-l4t-configs_1.5-18+24.04_all.deb
+Size: 520770
+MD5sum: 6d1865159aedb6d18523fdad3886a78b
+SHA1: 7bb5e06e74ba5920e59074b05fa0342165c9cff2
+SHA256: 56fe4285d288aecbcaffb247e27457efde0ee06e9fc2502cb44125c2b18725d1
+Description: L4T Configs for Nintendo Switch
+
+Package: switch-l4t-repo
+Version: 1.0-0+24.04
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Filename: pool/trixie/switch-l4t-repo_1.0-0+24.04_all.deb
+Size: 1968
+MD5sum: 7d5760741e236749810135996ac609a6
+SHA1: 878ef489d5c056924e6a90421bcee5a231d95744
+SHA256: c003b22ac231ce264855824786b6e5ee418049fbf93913e3d37277fc8f0a23f9
+Description: L4T Apt Repo and Key
+
+Package: switch-sddm-rule
+Version: 1.0-1
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 48
+Filename: pool/trixie/switch-sddm-rule_1.0-1_all.deb
+Size: 1584
+MD5sum: 40bd954f1439e407b26fcebe98e91fbf
+SHA1: 1d11cb2892b9e76c3a711b6a77a7d1c6165e0dbe
+SHA256: 00db54d8b031dc33b498c68af5661cdc1493b91c67b269213e06734e3d2624c9
+Description: Udev rules to allow sddm to initialize on Tegra Drivers
+
+Package: switch-touch-rules
+Version: 1.3-0ubuntu2
+Architecture: all
+Maintainer: Billy Laws <blaws05@gmail.com>
+Installed-Size: 68
+Depends: udev, noble-libinput10
+Filename: pool/trixie/switch-touch-rules_1.3-0ubuntu2_all.deb
+Size: 2198
+MD5sum: cf686e89e34014ce042221d9c71880c6
+SHA1: 822d71c7732fdf9ec0caca7c90db1b5e3ae97278
+SHA256: f057d54881b990990d1b0f17ccec002599b046914f8484420a1ded32c8b10653
+Description: Udev rules to rotate touchscreen on the Nintendo Switch
+
+Package: xserver-xorg-core
+Version: 2:1.20.13-1ubuntu1~20.04.8
+Architecture: armhf
+Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
+Installed-Size: 2520
+Depends: xserver-common, noble-keyboard-configuration, udev, libegl1, noble-libaudit1, libbsd0, noble-libc6, noble-libdbus-1-3, libdrm2, libepoxy0, noble-libgbm1, noble-libgcrypt20, libgl1, libpciaccess0, noble-libpixman-1-0, noble-libselinux1, noble-libsystemd0, noble-libudev1, noble-libunwind8, libxau6, libxdmcp6, libxfont2, libxshmfence1
+Filename: pool/trixie/xserver-xorg-core_1.20.13-1ubuntu1~20.04.8_armhf.deb
+Size: 1238016
+MD5sum: 10cba5e5c95e9eadafee14478d5b06a4
+SHA1: 49e3d79be9a8dc70bbee6a69e25aaaa4e4537ad6
+SHA256: 7d3d214c174c7a142e227f2bddbd9907107cb8631c373fbceca747fcf2037c2c
+Description: Xorg X server - core server
+
+Package: xserver-xorg-dev
+Version: 2:1.20.13-1ubuntu1~20.04.8
+Architecture: armhf
+Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
+Installed-Size: 1652
+Depends: noble-libpixman-1-dev, noble-x11proto-dev, libxfont-dev, libxkbfile-dev, libpciaccess-dev, noble-mesa-common-dev
+Filename: pool/trixie/xserver-xorg-dev_1.20.13-1ubuntu1~20.04.8_armhf.deb
+Size: 201542
+MD5sum: e25eefda74589718f43278f2bbb9ef38
+SHA1: 5d07674d393ce668703721f1733d727f54e1c42b
+SHA256: 7f52068d3a6af43f8c8fdcab09ae5f89c02918004392c86b486c64855fdbc054
+Description: Xorg X server - development files
+
+Package: xserver-xorg-input-libinput
+Version: 1.2.1-1
+Architecture: armhf
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 136
+Depends: noble-libc6, noble-libinput10, xorg-input-abi-24, xserver-xorg-core
+Filename: pool/trixie/xserver-xorg-input-libinput_1.2.1-1_armhf.deb
+Size: 34304
+MD5sum: 07bce0bac9734d6a62f8a4a5c8edec02
+SHA1: 867e94f0aadc5aec01ea9ec83f91651ca49b194e
+SHA256: 445330efccd57c569960bd524b657994829c2d82df7fa95855e09ed00a45a73b
+Description: X.Org X server -- libinput input driver
+
+Package: xserver-xorg-input-libinput-dev
+Version: 1.2.1-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 64
+Filename: pool/trixie/xserver-xorg-input-libinput-dev_1.2.1-1_all.deb
+Size: 4824
+MD5sum: a7d7b7743f6c5ab23601c0d62142770e
+SHA1: d8a2bf95fa7155f5a6d396463dbaa39dc8c75b13
+SHA256: 6f0913fb14445b97e9e0935a8faa6a1d091f1e9b58dc2ccc5ee289d53200f6e0
+Description: X.Org X server -- libinput input driver (development headers)
+
+Package: xserver-xorg-video-fbdev
+Version: 1:0.5.0-1ubuntu1
+Architecture: armhf
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 84
+Depends: noble-libc6, xorg-video-abi-24, xserver-xorg-core
+Filename: pool/trixie/xserver-xorg-video-fbdev_0.5.0-1ubuntu1_armhf.deb
+Size: 11374
+MD5sum: b810396b53bdf4a516fb3e239061266d
+SHA1: eb70aed7beb29f85c3e6e76519a07a50727c7e26
+SHA256: 366a99b8b534ebe244cf43c084fe24224c8a02516cad9e2df614a34a860b69ef
+Description: X.Org X server -- fbdev display driver
+
+Package: yt-dlp
+Version: 2023.11.16-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 12008
+Depends: python3-brotli, noble-python3-certifi, noble-python3-mutagen, python3-pycryptodome, noble-python3-requests, noble-python3-urllib3, noble-python3-websockets, python3:any, python3-pkg-resources
+Filename: pool/trixie/yt-dlp_2023.11.16-1_all.deb
+Size: 1796350
+MD5sum: 06cec1d2e0b1f87c79f3fc00d7456732
+SHA1: 021f8b65b80a7393054d52abacaee08356038c9e
+SHA256: 81f3ccf0b389098a642231e2c0f9d6c1b9df8fade726a3548fb2188f3ffb6ee9
+Description: downloader of videos from YouTube and other sites
+

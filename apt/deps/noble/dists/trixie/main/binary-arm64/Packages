@@ -1,0 +1,3074 @@
+Package: noble-flatpak
+Version: 1.14.6-1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 6032
+Depends: adduser, bubblewrap, default-dbus-system-bus, fuse3, xdg-dbus-proxy, libappstream5, libarchive13t64, libc6, libcurl3t64-gnutls, libdconf1, libfuse3-3, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libjson-glib-1.0-0, libmalcontent-0-0, libostree-1-1, libpolkit-agent-1-0, libpolkit-gobject-1-0, libseccomp2, libsystemd0, libxau6, libxml2, libzstd1
+Provides: flatpak
+Filename: pool/trixie/noble-flatpak_1.14.6-1ubuntu0.1_arm64.deb
+Size: 1327284
+MD5sum: 4b3a087353ba4e5bdb179c3b42ee85b9
+SHA1: 60a57b15a1f57e8f9581993634bc5b983a6d2c1f
+SHA256: f5200a4af3a9fdb49f55b811e12f1dd557ae51f010f3a6e214c64cdceb1b05b9
+Description: Application deployment framework for desktop apps
+
+Package: noble-fuse3
+Version: 3.14.0-5build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 220
+Depends: libc6, libfuse3-3, adduser, mount, sed
+Provides: fuse3
+Filename: pool/trixie/noble-fuse3_3.14.0-5build1_arm64.deb
+Size: 23610
+MD5sum: 79748f313225e0315481ad38e2738eae
+SHA1: 8af1483606485a057705847f15b8c55e3be3b48b
+SHA256: 36d2bd7d0cc31f1d6d3fe0b3a7f364946f4e27a068c094683c860cd3d6106a47
+Description: Filesystem in Userspace (3.x version)
+
+Package: noble-gir1.2-adw-1
+Version: 1.5.0-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 196
+Depends: gir1.2-gio-2.0, gir1.2-gtk-4.0, libadwaita-1-0
+Provides: gir1.2-adw-1
+Filename: pool/trixie/noble-gir1.2-adw-1_1.5.0-1ubuntu2_arm64.deb
+Size: 41480
+MD5sum: 60cdc9bff39036c068791e13119b5804
+SHA1: f7d5782a1580201bbd13e39c6bee493f8120d3b5
+SHA256: 468ca774724fa5a99fdd2d6689b68758caae4d9582f4a6ea6db6f6e05c1e3535
+Description: GObject introspection files for libadwaita
+
+Package: noble-gir1.2-atk-1.0
+Version: 2.52.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 128
+Depends: gir1.2-gobject-2.0, libatk1.0-0t64
+Provides: gir1.2-atk-1.0
+Filename: pool/trixie/noble-gir1.2-atk-1.0_2.52.0-1build1_arm64.deb
+Size: 22768
+MD5sum: 9b376b8ebc44feef33eee0d57fe6c26e
+SHA1: de0ad05b118f06e8154edadeac2e4851d61a3e54
+SHA256: c8c7d73fe6ee118143f4755673e19f8c8a8d863cff87e3a69424b984722ec57a
+Description: ATK accessibility toolkit (GObject introspection)
+
+Package: noble-gir1.2-atspi-2.0
+Version: 2.52.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: gir1.2-dbus-1.0, gir1.2-glib-2.0, gir1.2-gobject-2.0, libatspi2.0-0t64
+Provides: gir1.2-atspi-2.0
+Filename: pool/trixie/noble-gir1.2-atspi-2.0_2.52.0-1build1_arm64.deb
+Size: 19442
+MD5sum: e51e7f91577505fba9fe6e1798485643
+SHA1: 39134557426f6bbc57704fb31d1b1ea1c5fd6977
+SHA256: da67335d89710a8158313d84b1b73ea6f3675d022951c3198f741ce473c3f7d8
+Description: Assistive Technology Service Provider (GObject introspection)
+
+Package: noble-gir1.2-freedesktop
+Version: 1.80.1-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 224
+Depends: gir1.2-gobject-2.0, libcairo-gobject2
+Provides: gir1.2-freedesktop
+Filename: pool/trixie/noble-gir1.2-freedesktop_1.80.1-1_arm64.deb
+Size: 48672
+MD5sum: d41d3ad222cccc54d1fe236b948647f6
+SHA1: 18ca7ac6ab85c8c57b3996643b702971fd627c69
+SHA256: 0d29c2e707d15086355b6e57fa0f4adca2fa2f1167b84b0bf9464f1cdb0e36ae
+Description: Introspection data for some FreeDesktop components
+
+Package: noble-gir1.2-gcr-4
+Version: 4.2.0-5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 80
+Depends: libgcr-4-4, gir1.2-gck-2, gir1.2-gio-2.0, gir1.2-gobject-2.0
+Provides: gir1.2-gcr-4
+Filename: pool/trixie/noble-gir1.2-gcr-4_4.2.0-5_arm64.deb
+Size: 11778
+MD5sum: 8fa16edd9c94a91c20dafedcf12b8188
+SHA1: f6ae547a98258082f36e844f1169db5fa76bec50
+SHA256: 83a53d63dbbf521d6629f4daa9fd438f4ffc5e11c3fec244409a44eba93ec280
+Description: GObject introspection data for the GCR library
+
+Package: noble-gir1.2-gdesktopenums-3.0
+Version: 46.1-0ubuntu1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 64
+Provides: gir1.2-gdesktopenums-3.0
+Filename: pool/trixie/noble-gir1.2-gdesktopenums-3.0_46.1-0ubuntu1_arm64.deb
+Size: 9812
+MD5sum: 414049d9119b853e947d53d5628aaf82
+SHA1: c4977ba4d60de4f792cc34a8547ca6f6ab531df7
+SHA256: 7157764ba49a5011d0261861b0cc27ef96f281f325a7947fb846b08fb2370662
+Description: GObject introspection for GSettings desktop-wide schemas
+
+Package: noble-gir1.2-gdm-1.0
+Version: 46.2-1ubuntu1~24.04.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 96
+Depends: gir1.2-gio-2.0, gir1.2-glib-2.0, gir1.2-gobject-2.0, libgdm1
+Provides: gir1.2-gdm-1.0
+Filename: pool/trixie/noble-gir1.2-gdm-1.0_46.2-1ubuntu1~24.04.6_arm64.deb
+Size: 10838
+MD5sum: a9e8b9e64d813efb9150c8f4ba60b173
+SHA1: 439662bf8e5efa90f8853672d940a3201edd2210
+SHA256: 1b10fe707739885f214e519bd230bea82cc72ef2b5cad3a97405da6c9529096d
+Description: GObject introspection data for the GNOME Display Manager
+
+Package: noble-gir1.2-gnomebg-4.0
+Version: 44.0-5build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 56
+Depends: gir1.2-gdk-4.0, gir1.2-gdkpixbuf-2.0, gir1.2-gnomedesktop-4.0, libgnome-bg-4-2t64
+Provides: gir1.2-gnomebg-4.0
+Filename: pool/trixie/noble-gir1.2-gnomebg-4.0_44.0-5build2_arm64.deb
+Size: 4054
+MD5sum: 2dda14a7eea1fa9b836fbe8959a5be3a
+SHA1: 11e5543baf98a033467688a3574278cc1e3fba5f
+SHA256: 5d97effdffe418147eb115c5d176e95032760f8ae16df22afeeba9cee9cbd881
+Description: Introspection data for GnomeBG (GTK 4)
+
+Package: noble-gir1.2-gnomebluetooth-3.0
+Version: 46.0-1ubuntu1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 52
+Depends: gir1.2-gio-2.0, libgnome-bluetooth-3.0-13
+Provides: gir1.2-gnomebluetooth-3.0
+Filename: pool/trixie/noble-gir1.2-gnomebluetooth-3.0_46.0-1ubuntu1_arm64.deb
+Size: 3634
+MD5sum: 80684746687598cad015624f816050b1
+SHA1: 28dd52d190710373a3b12f00ded6852e91ab2771
+SHA256: 4b0e6beb5881e8adcad2818257d6f885c6f59838b84376f913bea151db9f3254
+Description: Introspection data for GnomeBluetooth
+
+Package: noble-gir1.2-gnomedesktop-4.0
+Version: 44.0-5build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 60
+Depends: gir1.2-gdesktopenums-3.0, gir1.2-gdkpixbuf-2.0, gir1.2-gio-2.0, gir1.2-gobject-2.0, libgnome-desktop-4-2t64
+Provides: gir1.2-gnomedesktop-4.0
+Filename: pool/trixie/noble-gir1.2-gnomedesktop-4.0_44.0-5build2_arm64.deb
+Size: 5408
+MD5sum: c9b37bc75f8d59426354a15b7b287b3b
+SHA1: ed0b25cc7992dd896b29fb6d2c68627b2e712c88
+SHA256: 647a2b1a7f8f701cdf1c6ecbf51a8ee2c0b8f60d64c1f2594558d408bec62a7d
+Description: Introspection data for GnomeDesktop (GTK 4)
+
+Package: noble-gir1.2-gstreamer-1.0
+Version: 1.24.2-1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 392
+Depends: gir1.2-gio-2.0, gir1.2-glib-2.0, gir1.2-gmodule-2.0, gir1.2-gobject-2.0, libgstreamer1.0-0
+Provides: gir1.2-gstreamer-1.0
+Filename: pool/trixie/noble-gir1.2-gstreamer-1.0_1.24.2-1ubuntu0.1_arm64.deb
+Size: 87756
+MD5sum: 5ac1122b5c68db94c1e88bdf827f6355
+SHA1: ed742902c334820a9ef181ab86de3f04ae2516b6
+SHA256: 3613a81225c4b1b05999c7838f75533f21656281bd0aba18bbde61f8b5a56ff0
+Description: GObject introspection data for the GStreamer library
+
+Package: noble-gir1.2-gtk-4.0
+Version: 4.14.5+ds-0ubuntu0.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 904
+Depends: gir1.2-cairo-1.0, gir1.2-gdkpixbuf-2.0, gir1.2-gio-2.0, gir1.2-graphene-1.0, gir1.2-pango-1.0, gir1.2-pangocairo-1.0, gir1.2-xlib-2.0, libgtk-4-1, libgtk-4-common
+Provides: gir1.2-gtk-4.0
+Filename: pool/trixie/noble-gir1.2-gtk-4.0_4.14.5+ds-0ubuntu0.7_arm64.deb
+Size: 222778
+MD5sum: 2d7e36b48a72037036a9c304bd8b0b77
+SHA1: bd68b3b0034f5c907e14f00c33ed789a7cf5a54e
+SHA256: cc9c47e5b402a870ab0f2f2cce06ac724ff2b7c4f3cfa44a34441088103279a5
+Description: GTK graphical user interface library -- gir bindings
+
+Package: noble-gir1.2-mutter-14
+Version: 46.2-1ubuntu0.24.04.14
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 548
+Depends: libmutter-14-0, gir1.2-atk-1.0, gir1.2-cairo-1.0, gir1.2-gdesktopenums-3.0, gir1.2-gio-2.0, gir1.2-gl-1.0, gir1.2-gobject-2.0, gir1.2-graphene-1.0, gir1.2-pango-1.0, gir1.2-pangocairo-1.0, gir1.2-xfixes-4.0, gir1.2-xlib-2.0
+Provides: gir1.2-mutter-14
+Filename: pool/trixie/noble-gir1.2-mutter-14_46.2-1ubuntu0.24.04.14_arm64.deb
+Size: 130774
+MD5sum: 38a091d4af1bf3171e57b04a2858a793
+SHA1: b5049df9b6546c5ea2afaf4f1c97dc150616f944
+SHA256: efe15588770960d88cc3b146c43459d1cfcea13026d6b8033bb89b69c7970975
+Description: GObject introspection data for Mutter
+
+Package: noble-gir1.2-nm-1.0
+Version: 1.46.0-1ubuntu2.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 380
+Depends: gir1.2-gio-2.0, libnm0
+Provides: gir1.2-nm-1.0
+Filename: pool/trixie/noble-gir1.2-nm-1.0_1.46.0-1ubuntu2.5_arm64.deb
+Size: 86306
+MD5sum: b7fa689a856a6eba05613d2a1fbcacea
+SHA1: 2e475ef72d10bf7c5855957ab22ea7a03605d578
+SHA256: 18aa2092c94758df7a165034f8db3e6216baccc3417eca5753149c4fb61cdc2e
+Description: GObject introspection data for the libnm library
+
+Package: noble-gir1.2-polkit-1.0
+Version: 124-2ubuntu1.24.04.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 72
+Depends: gir1.2-gio-2.0, libpolkit-agent-1-0, libpolkit-gobject-1-0
+Provides: gir1.2-polkit-1.0
+Filename: pool/trixie/noble-gir1.2-polkit-1.0_124-2ubuntu1.24.04.2_arm64.deb
+Size: 8500
+MD5sum: 153dd802c8dbcfb403444a9f985263d0
+SHA1: a9c8649f14a9bc235bfc8025997feefc17cd7214
+SHA256: 8556b3b13c8590ea2e72d59defca2566d0eb3d3982e6b61a06f9952ece2a37bd
+Description: GObject introspection data for polkit
+
+Package: noble-gir1.2-rsvg-2.0
+Version: 2.58.0+dfsg-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 76
+Depends: gir1.2-cairo-1.0, gir1.2-gdkpixbuf-2.0, gir1.2-gio-2.0, gir1.2-glib-2.0, gir1.2-gobject-2.0, librsvg2-2
+Provides: gir1.2-rsvg-2.0
+Filename: pool/trixie/noble-gir1.2-rsvg-2.0_2.58.0+dfsg-1build1_arm64.deb
+Size: 10764
+MD5sum: 1fb5dba5fd5e80be61f90f8fb85bb56a
+SHA1: 6294ca1596a0a8fb60b6444a5aa66a417fa680d7
+SHA256: 0182b4447eee38d63666c1a86ed4e695f78aabe5b5d8d0fbc9fa507319b5719b
+Description: gir files for renderer library for SVG files
+
+Package: noble-gir1.2-soup-3.0
+Version: 3.4.4-5ubuntu0.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: gir1.2-gio-2.0, libsoup-3.0-0
+Provides: gir1.2-soup-3.0
+Filename: pool/trixie/noble-gir1.2-soup-3.0_3.4.4-5ubuntu0.7_arm64.deb
+Size: 22088
+MD5sum: d2737d3009557ad65994340d159bb097
+SHA1: 9cf1459ef60e18abfd8c298399f59ffb38457b69
+SHA256: fbe7b5182afe090dd7e538cad8580d306e8cbb29ecd16ec6b37c2caa18443744
+Description: GObject introspection data for the libsoup HTTP library
+
+Package: noble-gnome-settings-daemon
+Version: 46.0-1ubuntu1.24.04.1
+Architecture: arm64
+Maintainer: Ubuntu Desktop Team <ubuntu-desktop@lists.ubuntu.com>
+Installed-Size: 2064
+Depends: default-logind, gnome-settings-daemon-common, gsettings-desktop-schemas, libspa-0.2-bluetooth, pipewire-audio, libaccountsservice0, libasound2t64, libc6, libcairo2, libcanberra-gtk3-0t64, libcanberra0t64, libcolord2, libcups2t64, libfontconfig1, libgck-2-2, libgcr-4-4, libgeoclue-2-0, libgeocode-glib-2-0, libglib2.0-0t64, libgnome-desktop-3-20t64, libgtk-3-0t64, libgudev-1.0-0, libgweather-4-0t64, libmm-glib0, libnm0, libnotify4, libp11-kit0, libpango-1.0-0, libpangocairo-1.0-0, libpolkit-gobject-1-0, libpulse-mainloop-glib0, libpulse0, libsystemd0, libupower-glib3, libwacom9, libwayland-client0, libx11-6, libxext6, libxfixes3, libxi6
+Provides: gnome-settings-daemon
+Filename: pool/trixie/noble-gnome-settings-daemon_46.0-1ubuntu1.24.04.1_arm64.deb
+Size: 315602
+MD5sum: b481ff9598e1283fb5ac392721f184e1
+SHA1: e3afba2629b246e55210fadb29153e0e4b2ab248
+SHA256: 38e40baa8bec8e28c05cab5e0225d0ebdcce0b74fe8ee18495018c0c530cf961
+Description: daemon handling the GNOME session settings
+
+Package: noble-gnome-shell
+Version: 46.0-0ubuntu6~24.04.13
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 7044
+Depends: gir1.2-accountsservice-1.0, gir1.2-adw-1, gir1.2-atk-1.0, gir1.2-atspi-2.0, gir1.2-gcr-4, gir1.2-gdesktopenums-3.0, gir1.2-gdkpixbuf-2.0, gir1.2-gdm-1.0, gir1.2-geoclue-2.0, gir1.2-glib-2.0, gir1.2-gnomebg-4.0, gir1.2-gnomebluetooth-3.0, gir1.2-gnomedesktop-4.0, gir1.2-graphene-1.0, gir1.2-gstreamer-1.0, gir1.2-gtk-4.0, gir1.2-gweather-4.0, gir1.2-freedesktop, gir1.2-ibus-1.0, gir1.2-mutter-14, gir1.2-nm-1.0, gir1.2-nma4-1.0, gir1.2-pango-1.0, gir1.2-polkit-1.0, gir1.2-rsvg-2.0, gir1.2-soup-3.0, gir1.2-upowerglib-1.0, gir1.2-webkit-6.0, gnome-settings-daemon, gnome-shell-common, gsettings-desktop-schemas, gstreamer1.0-pipewire, libglib2.0-bin, python3, ubuntu-wallpapers, dconf-gsettings-backend, libatk-bridge2.0-0t64, libatk1.0-0t64, libc6, libcairo2, libecal-2.0-3, libedataserver-1.2-27t64, libgcr-4-4, libgdk-pixbuf-2.0-0, libgirepository-1.0-1, libgjs0g, libgles2, libglib2.0-0t64, libgnome-autoar-0-0, libgnome-desktop-4-2t64, libgraphene-1.0-0, libgtk-4-1, libical3t64, libjson-glib-1.0-0, libmutter-14-0, libnm0, libpango-1.0-0, libpipewire-0.3-0t64, libpolkit-agent-1-0, libpolkit-gobject-1-0, libpulse-mainloop-glib0, libpulse0, libsecret-1-0, libsystemd0, libx11-6, libxext6, libxfixes3
+Provides: gnome-shell
+Filename: pool/trixie/noble-gnome-shell_46.0-0ubuntu6~24.04.13_arm64.deb
+Size: 946684
+MD5sum: 2bd18a44fb26a6133d385ca6b3683377
+SHA1: 6db4ede4edb32bea75d7b5c41e775231111eb562
+SHA256: d0b20a8be2dc93349be8d5fb5afd579f60eb8965da79d98194ce8587cf6d8c30
+Description: graphical shell for the GNOME desktop
+
+Package: noble-gnome-shell-common
+Version: 46.0-0ubuntu6~24.04.13
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3668
+Depends: dconf-gsettings-backend
+Provides: gnome-shell-common
+Filename: pool/trixie/noble-gnome-shell-common_46.0-0ubuntu6~24.04.13_all.deb
+Size: 247206
+MD5sum: 021328bf8806bad4ca1abfa2ccd3e2f8
+SHA1: b39032f751e0899422ab7ede56bd20cf8483c51c
+SHA256: 4d3e15d98302b7b20235c581faf5e835715a0ae01ae91a58c8db214a0f41318b
+Description: common files for the GNOME graphical shell
+
+Package: noble-gnome-software
+Version: 46.0-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3764
+Depends: appstream, apt-config-icons, gnome-software-common, gsettings-desktop-schemas, libgtk3-perl, packagekit, software-properties-gtk, dconf-gsettings-backend, libadwaita-1-0, libappstream5, libc6, libfwupd2, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libgtk-4-1, libgudev-1.0-0, libjson-glib-1.0-0, libmalcontent-0-0, libpackagekit-glib2-18, libpango-1.0-0, libpolkit-gobject-1-0, libsoup-3.0-0, libxmlb2
+Provides: gnome-software
+Filename: pool/trixie/noble-gnome-software_46.0-1ubuntu2_arm64.deb
+Size: 688770
+MD5sum: c31b9d8ace01f4174ab84aa8a7d16fe7
+SHA1: 330f4ca54eb015a5c043a72e90af60d28c398516
+SHA256: 0a5e11e19bd204c6c090f48f29003838f31b239cf25b5b627b4ebd5640040fa1
+Description: Software Center for GNOME
+
+Package: noble-gnome-software-plugin-flatpak
+Version: 46.0-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 320
+Depends: flatpak, gnome-software, libappstream5, libc6, libflatpak0, libglib2.0-0t64, libostree-1-1, libxmlb2
+Provides: gnome-software-plugin-flatpak
+Filename: pool/trixie/noble-gnome-software-plugin-flatpak_46.0-1ubuntu2_arm64.deb
+Size: 74460
+MD5sum: 9f78b293c97cf402da841bbdbf3a0803
+SHA1: 655b9355fbcf1f952ae07459ae4997b5b64330aa
+SHA256: f7ca1e3447d26f02b3f0a35a1193b27fdaa92e6aadbebceae2cdd787e2eef693
+Description: Flatpak support for GNOME Software
+
+Package: noble-gsettings-desktop-schemas
+Version: 46.1-0ubuntu1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 304
+Depends: dconf-gsettings-backend, session-migration
+Provides: gsettings-desktop-schemas
+Filename: pool/trixie/noble-gsettings-desktop-schemas_46.1-0ubuntu1_all.deb
+Size: 34198
+MD5sum: 0e3ba3226f526cdba318466b132016e3
+SHA1: 6f57e2232e900f098f002516edb71541ec5fb75a
+SHA256: e1a4087205063762d3390a426707758f588d9be7e43508b2bad693169658e16c
+Description: GSettings desktop-wide schemas
+
+Package: noble-gstreamer1.0-pipewire
+Version: 1.0.5-1ubuntu3.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 184
+Depends: pipewire, libc6, libglib2.0-0t64, libgstreamer-plugins-base1.0-0, libgstreamer1.0-0, libpipewire-0.3-0t64
+Provides: gstreamer1.0-pipewire
+Filename: pool/trixie/noble-gstreamer1.0-pipewire_1.0.5-1ubuntu3.2_arm64.deb
+Size: 46928
+MD5sum: dc873ca3b3bc4c6d78359b995ba6b042
+SHA1: 014444c0e4d34b1c4b90f1776d5aa727df967d67
+SHA256: 65379a0d51863c6f1c4d20a390342879e9f7815e38b2e1c33282ab03e90490a9
+Description: GStreamer 1.0 plugin for the PipeWire multimedia server
+
+Package: noble-iso-codes
+Version: 4.16.0-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 22056
+Provides: iso-codes
+Filename: pool/trixie/noble-iso-codes_4.16.0-1_all.deb
+Size: 3476092
+MD5sum: 6290e709eecd2f711bf36a284a7a3ede
+SHA1: 5d19c373f9d49725d9ca46ce0c3852fd57dbba48
+SHA256: fa0e0a98833f5759d4e34db778474fe6d8769561eb389e864aa170c36c862e75
+Description: ISO language, territory, currency, script codes and their translations
+
+Package: noble-keyboard-configuration
+Version: 1.226ubuntu1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 192
+Depends: debconf, liblocale-gettext-perl, xkb-data, xkb-data
+Provides: keyboard-configuration
+Filename: pool/trixie/noble-keyboard-configuration_1.226ubuntu1_all.deb
+Size: 39738
+MD5sum: 0807018e33636300904408435ec2bb8b
+SHA1: 69adf9efdca209fda1e039603ebbdb47a7948e0d
+SHA256: ec18712f6f2cfb7e6623ec1a6fd7fb8c2aed6d4b410ec8895b8cc069e14cf982
+Description: system-wide keyboard preferences
+
+Package: noble-libadwaita-1-0
+Version: 1.5.0-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2452
+Depends: libappstream5, libc6, libfribidi0, libglib2.0-0t64, libgraphene-1.0-0, libgtk-4-1, libpango-1.0-0
+Provides: libadwaita-1-0
+Filename: pool/trixie/noble-libadwaita-1-0_1.5.0-1ubuntu2_arm64.deb
+Size: 393172
+MD5sum: 15f435124176aa988db61881c10d3456
+SHA1: 6904c1e61fa1865a95c6ab93f38d7bb6c58df5ee
+SHA256: 6a4a593eb9d3038fbb2277116c597cf1d4a0fe22f6ae4a39952c857c66e9c24a
+Description: Library with GTK widgets for mobile phones
+
+Package: noble-libaom3
+Version: 3.8.2-2ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3912
+Depends: libc6
+Provides: libaom3
+Filename: pool/trixie/noble-libaom3_3.8.2-2ubuntu0.1_arm64.deb
+Size: 1615692
+MD5sum: 76e5e35266e361001bb27615e711aed9
+SHA1: 0d79545a567807fa139c3b444dff13faa7abb665
+SHA256: 6af259583ed1a3184b8fd69a152a60d75bf349cdbf8c5cd5730c6d38dbc7ee8c
+Description: AV1 Video Codec Library
+
+Package: noble-libapparmor1
+Version: 4.0.1really4.0.1-0ubuntu0.24.04.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 192
+Depends: libc6
+Provides: libapparmor1
+Filename: pool/trixie/noble-libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.5_arm64.deb
+Size: 49832
+MD5sum: eb5eca45c21d45eaa7b06e3257ae43d0
+SHA1: 7cadf0bb7d3f33e3e3b497b3701110ecff60f21d
+SHA256: 8462e6c5c6dcb7780bf678b02cc6baa1ab86f31c14b0531f78b92a38f4f1c8a2
+Description: changehat AppArmor library
+
+Package: noble-libassuan0
+Version: 2.5.6-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6, libgpg-error0
+Provides: libassuan0
+Filename: pool/trixie/noble-libassuan0_2.5.6-1build1_arm64.deb
+Size: 35604
+MD5sum: 2f8dbcbd3e2c88e17955d2ccae8791b0
+SHA1: 1bf8d007f60232e458cbc0c1486c523ae9e19b44
+SHA256: a6be6a85df3fa017a40ca5fe8be3f563e6643c63d412c05a0d08e5d9b5c29014
+Description: IPC library for the GnuPG components
+
+Package: noble-libatk-bridge2.0-0t64
+Version: 2.52.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 324
+Depends: libatk1.0-0t64, libatspi2.0-0t64, libc6, libdbus-1-3, libglib2.0-0t64
+Provides: libatk-bridge2.0-0t64
+Filename: pool/trixie/noble-libatk-bridge2.0-0t64_2.52.0-1build1_arm64.deb
+Size: 64778
+MD5sum: 23bb3c3b6bd39c930425f04adaf8b8ab
+SHA1: d3423cc13d281ce021647a9f600214f874993a1f
+SHA256: 800462fff4eeaf200279367b60063f1c53eecb47388445d11f31fc22769ff143
+Description: AT-SPI 2 toolkit bridge - shared library
+
+Package: noble-libatk1.0-0t64
+Version: 2.52.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 264
+Depends: libc6, libglib2.0-0t64, at-spi2-common
+Provides: libatk1.0-0t64
+Filename: pool/trixie/noble-libatk1.0-0t64_2.52.0-1build1_arm64.deb
+Size: 52832
+MD5sum: 9c7db5bc09a067bd41f909ffdec2c5bb
+SHA1: 53a84f1f4fc6c7ee65cba25ee749adac1d01e88f
+SHA256: 3ce790004d0417a06a88cb73985376a5fad7a3b5011aa08bba5cc32e0e1bd5f3
+Description: ATK accessibility toolkit
+
+Package: noble-libaudit-common
+Version: 1:3.1.2-2.1build1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 56
+Provides: libaudit-common
+Filename: pool/trixie/noble-libaudit-common_3.1.2-2.1build1.1_all.deb
+Size: 5476
+MD5sum: 8823ce82a2396a4bda6a4e269c449509
+SHA1: 7ece88497ead238fd69d2e3f3d96a17cb1c7028c
+SHA256: 331fb0ae12edc6d91a54733010d924a63a7266b5d50870043c2f46c053f24b7c
+Description: Dynamic library for security auditing - common files
+
+Package: noble-libaudit1
+Version: 1:3.1.2-2.1build1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libaudit-common, libc6, libcap-ng0
+Provides: libaudit1
+Filename: pool/trixie/noble-libaudit1_3.1.2-2.1build1.1_arm64.deb
+Size: 46492
+MD5sum: 2682a28c695abd2d84346caade9faaab
+SHA1: 6ed6906467de325853113150a535f65c3b291ad9
+SHA256: e44e53b1fb72ee1e66bd890cd1a3ab02a12aaeb9635c58e99f92b93a758f01ae
+Description: Dynamic library for security auditing
+
+Package: noble-libblkid1
+Version: 2.39.3-9ubuntu6.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 348
+Depends: libc6
+Provides: libblkid1
+Filename: pool/trixie/noble-libblkid1_2.39.3-9ubuntu6.4_arm64.deb
+Size: 121734
+MD5sum: ec2a2e3c37f7c26f8a572e548568b301
+SHA1: 9a1b2a2e1867c073dd9f264a3f95ae1d92dc3fa3
+SHA256: 9e5d7cd3821a89071dad165fe89d09886cc1fb11f6eceaa3e35e78d469c27cde
+Description: block device ID library
+
+Package: noble-libbluetooth3
+Version: 5.72-0ubuntu5.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 420
+Depends: libc6, libudev1
+Provides: libbluetooth3
+Filename: pool/trixie/noble-libbluetooth3_5.72-0ubuntu5.5_arm64.deb
+Size: 92088
+MD5sum: ffd5438243be6a84d717cc6829ca09bd
+SHA1: bd336f28f480a7a42fe2cf299ec079c0d742268c
+SHA256: da2550a6516df915fa41ee8952c926e700926697d2f6aeadf3229cb9b5ff55b8
+Description: Library to use the BlueZ Linux Bluetooth stack
+
+Package: noble-libc6
+Version: 2.39-0ubuntu8.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 23696
+Depends: libgcc-s1
+Provides: libc6
+Filename: pool/trixie/noble-libc6_2.39-0ubuntu8.7_arm64.deb
+Size: 2721456
+MD5sum: df31d38ed3ef36bac627cad439e1a2fa
+SHA1: 3b82c970ea06cd4f766bfd6c2ec896b98c04170f
+SHA256: b9044b6abf476899db35e7cc4d8fb8396b267dd4004a519610dec5d07c7f8994
+Description: GNU C Library: Shared libraries
+
+Package: noble-libcamel-1.2-64t64
+Version: 3.52.3-0ubuntu1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1620
+Depends: libc6, libglib2.0-0t64, libgssapi-krb5-2, libicu74, libnspr4, libnss3, libsqlite3-0, zlib1g
+Provides: libcamel-1.2-64t64
+Filename: pool/trixie/noble-libcamel-1.2-64t64_3.52.3-0ubuntu1.1_arm64.deb
+Size: 472708
+MD5sum: ca734ee3048bd8293db9774044803336
+SHA1: f786d31370208f3889ff041bc8334133836733fb
+SHA256: 5aaeac00a00c8be802bbcca01a7b4d312bd133b85612d88fccead2b06fbba13e
+Description: Evolution MIME message handling library
+
+Package: noble-libcanberra-gtk3-0t64
+Version: 0.30-10ubuntu10
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 120
+Depends: libc6, libcanberra0t64, libglib2.0-0t64, libgtk-3-0t64, libx11-6
+Provides: libcanberra-gtk3-0t64
+Filename: pool/trixie/noble-libcanberra-gtk3-0t64_0.30-10ubuntu10_arm64.deb
+Size: 7340
+MD5sum: d93301f022cdcccad3c9005febaa5f9f
+SHA1: 5b6db9784447b0b30a698a4ad9019a9ccf9744a7
+SHA256: cb258ca44234d2d3ff3de7c1886e7b0524d7d1ec0fd58fcca30447a7372549e0
+Description: GTK+ 3.0 helper for playing widget event sounds with libcanberra
+
+Package: noble-libcanberra0t64
+Version: 0.30-10ubuntu10
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 268
+Depends: libasound2t64, libc6, libltdl7, libtdb1, libvorbisfile3, sound-theme-freedesktop
+Provides: libcanberra0t64
+Filename: pool/trixie/noble-libcanberra0t64_0.30-10ubuntu10_arm64.deb
+Size: 37584
+MD5sum: 3916dc7b7214f75bd5b0321eaba08a6a
+SHA1: 11fd3be3effe7b3762838387d5f69d1333587f40
+SHA256: 8e53456d86495fc126a5b9702da18fe75bc414f3c4666e1bb469ece345f1464e
+Description: simple abstract interface for playing event sounds
+
+Package: noble-libcap2
+Version: 1:2.66-5ubuntu2.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 184
+Depends: libc6
+Provides: libcap2
+Filename: pool/trixie/noble-libcap2_2.66-5ubuntu2.2_arm64.deb
+Size: 29318
+MD5sum: 88f072a372d209ec28be0edbbbf61518
+SHA1: 9b0b51b6f0874dd9d1d1260d7c3d4eee20c53d67
+SHA256: 57a654372eca455e481b994afa362c707025fae32743011c6f5aa23d7f2037b1
+Description: POSIX 1003.1e capabilities (library)
+
+Package: noble-libcap2-bin
+Version: 1:2.66-5ubuntu2.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 364
+Depends: libc6, libcap2
+Provides: libcap2-bin
+Filename: pool/trixie/noble-libcap2-bin_2.66-5ubuntu2.2_arm64.deb
+Size: 32784
+MD5sum: 1f03c1d578d9c0e03a71be4d8526cd22
+SHA1: b34815cf6ffbab7840685e8d7a1c681fac760e4b
+SHA256: 23e64ddd908a672a17a76eabfa30322f3a8c95c2592e7f962cbda58a83ec42e5
+Description: POSIX 1003.1e capabilities (utilities)
+
+Package: noble-libcurl3t64-gnutls
+Version: 8.5.0-2ubuntu10.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 800
+Depends: libbrotli1, libc6, libgnutls30t64, libgssapi-krb5-2, libidn2-0, libldap2, libnettle8t64, libnghttp2-14, libpsl5t64, librtmp1, libssh-4, libzstd1, zlib1g
+Provides: libcurl3t64-gnutls
+Filename: pool/trixie/noble-libcurl3t64-gnutls_8.5.0-2ubuntu10.6_arm64.deb
+Size: 325712
+MD5sum: 37e0c04f47f5b5de815f2d0530beb587
+SHA1: de0b897b6519de9c7b002ac3ffa2f87d9a5ddea2
+SHA256: 3a8105073c659b4373bffe1979a2bf2e69fe3862f5e607fceee329ed36603632
+Description: easy-to-use client-side URL transfer library (GnuTLS flavour)
+
+Package: noble-libcurl4t64
+Version: 8.5.0-2ubuntu10.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 864
+Depends: libbrotli1, libc6, libgssapi-krb5-2, libidn2-0, libldap2, libnghttp2-14, libpsl5t64, librtmp1, libssh-4, libssl3t64, libzstd1, zlib1g
+Provides: libcurl4t64
+Filename: pool/trixie/noble-libcurl4t64_8.5.0-2ubuntu10.6_arm64.deb
+Size: 332390
+MD5sum: 1111512eb93010b4c5b2dd53ab212992
+SHA1: 1e956e8f9b9a60a3e5a7afe5cc730568f9c068f6
+SHA256: 64ea8d1d5f09afe09cff7dfff563b41e373a55dd68860fb0db3aac37b2897952
+Description: easy-to-use client-side URL transfer library (OpenSSL flavour)
+
+Package: noble-libdav1d7
+Version: 1.4.1-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 760
+Depends: libc6
+Provides: libdav1d7
+Filename: pool/trixie/noble-libdav1d7_1.4.1-1build1_arm64.deb
+Size: 297346
+MD5sum: 8929e866a575bbd0bf4110dd15d0a901
+SHA1: 9239c8fbff39900823803174513fde3733084812
+SHA256: 90dcf607ae5509e04789ab3f22d59ef7fd90caf43a2528d8ba1be5e1b66e7d13
+Description: fast and small AV1 video stream decoder (shared library)
+
+Package: noble-libdbus-1-3
+Version: 1.14.10-4ubuntu4.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 528
+Depends: libc6, libsystemd0
+Provides: libdbus-1-3
+Filename: pool/trixie/noble-libdbus-1-3_1.14.10-4ubuntu4.1_arm64.deb
+Size: 205446
+MD5sum: 6a02cd2967bc6b050fc45da35ce152c8
+SHA1: 11d21fdbd0b29127131b7c46c2ef985c73c6c341
+SHA256: f4083cd6d23dcf426e1e4edfbbd2f5c65fc11f95c296c9e819129248a96829fc
+Description: simple interprocess messaging system (library)
+
+Package: noble-libdeflate0
+Version: 1.19-1build1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6
+Provides: libdeflate0
+Filename: pool/trixie/noble-libdeflate0_1.19-1build1.1_arm64.deb
+Size: 42810
+MD5sum: 65b5c5066134d89e1779c868e2b3b316
+SHA1: 92f215820b207a529053f1bf890e5c8b296dbbc4
+SHA256: 63831321a107f3a23c352c30481fb891f70080e294dd87e881b7bae31d80e60c
+Description: fast, whole-buffer DEFLATE-based compression and decompression
+
+Package: noble-libdw1t64
+Version: 0.190-1.1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 760
+Depends: libbz2-1.0, libc6, libelf1t64, liblzma5, libzstd1, zlib1g
+Provides: libdw1t64
+Filename: pool/trixie/noble-libdw1t64_0.190-1.1ubuntu0.1_arm64.deb
+Size: 255776
+MD5sum: fe67c24a4d0ea9f3c95e598f18fbe643
+SHA1: f50ebe3cf27518042b18bd2b4901bb4e57c40d26
+SHA256: ed6a370e05415cc0dfb18f5c83929d33cfb4381f89ad84cb0d82ec21c97d5fd8
+Description: library that provides access to the DWARF debug information
+
+Package: noble-libecal-2.0-3
+Version: 3.52.3-0ubuntu1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 624
+Depends: libc6, libcamel-1.2-64t64, libedataserver-1.2-27t64, libglib2.0-0t64, libical3t64
+Provides: libecal-2.0-3
+Filename: pool/trixie/noble-libecal-2.0-3_3.52.3-0ubuntu1.1_arm64.deb
+Size: 162548
+MD5sum: e1cbd2e358d1ec716d57b94cbe5df235
+SHA1: e3e8ff6ed5b7dc1aaba7511b38acf546f11dbe47
+SHA256: 1bbd00572de1d19b440ad233b31834881a43fb63b2fe376204d8f63805ead3f1
+Description: Client library for evolution calendars
+
+Package: noble-libedataserver-1.2-27t64
+Version: 3.52.3-0ubuntu1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1020
+Depends: libc6, libcamel-1.2-64t64, libgcc-s1, libglib2.0-0t64, libicu74, libjson-glib-1.0-0, libsecret-1-0, libsoup-3.0-0, libstdc++6, libxml2, evolution-data-server-common
+Provides: libedataserver-1.2-27t64
+Filename: pool/trixie/noble-libedataserver-1.2-27t64_3.52.3-0ubuntu1.1_arm64.deb
+Size: 265820
+MD5sum: afece124d7bb560a411e27065495f1ea
+SHA1: c6fe9c569c562672e8b48a2e507485cba350deec
+SHA256: c8ba69cf25a1a5d6ed4977bf61597c002b55dbf645e3c4c0d9ae7c1dbb68dd8f
+Description: Utility library for evolution data servers
+
+Package: noble-libeis1
+Version: 1.2.1-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6
+Provides: libeis1
+Filename: pool/trixie/noble-libeis1_1.2.1-1_arm64.deb
+Size: 37618
+MD5sum: 58bb5da69c0b2e9985fc28cbb95c52ee
+SHA1: 6076d2e0be8b5530ab4bb34216f5b05701e55da4
+SHA256: 6f412c199284b65045e66583695e6eebadbacdf0acec4b8fcf8d98250bb795b9
+Description: Emulated Input server library
+
+Package: noble-libelf1t64
+Version: 0.190-1.1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 188
+Depends: libc6, libzstd1, zlib1g
+Provides: libelf1t64
+Filename: pool/trixie/noble-libelf1t64_0.190-1.1ubuntu0.1_arm64.deb
+Size: 57254
+MD5sum: 02b1553e64addf9b459a9b66c78e0853
+SHA1: 827f9168ed3fafc4496be508f08b3ffe8f2be91d
+SHA256: e31aa0a2d9321996258e05416ffcdb77ea7ded03e2467b356071b33e731fe12b
+Description: library to read and write ELF files
+
+Package: noble-libexpat1
+Version: 2.6.1-2ubuntu0.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 440
+Depends: libc6
+Provides: libexpat1
+Filename: pool/trixie/noble-libexpat1_2.6.1-2ubuntu0.4_arm64.deb
+Size: 76362
+MD5sum: 2cddf7e10bdef7784fd5eaa45696e746
+SHA1: 37cd63d82e19ab95af7d539456315abc6f77629d
+SHA256: a38a4334e2691f7ff433b202f4ed3429eea5926fad7aab05e74715cf45a65742
+Description: XML parsing C library - runtime library
+
+Package: noble-libflatpak0
+Version: 1.14.6-1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 768
+Depends: bubblewrap, libarchive13t64, libc6, libcurl3t64-gnutls, libdconf1, libglib2.0-0t64, libjson-glib-1.0-0, libmalcontent-0-0, libostree-1-1, libpolkit-gobject-1-0, libseccomp2, libsystemd0, libxau6, libxml2, libzstd1
+Provides: libflatpak0
+Filename: pool/trixie/noble-libflatpak0_1.14.6-1ubuntu0.1_arm64.deb
+Size: 292656
+MD5sum: 92ef9d0a747bf24a6306056b4cdcb77a
+SHA1: e30cd91f6ec9f4f66e1b6b6d471983ce140fd204
+SHA256: d9a8ec19d2c4dc7f2aaec763fa001b2f2cbc36ae3e9d94334b01cde292c617ee
+Description: Application deployment framework for desktop apps (library)
+
+Package: noble-libfreeaptx0
+Version: 0.1.1-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6
+Provides: libfreeaptx0
+Filename: pool/trixie/noble-libfreeaptx0_0.1.1-2build1_arm64.deb
+Size: 12696
+MD5sum: de9e35261021bf5cb496ff873a9fd72f
+SHA1: 34971704e15c56ae5357438f465be39ecf55a92b
+SHA256: 6a9df31180f263a92459e35eec69ac2ffc2c6d60d2c5a3823087ae2ad25da99a
+Description: Free implementation of aptX
+
+Package: noble-libfuse3-3
+Version: 3.14.0-5build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 324
+Depends: libc6
+Provides: libfuse3-3
+Filename: pool/trixie/noble-libfuse3-3_3.14.0-5build1_arm64.deb
+Size: 80528
+MD5sum: 4063137b4f201ffeaaa4a118e512fcc8
+SHA1: c8b540d6a4646b085963765acd4fa9e1281e4258
+SHA256: d0f2f248af2798ee025ea4152119e8aa71fc350db8c723a60624481435994c7c
+Description: Filesystem in Userspace (library) (3.x version)
+
+Package: noble-libfwupd2
+Version: 1.9.33-0ubuntu1~24.04.1ubuntu1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 512
+Depends: libc6, libcurl3t64-gnutls, libglib2.0-0t64, libjcat1, libjson-glib-1.0-0
+Provides: libfwupd2
+Filename: pool/trixie/noble-libfwupd2_1.9.33-0ubuntu1~24.04.1ubuntu1_arm64.deb
+Size: 126788
+MD5sum: 0bd0b2bae19d8d0ba95762cd2f52d222
+SHA1: d45230a3098406f2a1325022b944b383f2ae6846
+SHA256: b22947a4d15d85d02d635479b26813fdb9a1c846a355c5c6f35208147c6b06c2
+Description: Firmware update daemon library
+
+Package: noble-libgbm1
+Version: 25.2.8-0ubuntu0.24.04.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 228
+Depends: libc6, libdrm2, libexpat1, mesa-libgallium
+Provides: libgbm1
+Filename: pool/trixie/noble-libgbm1_25.2.8-0ubuntu0.24.04.1_arm64.deb
+Size: 34002
+MD5sum: 28baa9d75acb27ef35bcab40030f4f33
+SHA1: b97a64b6ede12fd4f1e031414cddf2fe00708556
+SHA256: 72529b06dc59a3198d1129506fb0a274744482db5a5dd329e53583e46ffff9a4
+Description: generic buffer management API -- runtime
+
+Package: noble-libgck-2-2
+Version: 4.2.0-5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 304
+Depends: libc6, libglib2.0-0t64, libp11-kit0
+Provides: libgck-2-2
+Filename: pool/trixie/noble-libgck-2-2_4.2.0-5_arm64.deb
+Size: 73956
+MD5sum: 6fa91d09dc4fe799eee12afbcbc0bc73
+SHA1: 4ba2c595adcd2675ea2d5f07f273f6bfc927477f
+SHA256: a5cf297c24b4320e4bfc899c018a69cb7eb14189154165571dd89d2f03e6e071
+Description: Glib wrapper library for PKCS#11 - runtime
+
+Package: noble-libgcr-4-4
+Version: 4.2.0-5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 688
+Depends: libgck-2-2, libc6, libgcrypt20, libglib2.0-0t64, libp11-kit0
+Provides: libgcr-4-4
+Filename: pool/trixie/noble-libgcr-4-4_4.2.0-5_arm64.deb
+Size: 185462
+MD5sum: 1d77f33077954faa4b789cc97dec05c2
+SHA1: 648f5fa48882eee9676575977f0b2c2c51487387
+SHA256: 9a826939fa57bbfe7078e44afee914fb9191aaf4b7476cf291a7d535a764a1ea
+Description: Library for Crypto related tasks
+
+Package: noble-libgcrypt20
+Version: 1.10.3-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1096
+Depends: libc6, libgpg-error0
+Provides: libgcrypt20
+Filename: pool/trixie/noble-libgcrypt20_1.10.3-2build1_arm64.deb
+Size: 469972
+MD5sum: 03e44fea980952d8e0b857d440f5ebdd
+SHA1: 245b823ac21d37b1a28ef51adf9bbb4fafc16322
+SHA256: 3ed32512c041475c77f80b71a16be60a1b0ec3cb25b3ae1c5357f7683cb8ea5e
+Description: LGPL Crypto library - runtime library
+
+Package: noble-libgirepository-1.0-1
+Version: 1.80.1-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 312
+Depends: libc6, libffi8, libglib2.0-0t64
+Provides: libgirepository-1.0-1
+Filename: pool/trixie/noble-libgirepository-1.0-1_1.80.1-1_arm64.deb
+Size: 78970
+MD5sum: 55fc44cd064e7b6f87196b7f81eda46a
+SHA1: 8310e70ab79586010ea7d611a4a6994481c4cb0d
+SHA256: 1d55be5b11b2c410f2b1771f84e3dac186478a65bd345c7d48c96cdb27e9c875
+Description: Library for handling GObject introspection data (runtime library)
+
+Package: noble-libgjs0g
+Version: 1.80.2-1build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1308
+Depends: gir1.2-gio-2.0, gir1.2-girepository-2.0, gir1.2-glib-2.0, gir1.2-gobject-2.0, libc6, libcairo-gobject2, libcairo2, libffi8, libgirepository-1.0-1, libgirepository-1.0-1-with-libffi8, libglib2.0-0t64, libmozjs-115-0t64, libreadline8t64, libstdc++6, libx11-6
+Provides: libgjs0g
+Filename: pool/trixie/noble-libgjs0g_1.80.2-1build2_arm64.deb
+Size: 368560
+MD5sum: c7c15c38295a55c93c0465eb64e0e76e
+SHA1: e52e3c207c3497e68b65a4688b83c128b5bc0042
+SHA256: ae6aaafd4d59522a5018aef5f4967ffdf15e66999382211c9c7ad1c5aab952e9
+Description: Mozilla-based javascript bindings for the GNOME platform
+
+Package: noble-libglib2.0-0t64
+Version: 2.80.0-6ubuntu3.8
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4652
+Depends: libc6, libffi8, libmount1, libpcre2-8-0, libselinux1, zlib1g
+Provides: libglib2.0-0t64
+Filename: pool/trixie/noble-libglib2.0-0t64_2.80.0-6ubuntu3.8_arm64.deb
+Size: 1508670
+MD5sum: ff1e122bcc8106afa575736a5271bb32
+SHA1: 06316c6cc109df3b6cf81b0a323d07229d8b24b1
+SHA256: 1b8889c5fcfbf4b98f27617a233b6c8bf6b14d49a38cca6eab4b99d98e58bbab
+Description: GLib library of C routines
+
+Package: noble-libglib2.0-bin
+Version: 2.80.0-6ubuntu3.8
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 572
+Depends: libglib2.0-data, libc6, libelf1t64, libglib2.0-0t64
+Provides: libglib2.0-bin
+Filename: pool/trixie/noble-libglib2.0-bin_2.80.0-6ubuntu3.8_arm64.deb
+Size: 96268
+MD5sum: 56217e18b93de9e1e25faa4fcc1209f5
+SHA1: dc5ec8bfc6ad490225461f9b9b651b52008f733a
+SHA256: 168e1f040a7418c3584f8969b14cc33350306b3a91fc8c3e006546c969bb7e88
+Description: Programs for the GLib library
+
+Package: noble-libgnome-desktop-4-2t64
+Version: 44.0-5build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 236
+Depends: bubblewrap, gnome-desktop3-data, gnome-desktop3-data, gsettings-desktop-schemas, iso-codes, libc6, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libseccomp2, libsystemd0, libudev1, libxkbregistry0
+Provides: libgnome-desktop-4-2t64
+Filename: pool/trixie/noble-libgnome-desktop-4-2t64_44.0-5build2_arm64.deb
+Size: 81928
+MD5sum: 9d9ff77267f2a3c27cab26e39a306a00
+SHA1: efc40cc153256cd2da4e295ff04bc1f14765a945
+SHA256: 06ee05bcb6bab02e337b01a21bcfd23881cb258d9ab3d7bf13997afebfdae62c
+Description: Utility library for the GNOME desktop - runtime files
+
+Package: noble-libgpg-error0
+Version: 1.47-3build2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 248
+Depends: libc6
+Provides: libgpg-error0
+Filename: pool/trixie/noble-libgpg-error0_1.47-3build2.1_arm64.deb
+Size: 68498
+MD5sum: 390e29f821c2f395c809bf28fdbd9c4d
+SHA1: ea46e8533678413e9af04475a0f6fd9810ed7330
+SHA256: 7ede73f4a7aa62b321499b7b20815b210ea6c6f7153d71953c9f7c2aafef0522
+Description: GnuPG development runtime library
+
+Package: noble-libgpgme11t64
+Version: 1.18.0-4.1ubuntu4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 452
+Depends: gnupg, libassuan0, libc6, libgpg-error0
+Provides: libgpgme11t64
+Filename: pool/trixie/noble-libgpgme11t64_1.18.0-4.1ubuntu4_arm64.deb
+Size: 134362
+MD5sum: e5375f9c6f3d2a6102a7a642fd80e9b1
+SHA1: b1a350201cdbeb2412b4040634562e989cd22f63
+SHA256: 6afff570e9b310ac4aa9f90a897bb861c6f623f0a7f39acdd4d7f90563c9a61c
+Description: GPGME - GnuPG Made Easy (library)
+
+Package: noble-libgssapi-krb5-2
+Version: 1.20.1-6ubuntu2.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 452
+Depends: libkrb5-3, libc6, libcom-err2, libk5crypto3, libkrb5support0
+Provides: libgssapi-krb5-2
+Filename: pool/trixie/noble-libgssapi-krb5-2_1.20.1-6ubuntu2.6_arm64.deb
+Size: 139522
+MD5sum: a884ba231b0cdeb53f061002b4208845
+SHA1: 7f7bc3f20c59b6683845e71cf5b213b8553f93d7
+SHA256: 703155c6d75fe1ea3866b6ca2c734e618d4402ceb9451024364fe9bb251fa97d
+Description: MIT Kerberos runtime libraries - krb5 GSS-API Mechanism
+
+Package: noble-libgstreamer-gl1.0-0
+Version: 1.24.2-1ubuntu0.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 716
+Depends: libc6, libdrm2, libegl1, libgbm1, libgl1, libglib2.0-0t64, libgstreamer-plugins-base1.0-0, libgstreamer1.0-0, libgudev-1.0-0, libwayland-client0, libwayland-cursor0, libwayland-egl1, libx11-6, libx11-xcb1, libxcb1
+Provides: libgstreamer-gl1.0-0
+Filename: pool/trixie/noble-libgstreamer-gl1.0-0_1.24.2-1ubuntu0.3_arm64.deb
+Size: 205746
+MD5sum: 7347cb33ba7c5c423f5b8ed685e26643
+SHA1: f68b1de3c0e58c8dfdb60750d637c83f6c30b115
+SHA256: 4e6049adca45976e3952de6afbd55cb959961f56a8ad741513bcc086f0864850
+Description: GStreamer GL libraries
+
+Package: noble-libgstreamer-plugins-bad1.0-0
+Version: 1.24.2-1ubuntu4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3276
+Depends: libc6, libdrm2, libgcc-s1, libglib2.0-0t64, libgstreamer-gl1.0-0, libgstreamer-plugins-base1.0-0, libgstreamer1.0-0, libnice10, libstdc++6, libva-drm2, libva2, libvulkan1, libwayland-client0, libxcb1, libxkbcommon-x11-0, libxkbcommon0
+Provides: libgstreamer-plugins-bad1.0-0
+Filename: pool/trixie/noble-libgstreamer-plugins-bad1.0-0_1.24.2-1ubuntu4_arm64.deb
+Size: 769012
+MD5sum: f5c0f6048b6a1563688702f465157848
+SHA1: 654759bd99bd546a4432f8ac7a4cc40bd9cb6725
+SHA256: 4ee1d4d4efa603d45214fd846a70bdd7a34f87a1d60bc3eec0caee28ad73a205
+Description: GStreamer libraries from the "bad" set
+
+Package: noble-libgstreamer-plugins-base1.0-0
+Version: 1.24.2-1ubuntu0.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3052
+Depends: libc6, libdrm2, libglib2.0-0t64, libgstreamer1.0-0, liborc-0.4-0t64, zlib1g, iso-codes
+Provides: libgstreamer-plugins-base1.0-0
+Filename: pool/trixie/noble-libgstreamer-plugins-base1.0-0_1.24.2-1ubuntu0.3_arm64.deb
+Size: 819040
+MD5sum: cf8862a6767d5d776b825383a90d25e8
+SHA1: f371aaf70eb558c018f3efb7be4920d53cbfd2d9
+SHA256: aa6bc8d37e0a8b44a09cac5d9dcdc861618db899a6b53b3d440cc81a2138b247
+Description: GStreamer libraries from the "base" set
+
+Package: noble-libgstreamer1.0-0
+Version: 1.24.2-1ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3732
+Depends: libc6, libcap2, libdw1t64, libgcc-s1, libglib2.0-0t64, libunwind8, libcap2-bin
+Provides: libgstreamer1.0-0
+Filename: pool/trixie/noble-libgstreamer1.0-0_1.24.2-1ubuntu0.1_arm64.deb
+Size: 1133704
+MD5sum: 5f0088858f0ee91d0972d3c2d83a6b3b
+SHA1: d59cda1a028fe5fc7987086609fddccf2156fc9e
+SHA256: 0a75bb4fb933798368d82f17b125fa2a181fde701329d0358c1c3bc52e389565
+Description: Core GStreamer libraries and elements
+
+Package: noble-libgtk-4-1
+Version: 4.14.5+ds-0ubuntu0.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 12356
+Depends: adwaita-icon-theme, hicolor-icon-theme, shared-mime-info, libc6, libcairo-gobject2, libcairo-script-interpreter2, libcairo2, libcolord2, libcups2t64, libepoxy0, libfontconfig1, libfribidi0, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libgraphene-1.0-0, libharfbuzz0b, libjpeg8, libpango-1.0-0, libpangocairo-1.0-0, libpangoft2-1.0-0, libpng16-16t64, libtiff6, libvulkan1, libwayland-client0, libwayland-egl1, libx11-6, libxcursor1, libxdamage1, libxext6, libxfixes3, libxi6, libxinerama1, libxkbcommon0, libxrandr2, libgles2, libgtk-4-common
+Provides: libgtk-4-1
+Filename: pool/trixie/noble-libgtk-4-1_4.14.5+ds-0ubuntu0.7_arm64.deb
+Size: 3203640
+MD5sum: 1251176352ac0dc6027e9c979400438e
+SHA1: bae55f0256f4d337bf5195b440da065c7769292c
+SHA256: 9b01834af62d85eb92ce7d52b814f45310fb0b7b9cf7705bbd7ae5d702e6c6b5
+Description: GTK graphical user interface library
+
+Package: noble-libharfbuzz0b
+Version: 8.3.0-2build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1164
+Depends: libc6, libfreetype6, libglib2.0-0t64, libgraphite2-3
+Provides: libharfbuzz0b
+Filename: pool/trixie/noble-libharfbuzz0b_8.3.0-2build2_arm64.deb
+Size: 459570
+MD5sum: 2159733e44d8e5f23a9476793ff741fe
+SHA1: 78124d9547b138f1234a02248bd9701a3b2e0de4
+SHA256: affb0382cea1f3b490789ba68531868d700c237b38f6813b662e8aeb0580a5e7
+Description: OpenType text shaping engine (shared library)
+
+Package: noble-libhwy1t64
+Version: 1.0.7-8.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2500
+Depends: libc6, libstdc++6
+Provides: libhwy1t64
+Filename: pool/trixie/noble-libhwy1t64_1.0.7-8.1build1_arm64.deb
+Size: 435116
+MD5sum: 1b451e137c476e0f472d2d1cd4c1775c
+SHA1: 5c594c7ee3b2a678fa0dff395fc8d93c4cb8ee79
+SHA256: 9421c4f4950f582148c2a215c98b7c31521d75ee9c5a3bb3f8f4e9297ac1aa85
+Description: Efficient and performance-portable SIMD wrapper (runtime files)
+
+Package: noble-libice6
+Version: 2:1.0.10-1build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libbsd0, libc6, x11-common
+Provides: libice6
+Filename: pool/trixie/noble-libice6_1.0.10-1build3_arm64.deb
+Size: 40572
+MD5sum: 34dfc1107de409083ec39e9150c7592e
+SHA1: aeed0d751284f88e9136f1219b66c7a743b269bf
+SHA256: 1b808db5163d789fd3734a9ed2e936953dce8e32a64547fcac24c52139766bad
+Description: X11 Inter-Client Exchange library
+
+Package: noble-libicu74
+Version: 74.2-1ubuntu3.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 36240
+Depends: libc6, libgcc-s1, libstdc++6
+Provides: libicu74
+Filename: pool/trixie/noble-libicu74_74.2-1ubuntu3.1_arm64.deb
+Size: 10806258
+MD5sum: 3580f334072f3a3cfd126125e6f722fc
+SHA1: 4b11eeaf1fd2abf10a68bbcc552bd464a5b12889
+SHA256: 65c07191a370beb7a0aad8d045fbb283a46cd5dd1855ee6a03c0ddda53b2f36b
+Description: International Components for Unicode
+
+Package: noble-libinput-bin
+Version: 1.25.0-1ubuntu3.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 452
+Depends: libc6, libevdev2, libudev1, libwacom9
+Provides: libinput-bin
+Filename: pool/trixie/noble-libinput-bin_1.25.0-1ubuntu3.2_arm64.deb
+Size: 20924
+MD5sum: dc0989f9aa7b0efdea1059877b603a32
+SHA1: 73e7d459c1fe80fe42e7c1ab99c6185518fbefeb
+SHA256: 9a7f98a4f0daf6003589fb11ede0ab6b344d3ec64fe7b7d2265e1c882cb8393b
+Description: input device management and event handling library - udev quirks
+
+Package: noble-libinput10
+Version: 1.25.0-1ubuntu3.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 368
+Depends: libc6, libevdev2, libmtdev1t64, libudev1, libwacom9, libinput-bin
+Provides: libinput10
+Filename: pool/trixie/noble-libinput10_1.25.0-1ubuntu3.2_arm64.deb
+Size: 126750
+MD5sum: 66d03bef45022e9c3094b8637c99de0e
+SHA1: cc0e4253ae789cd200e880efa1a3b01b57df5503
+SHA256: a1e05e9669a02e0fbecc8f31c4e37682d398c6559d9a0851ec091983ab025427
+Description: input device management and event handling library - shared library
+
+Package: noble-libjpeg-turbo8
+Version: 2.1.5-2ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 484
+Depends: libc6
+Provides: libjpeg-turbo8
+Filename: pool/trixie/noble-libjpeg-turbo8_2.1.5-2ubuntu2_arm64.deb
+Size: 161266
+MD5sum: b310887cb9e961445babaa8ad42e93bc
+SHA1: 3370702a6b8634d9b0a519ae0f78903e7cc45c25
+SHA256: d0e05b9fe1e5f652c31d2a97e041ec722773f969e385e592ec4731aa8cdb15ae
+Description: libjpeg-turbo JPEG runtime library
+
+Package: noble-libjpeg8
+Version: 8c-2ubuntu11
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 36
+Depends: libjpeg-turbo8
+Provides: libjpeg8
+Filename: pool/trixie/noble-libjpeg8_8c-2ubuntu11_arm64.deb
+Size: 1992
+MD5sum: 93085c0275919e2a1945f95a9d5ffbea
+SHA1: e96410e4e305429c994f79bedb6792c84085dafe
+SHA256: 2145d1bf19d9624a8caf1c3782d5b023044232afee268c2d19bafb8c08f1ed5b
+Description: Independent JPEG Group's JPEG runtime library (dependency package)
+
+Package: noble-libjson-glib-1.0-0
+Version: 1.8.0-2build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 244
+Depends: libjson-glib-1.0-common, libc6, libglib2.0-0t64
+Provides: libjson-glib-1.0-0
+Filename: pool/trixie/noble-libjson-glib-1.0-0_1.8.0-2build2_arm64.deb
+Size: 63514
+MD5sum: 4923b23b08f0d0ade41fc3c6365a48ca
+SHA1: efa5684367ef70beda34de9712ac51be9f4ec7e9
+SHA256: 636790496ebdede6a38208b253241fc4d117daffa6d9e348db449414094bf98c
+Description: GLib JSON manipulation library
+
+Package: noble-libjxl0.7
+Version: 0.7.0-10.2ubuntu6.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1844
+Depends: libbrotli1, libc6, libhwy1t64, liblcms2-2, libstdc++6
+Provides: libjxl0.7
+Filename: pool/trixie/noble-libjxl0.7_0.7.0-10.2ubuntu6.1_arm64.deb
+Size: 688670
+MD5sum: 0f1c08277c78305f48cfaf67ce371d1c
+SHA1: 38a89274a6703cac257b54372f04fb91089a290e
+SHA256: c2c559aed92974174407e49531ed15a0bcec82dc4b6ba319244cd8e322bb2862
+Description: JPEG XL Image Coding System - "JXL" (shared libraries)
+
+Package: noble-libk5crypto3
+Version: 1.20.1-6ubuntu2.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 296
+Depends: libc6, libkrb5support0
+Provides: libk5crypto3
+Filename: pool/trixie/noble-libk5crypto3_1.20.1-6ubuntu2.6_arm64.deb
+Size: 84414
+MD5sum: 6f3952fe6778e8abf476460b5a6844ac
+SHA1: 1548abeb828471e6259cf418b6984bb9d474a80f
+SHA256: 33434952bea244195eda452e3863e7f22888d121fdda833b0ae9c0e1f628c1ec
+Description: MIT Kerberos runtime libraries - Crypto Library
+
+Package: noble-libkrb5-3
+Version: 1.20.1-6ubuntu2.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1112
+Depends: libkrb5support0, libc6, libcom-err2, libk5crypto3, libkeyutils1, libssl3t64
+Provides: libkrb5-3
+Filename: pool/trixie/noble-libkrb5-3_1.20.1-6ubuntu2.6_arm64.deb
+Size: 344420
+MD5sum: f620a716d169fc27bbf8ecd299b59877
+SHA1: 0472658e7190be3bdfe4ae277ee26af9ad6270b4
+SHA256: 942168daea79a8aae2b75d5a9db5536e08b7f35aed21bf3544dcdb7f3807b4f4
+Description: MIT Kerberos runtime libraries
+
+Package: noble-libkrb5support0
+Version: 1.20.1-6ubuntu2.6
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 188
+Depends: libc6
+Provides: libkrb5support0
+Filename: pool/trixie/noble-libkrb5support0_1.20.1-6ubuntu2.6_arm64.deb
+Size: 33348
+MD5sum: d050c2e27a7a9617713ce70211cca390
+SHA1: 553ee45467dfd79e7b76c6aa633ae71a2e42efda
+SHA256: a4bccea80dcdc4863c7d5b14716507199a2b466f05c0ca84d0f10a90e47614a5
+Description: MIT Kerberos runtime libraries - Support library
+
+Package: noble-liblc3-1
+Version: 1.0.4-3build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6
+Provides: liblc3-1
+Filename: pool/trixie/noble-liblc3-1_1.0.4-3build1_arm64.deb
+Size: 68622
+MD5sum: 884786ead50526bb9c817c26b5c56d64
+SHA1: 520d4f35543bd2f44d06010495cea809622c12a1
+SHA256: 89055d2590fffbe2215796a65860382b8d73bc06d0f0eabb4e6e33fcf9afaa7c
+Description: Low Complexity Communication Codec (shared library)
+
+Package: noble-liblcms2-2
+Version: 2.14-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 448
+Depends: libc6
+Provides: liblcms2-2
+Filename: pool/trixie/noble-liblcms2-2_2.14-2build1_arm64.deb
+Size: 158492
+MD5sum: 9da5d0328ab818c4ff076aee0dd4ecdc
+SHA1: 2e22f25629d0e58658e0d5c2f7b10a4704c6e117
+SHA256: fe495080c114b728d4783e51e1e0f31964943ca9f4b9b8b8157e109b89c9f94c
+Description: Little CMS 2 color management library
+
+Package: noble-libldb2
+Version: 2:2.8.0+samba4.19.5+dfsg-4ubuntu9.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1408
+Depends: libc6, libldap2, liblmdb0, libtalloc2, libtdb1, libtevent0t64
+Provides: libldb2
+Filename: pool/trixie/noble-libldb2_2.8.0+samba4.19.5+dfsg-4ubuntu9.4_arm64.deb
+Size: 185742
+MD5sum: eee2b33f287616450f8f80cc18d4257b
+SHA1: 3fa44c861bc32d4d0a7682387a13be85b42578aa
+SHA256: 12ef9bf41d721f546bc3f56079c54923ea01248a8025b9b429f9fcae05980f25
+Description: LDAP-like embedded database - shared library
+
+Package: noble-liblept5
+Version: 1.82.0-3build4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3076
+Depends: libc6, libgif7, libjpeg8, libopenjp2-7, libpng16-16t64, libtiff6, libwebp7, libwebpmux3, zlib1g
+Provides: liblept5
+Filename: pool/trixie/noble-liblept5_1.82.0-3build4_arm64.deb
+Size: 1111056
+MD5sum: 254dc98232188b8f2c09d337cb7ec565
+SHA1: e68228509b2b19e1ea4446d6a5838e648fafba55
+SHA256: 91184cf4e699a4afe2699d208826139b2744f24403e4285ca58f8f287909475b
+Description: image processing library
+
+Package: noble-libllvm20
+Version: 1:20.1.2-0ubuntu1~24.04.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 135788
+Depends: libc6, libedit2, libffi8, libgcc-s1, libstdc++6, libxml2, libzstd1, zlib1g
+Provides: libllvm20
+Filename: pool/trixie/noble-libllvm20_20.1.2-0ubuntu1~24.04.2_arm64.deb
+Size: 29273466
+MD5sum: f50cd4dd443cc01be6a23281b921e135
+SHA1: e8c8f205ac515e96b75481055102b6a0028539ff
+SHA256: 50360934abc4e82b00d530f371e9cadbc50a855c56fcba57349f122c6b53e4df
+Description: Modular compiler and toolchain technologies, runtime library
+
+Package: noble-libltdl7
+Version: 2.4.7-7build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 136
+Depends: libc6
+Provides: libltdl7
+Filename: pool/trixie/noble-libltdl7_2.4.7-7build1_arm64.deb
+Size: 39736
+MD5sum: 4dda68d275a76e9e94af32d94c3a32d9
+SHA1: 2b4b3acfec374c84066e8939cfdb60ea0f0e743c
+SHA256: 7678ba72f3c17136bdeff0eff710d8ea9df6e4e95b102d6cd9a739faee271b3a
+Description: System independent dlopen wrapper for GNU libtool
+
+Package: noble-liblz4-1
+Version: 1.9.4-1build1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6
+Provides: liblz4-1
+Filename: pool/trixie/noble-liblz4-1_1.9.4-1build1.1_arm64.deb
+Size: 62938
+MD5sum: d8cf7ba31b53bea0663632eabd69d276
+SHA1: 98d0c945c65b3d49e9d1466407454245c2f2b523
+SHA256: c1215ba1da0002a571a73a5e2214269bf2e5d353eaabc4cdcb87645acb1b807c
+Description: Fast LZ compression algorithm library - runtime
+
+Package: noble-liblzma5
+Version: 5.6.1+really5.4.5-1ubuntu0.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 284
+Depends: libc6
+Provides: liblzma5
+Filename: pool/trixie/noble-liblzma5_5.6.1+really5.4.5-1ubuntu0.2_arm64.deb
+Size: 124484
+MD5sum: 55a72b1b4fa76b06dbe06791fc0241ec
+SHA1: 3af9c3d546c9f7018a444cd0399cfe8b6a627e0f
+SHA256: bb78d3a249ee90a0494d3b3f6cd84c3ef672e213bcf710f32822500ead6f6967
+Description: XZ-format compression library
+
+Package: noble-libmd4c0
+Version: 0.4.8-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 132
+Depends: libc6
+Provides: libmd4c0
+Filename: pool/trixie/noble-libmd4c0_0.4.8-1build1_arm64.deb
+Size: 39898
+MD5sum: a084183c9027ffb4c64c42e2ca635503
+SHA1: fd7d9d7dc7a702b1c5451267c49bd7669d40990a
+SHA256: a9a56f2e99d5ba56128dc47a9d19527620d12a7ac4f4b0d2008cd344f36c4daf
+Description: Markdown for C
+
+Package: noble-libmm-glib0
+Version: 1.23.4-0ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1268
+Depends: libc6, libglib2.0-0t64
+Provides: libmm-glib0
+Filename: pool/trixie/noble-libmm-glib0_1.23.4-0ubuntu2_arm64.deb
+Size: 240876
+MD5sum: f1e960c57aba2b0a1fa3b0d464aff9cb
+SHA1: 05e929d43eb52ba94ced46e917e79b3332aa0eb1
+SHA256: 0175c03c32d23b54a3d8db285d9142c125d584c7f9508e80ea3cd98ee5be5af4
+Description: D-Bus service for managing modems - shared libraries
+
+Package: noble-libmount1
+Version: 2.39.3-9ubuntu6.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 396
+Depends: libblkid1, libc6, libselinux1
+Provides: libmount1
+Filename: pool/trixie/noble-libmount1_2.39.3-9ubuntu6.4_arm64.deb
+Size: 131062
+MD5sum: 3ea8a0db13954f4cab1aa8a6fa5c9a21
+SHA1: be952df5c982796f1635dc09aff3c89ae3418ca4
+SHA256: 7ad41ead01114e1c23a7f2f5fb754ccde309eb75ae198deebef0655b66e78982
+Description: device mounting library
+
+Package: noble-libmozjs-115-0t64
+Version: 115.10.0-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 29976
+Depends: libc6, libgcc-s1, libstdc++6, zlib1g, tzdata
+Provides: libmozjs-115-0t64
+Filename: pool/trixie/noble-libmozjs-115-0t64_115.10.0-1_arm64.deb
+Size: 8891978
+MD5sum: 845a27fa5ca95ef7a0d3a3f6e40e8df6
+SHA1: 89f385a6217f038fb8e5844ae3e3f5833bfcee1e
+SHA256: 27ee2143d984d406ccb40f00ae65e046f9ba2969a2c353cc3e1495e24bf2e7bf
+Description: SpiderMonkey JavaScript library
+
+Package: noble-libmutter-14-0
+Version: 46.2-1ubuntu0.24.04.14
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4332
+Depends: adwaita-icon-theme, gsettings-desktop-schemas, mutter-common, mutter-common-bin, libatk1.0-0t64, libc6, libcairo2, libcanberra0t64, libcolord2, libdrm2, libegl1, libeis1, libfontconfig1, libfribidi0, libgbm1, libgdk-pixbuf-2.0-0, libgl1, libglib2.0-0t64, libgnome-desktop-4-2t64, libgraphene-1.0-0, libgudev-1.0-0, libharfbuzz0b, libice6, libinput10, liblcms2-2, libpango-1.0-0, libpangocairo-1.0-0, libpangoft2-1.0-0, libpipewire-0.3-0t64, libpixman-1-0, libsm6, libstartup-notification0, libsystemd0, libudev1, libwacom9, libwayland-server0, libx11-6, libx11-xcb1, libxau6, libxcb-randr0, libxcb-res0, libxcb1, libxcomposite1, libxcursor1, libxdamage1, libxext6, libxfixes3, libxi6, libxinerama1, libxkbcommon-x11-0, libxkbcommon0, libxkbfile1, libxrandr2, libxtst6
+Provides: libmutter-14-0
+Filename: pool/trixie/noble-libmutter-14-0_46.2-1ubuntu0.24.04.14_arm64.deb
+Size: 1345582
+MD5sum: 537ec93f44435226d79fc5e564c7d29a
+SHA1: 99c720c95560352742774ba8969d44633f7b9ce3
+SHA256: c3f028547049118db30a94d061f6fc5a252ca1f90859ffc9127d55cfd3cfd213
+Description: window manager library from the Mutter window manager
+
+Package: noble-libncursesw6
+Version: 6.4+20240113-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 560
+Depends: libtinfo6, libc6
+Provides: libncursesw6
+Filename: pool/trixie/noble-libncursesw6_6.4+20240113-1ubuntu2_arm64.deb
+Size: 141996
+MD5sum: 540fdf5940877920fd90ad1f4ff568b7
+SHA1: e6eda26ccc612a98b7b2bd81cd04b3bc818f0ce9
+SHA256: 3d360c438110d784cf48cd9b6f9cb889d022ff7b1815335d2caf75e6b2966e5a
+Description: shared libraries for terminal handling (wide character support)
+
+Package: noble-libnettle8t64
+Version: 3.9.1-2.2build1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 492
+Depends: libc6
+Provides: libnettle8t64
+Filename: pool/trixie/noble-libnettle8t64_3.9.1-2.2build1.1_arm64.deb
+Size: 189578
+MD5sum: d4976def340e7e810af4896dd1203924
+SHA1: 9d9640f040ef299fd5faefbcf726cca16e588ccf
+SHA256: fdbfce65c8f4953a8c0be5812ba401b90c81e950823e152920c03662297bea96
+Description: low level cryptographic library (symmetric and one-way cryptos)
+
+Package: noble-libnghttp2-14
+Version: 1.59.0-1ubuntu0.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 252
+Depends: libc6
+Provides: libnghttp2-14
+Filename: pool/trixie/noble-libnghttp2-14_1.59.0-1ubuntu0.2_arm64.deb
+Size: 72710
+MD5sum: 2c6fc7dc64dfa1a791866bf252a16a05
+SHA1: e6e645da3105e25024c855864d18e86cd5b06d8d
+SHA256: 16424770030dac5e7b4c2e930e3bc633cf6ab88c922a77b9cc36560a53e08307
+Description: library implementing HTTP/2 protocol (shared library)
+
+Package: noble-libnm0
+Version: 1.46.0-1ubuntu2.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1596
+Depends: libc6, libglib2.0-0t64, libgnutls30t64, libudev1
+Provides: libnm0
+Filename: pool/trixie/noble-libnm0_1.46.0-1ubuntu2.5_arm64.deb
+Size: 471248
+MD5sum: d695297dd4e664c68d42ceacdc9be4d1
+SHA1: c7639a24aeb1c33f602bfc422a7f5e51722e65bc
+SHA256: 8598cf45f6ff475e04cafbebbf827776318171412ce8269feee80fa0ce9e751b
+Description: GObject-based client library for NetworkManager
+
+Package: noble-libnspr4
+Version: 2:4.35-1.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 456
+Depends: libc6
+Provides: libnspr4
+Filename: pool/trixie/noble-libnspr4_4.35-1.1build1_arm64.deb
+Size: 111240
+MD5sum: 90bcff910ac6f9df785274c23a3f716d
+SHA1: 410eba078a34632785aaebcb6b2022130b6e77e0
+SHA256: e26834616bd562e9d097e1351b99cbe8b98215ce310f3f5a445dcf05ad0640ec
+Description: NetScape Portable Runtime Library
+
+Package: noble-libnss3
+Version: 2:3.98-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4060
+Depends: libc6, libnspr4, libsqlite3-0
+Provides: libnss3
+Filename: pool/trixie/noble-libnss3_3.98-1build1_arm64.deb
+Size: 1396614
+MD5sum: 90eeeaf30045bbc2e3e84d82f1aa91e5
+SHA1: 5aaa4067289ce95f7278765ac7792c9eb307074b
+SHA256: 33d0fd7b42ae48fc8ed42804f2af9ed15182dbb7fa09088ee2f6654e4bc8ba88
+Description: Network Security Service libraries
+
+Package: noble-libopenal-data
+Version: 1:1.23.1-4build1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 308
+Provides: libopenal-data
+Filename: pool/trixie/noble-libopenal-data_1.23.1-4build1_all.deb
+Size: 159972
+MD5sum: 5fbdc5f482ec7c78640ca6b644bde9ef
+SHA1: 072d39635c5e4ad9208d677349c8f9c7f1e4dbde
+SHA256: 18dcbad5be6e07ebeb88a9fd0c5c3e5178765d6cf17125b086be7bb390c682db
+Description: Software implementation of the OpenAL audio API (data files)
+
+Package: noble-libopenal1
+Version: 1:1.23.1-4build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1172
+Depends: libopenal-data, libc6, libgcc-s1, libsndio7.0, libstdc++6
+Provides: libopenal1
+Filename: pool/trixie/noble-libopenal1_1.23.1-4build1_arm64.deb
+Size: 508944
+MD5sum: 932757f84298395a10d743d9ffc99420
+SHA1: bad5b8b92a8c01ee23e068621f33feb05f45d5fa
+SHA256: eafc60d37f97cba7f0a292ecb80103323f65928e5396c0ceb366563afd7fc59e
+Description: Software implementation of the OpenAL audio API (shared library)
+
+Package: noble-libopus0
+Version: 1.4-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 440
+Depends: libc6
+Provides: libopus0
+Filename: pool/trixie/noble-libopus0_1.4-1build1_arm64.deb
+Size: 196462
+MD5sum: dca00e608e2ba8f26769b37a0fe2be28
+SHA1: ee65d0ffa3868dcc96c9e580aca48c2df158f452
+SHA256: 8d609a808974e3db5d16e08fbaad20257b4fa2373596ab54ef44be67ab91eed7
+Description: Opus codec runtime library
+
+Package: noble-libostree-1-1
+Version: 2024.5-1build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 960
+Depends: libarchive13t64, libavahi-client3, libavahi-common3, libavahi-glib1, libc6, libcurl3t64-gnutls, libglib2.0-0t64, libgpg-error0, libgpgme11t64, liblzma5, libselinux1, libsystemd0, zlib1g
+Provides: libostree-1-1
+Filename: pool/trixie/noble-libostree-1-1_2024.5-1build2_arm64.deb
+Size: 356232
+MD5sum: 81f6c49c34be2c8e623ff6af4cf10863
+SHA1: ace4980ea72b8866e049f97999703e05178332e7
+SHA256: fb125cc45d74a35b469f14b024e2430aaea3d247f886828f8100bc2500937317
+Description: content-addressed filesystem for operating system binaries (library)
+
+Package: noble-libpackagekit-glib2-18
+Version: 1.2.8-2ubuntu1.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 508
+Depends: libc6, libglib2.0-0t64
+Provides: libpackagekit-glib2-18
+Filename: pool/trixie/noble-libpackagekit-glib2-18_1.2.8-2ubuntu1.4_arm64.deb
+Size: 112336
+MD5sum: 4c8dbcdeb22db8379885b505f758af1b
+SHA1: 47c92900c23a0b35902af79c4ef90ec052c8649e
+SHA256: 52a14aa00b8acf13b705c6a41d0f4929351a11e6c90781da83d0d766ef8e75cb
+Description: Library for accessing PackageKit using GLib
+
+Package: noble-libpam0g
+Version: 1.5.3-5ubuntu5.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 292
+Depends: libaudit1, libc6, debconf
+Provides: libpam0g
+Filename: pool/trixie/noble-libpam0g_1.5.3-5ubuntu5.5_arm64.deb
+Size: 53920
+MD5sum: 760f223d5cefb46493db4f77eee1454b
+SHA1: 994d7b691436e312374dbaf8afff0460dafa117b
+SHA256: 152be5c8450542516187b10ce1b71a1f68382e02647773b829bfdcf7007ec617
+Description: Pluggable Authentication Modules library
+
+Package: noble-libpango-1.0-0
+Version: 1.52.1+ds-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 568
+Depends: fontconfig, libc6, libfribidi0, libglib2.0-0t64, libharfbuzz0b, libthai0
+Provides: libpango-1.0-0
+Filename: pool/trixie/noble-libpango-1.0-0_1.52.1+ds-1build1_arm64.deb
+Size: 223386
+MD5sum: 8a72fe6095328cbf9afe860843420786
+SHA1: 31fda9e3951a95a3e0d8e22df414111c9b9a262a
+SHA256: 6d5abe9db8802b45b47528bd74ab2638c6a13bd8b453dd6806030575f028bea7
+Description: Layout and rendering of internationalized text
+
+Package: noble-libpangocairo-1.0-0
+Version: 1.52.1+ds-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 124
+Depends: libc6, libcairo2, libfontconfig1, libglib2.0-0t64, libharfbuzz0b, libpango-1.0-0, libpangoft2-1.0-0
+Provides: libpangocairo-1.0-0
+Filename: pool/trixie/noble-libpangocairo-1.0-0_1.52.1+ds-1build1_arm64.deb
+Size: 26372
+MD5sum: 2928058aab416990db8ccd29b8bf0693
+SHA1: 898a558cf095c652117766e36401ae7b6f6c430d
+SHA256: 5a148af163d9130e7800911fa0d5a8ad6a5dda5a8b0a3c205bda444cafb031b6
+Description: Layout and rendering of internationalized text
+
+Package: noble-libpangoft2-1.0-0
+Version: 1.52.1+ds-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 188
+Depends: libc6, libfontconfig1, libfreetype6, libglib2.0-0t64, libharfbuzz0b, libpango-1.0-0
+Provides: libpangoft2-1.0-0
+Filename: pool/trixie/noble-libpangoft2-1.0-0_1.52.1+ds-1build1_arm64.deb
+Size: 40640
+MD5sum: 7f5e46509ca62dd635d9fab83d518a10
+SHA1: c9aa9c48c1db76324fb627455e20b26000937b21
+SHA256: 7a35c1164a030dc9b50d72628ee5c564be698b3bd26ac53cd6c29dd2e615bf65
+Description: Layout and rendering of internationalized text
+
+Package: noble-libpcre2-16-0
+Version: 10.42-4ubuntu2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 564
+Depends: libc6
+Provides: libpcre2-16-0
+Filename: pool/trixie/noble-libpcre2-16-0_10.42-4ubuntu2.1_arm64.deb
+Size: 194890
+MD5sum: e4bf3b38b2e41484cd6eaecbba0ff4d7
+SHA1: efe30ecac8483ffe38101b45a2e705ad37309081
+SHA256: 65785188e65a5218582fe1055e077bffb8ea1e38291b25fc6e5b362390b4e21f
+Description: New Perl Compatible Regular Expression Library - 16 bit runtime files
+
+Package: noble-libpcre2-8-0
+Version: 10.42-4ubuntu2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 632
+Depends: libc6
+Provides: libpcre2-8-0
+Filename: pool/trixie/noble-libpcre2-8-0_10.42-4ubuntu2.1_arm64.deb
+Size: 210692
+MD5sum: ec65d2b0bd373131c7f86849ab91fbaa
+SHA1: 4b112683600f3c934ebc62b12d69f88f27d240c2
+SHA256: dff9c0428588eb1d82462f011a0ca71f9c456ba88a928368be799afaa9d78fe5
+Description: New Perl Compatible Regular Expression Library- 8 bit runtime files
+
+Package: noble-libpcre3
+Version: 2:8.39-15build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 668
+Depends: libc6
+Provides: libpcre3
+Filename: pool/trixie/noble-libpcre3_8.39-15build1_arm64.deb
+Size: 233716
+MD5sum: 8aef19d919b14162dc6bf747e117a663
+SHA1: 11f4bfbf8e5b6e781e302670ee14921e7fb74fd7
+SHA256: 71560c949a61028ab5f0a29a6eaad93f25fd2bb1988bfdace528301ef01c31c9
+Description: Old Perl 5 Compatible Regular Expression Library - runtime files
+
+Package: noble-libpipewire-0.3-0t64
+Version: 1.0.5-1ubuntu3.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 960
+Depends: libspa-0.2-modules, libc6
+Provides: libpipewire-0.3-0t64
+Filename: pool/trixie/noble-libpipewire-0.3-0t64_1.0.5-1ubuntu3.2_arm64.deb
+Size: 244110
+MD5sum: e2ebdf10fa87287006eb849a47fc8e49
+SHA1: e2cd68a729102104ccd87ef9fa2675be33557a3a
+SHA256: 094531e6d7dbed9ca499e2b904fd1941ee8c42010a6ff9873b7ab011f35fc85b
+Description: libraries for the PipeWire multimedia server
+
+Package: noble-libpixman-1-0
+Version: 0.42.2-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 700
+Depends: libc6
+Provides: libpixman-1-0
+Filename: pool/trixie/noble-libpixman-1-0_0.42.2-1build1_arm64.deb
+Size: 202742
+MD5sum: 4ed80d998a60d18effe3cdce888116ff
+SHA1: 38a9a1622fbed43f9d5b07bc112c87c8d9b45356
+SHA256: 3f9421cbf20f1b1284b95eda7481a074a1e2385b6edb36c8ff7b110e64cbd2c8
+Description: pixel-manipulation library for X and cairo
+
+Package: noble-libpixman-1-dev
+Version: 0.42.2-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 956
+Depends: libpixman-1-0
+Provides: libpixman-1-dev
+Filename: pool/trixie/noble-libpixman-1-dev_0.42.2-1build1_arm64.deb
+Size: 227708
+MD5sum: 1ad1a81b5e5c3b74f0654dbbc050796f
+SHA1: fb1e311cbbfba13dee5d9be4dfaddf71923285d7
+SHA256: b16c9dd0f7fa94d58350c1891e28a98dd1becf2363a5ffebe7ea894a207b2a06
+Description: pixel-manipulation library for X and cairo (development files)
+
+Package: noble-libplacebo338
+Version: 6.338.2-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 8204
+Depends: libc6, libgcc-s1, liblcms2-2, libstdc++6, libvulkan1
+Provides: libplacebo338
+Filename: pool/trixie/noble-libplacebo338_6.338.2-2build1_arm64.deb
+Size: 2563822
+MD5sum: 820e2d19d6bedc4e3dd97367e046f0c6
+SHA1: 7f0d703d8999ef1bf4861b0124191c92c39da1fb
+SHA256: 4e410f3812803fa526987328bfc9b92dc8fea922d2c4cf441a81a692bcdd065f
+Description: GPU-accelerated video/image rendering primitives (shared library)
+
+Package: noble-libpolkit-agent-1-0
+Version: 124-2ubuntu1.24.04.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libglib2.0-0t64, libpolkit-gobject-1-0
+Provides: libpolkit-agent-1-0
+Filename: pool/trixie/noble-libpolkit-agent-1-0_124-2ubuntu1.24.04.2_arm64.deb
+Size: 16248
+MD5sum: 64f38c4dcfa43a7e168997bd52cd23d5
+SHA1: 16a2a8d718039d605e367f4aa49d6066004d2d95
+SHA256: 58a88f48bc9b3b0919b6fdfa1d08ac599c9fff714f27b0bf71eb579bd1b8fd78
+Description: polkit Authentication Agent API
+
+Package: noble-libpolkit-gobject-1-0
+Version: 124-2ubuntu1.24.04.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 188
+Depends: libc6, libglib2.0-0t64, libsystemd0
+Provides: libpolkit-gobject-1-0
+Filename: pool/trixie/noble-libpolkit-gobject-1-0_124-2ubuntu1.24.04.2_arm64.deb
+Size: 47592
+MD5sum: ab999f4abc898e4e55dd823a7959e312
+SHA1: 862e3a816f46a8acff76f701f70a916de360f2be
+SHA256: 94a0b0560ec3d5f294fb6c63b35d10fa92fef0b5e993989f36c7b0f7cdf851e6
+Description: polkit Authorization API
+
+Package: noble-libpthread-stubs0-dev
+Version: 0.4-1build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 56
+Provides: libpthread-stubs0-dev
+Filename: pool/trixie/noble-libpthread-stubs0-dev_0.4-1build3_arm64.deb
+Size: 4164
+MD5sum: 4677366007bdf4973cc1ede9aba40a50
+SHA1: 85ce2c23124e3df70586eb74b3f25f0cd6048af5
+SHA256: 6a2677893f29fc7545204a5b9845989031cf37c8972ad69c1a30f76082af7a08
+Description: pthread stubs not provided by native libc, development files
+
+Package: noble-libpulse-mainloop-glib0
+Version: 1:16.1+dfsg1-2ubuntu10.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 128
+Depends: libc6, libglib2.0-0t64, libpulse0
+Provides: libpulse-mainloop-glib0
+Filename: pool/trixie/noble-libpulse-mainloop-glib0_16.1+dfsg1-2ubuntu10.1_arm64.deb
+Size: 11180
+MD5sum: 5e1e25267c3cd339f2dc26dce073f4ab
+SHA1: a0ccb2af012860214e10dad076e6833c73366ccd
+SHA256: 700cac0521ac54b1e52a09d3ec12ff607733ebbb439f2ca80cf7e966615e44b6
+Description: PulseAudio client libraries (glib support)
+
+Package: noble-libpulse0
+Version: 1:16.1+dfsg1-2ubuntu10.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1016
+Depends: libapparmor1, libasyncns0, libc6, libdbus-1-3, libsndfile1, libsystemd0, libx11-6, libx11-xcb1, libxcb1
+Provides: libpulse0
+Filename: pool/trixie/noble-libpulse0_16.1+dfsg1-2ubuntu10.1_arm64.deb
+Size: 267966
+MD5sum: 80aa9d999afbb66b16b39d8e25b69ad4
+SHA1: 4105a2fa209d5200f49bf6baa2d1b810c492ea8d
+SHA256: 786b86670856d98831c7435e8881246edb4499d96950e63ba91b0128ef690687
+Description: PulseAudio client libraries
+
+Package: noble-libpython3-stdlib
+Version: 3.12.3-0ubuntu2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 52
+Depends: libpython3.12-stdlib
+Provides: libpython3-stdlib
+Filename: pool/trixie/noble-libpython3-stdlib_3.12.3-0ubuntu2.1_arm64.deb
+Size: 9756
+MD5sum: 59c49dbbfc8152617f0fd2be26fec912
+SHA1: 4f573eb3d802fc50dbd437938a72c82f55ed6e77
+SHA256: 4831aebac9ca115f80807b699f98d460d412ef5e0c71ab111492d9583d5508a7
+Description: interactive high-level object-oriented language (default python3 version)
+
+Package: noble-libpython3.12-minimal
+Version: 3.12.3-1ubuntu0.11
+Architecture: arm64
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 5804
+Depends: libc6, libssl3t64
+Provides: libpython3.12-minimal
+Filename: pool/trixie/noble-libpython3.12-minimal_3.12.3-1ubuntu0.11_arm64.deb
+Size: 826024
+MD5sum: 8e587fb3c949ae717c09ddab7f48cfc5
+SHA1: 38298d42a15ca69dd277329de9954960f987ed7a
+SHA256: 2711b02684ebfafc7ca202eb7cbc31ed50ac4568523f05e049dd28ffe81de3a0
+Description: Minimal subset of the Python language (version 3.12)
+
+Package: noble-libpython3.12-stdlib
+Version: 3.12.3-1ubuntu0.11
+Architecture: arm64
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 11116
+Depends: libpython3.12-minimal, media-types, netbase, tzdata, libbz2-1.0, libc6, libcrypt1, libdb5.3t64, libffi8, liblzma5, libncursesw6, libreadline8t64, libsqlite3-0, libtinfo6
+Provides: libpython3.12-stdlib
+Filename: pool/trixie/noble-libpython3.12-stdlib_3.12.3-1ubuntu0.11_arm64.deb
+Size: 2027954
+MD5sum: 0d506b374f7e5b4948530b7f8ad92cf5
+SHA1: 318e0ff98a7f9097f813f272281e5516a1a26664
+SHA256: 030ae0a612d30efe402063e5069d3e232e5dbfd69092fa1bcf5a2e6ce58230c4
+Description: Interactive high-level object-oriented language (standard library, version 3.12)
+
+Package: noble-libqt6core6t64
+Version: 6.4.2+dfsg-21.1build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 5328
+Depends: shared-mime-info, libb2-1, libc6, libdouble-conversion3, libgcc-s1, libglib2.0-0t64, libicu74, libpcre2-16-0, libstdc++6, libzstd1, zlib1g
+Provides: libqt6core6t64
+Filename: pool/trixie/noble-libqt6core6t64_6.4.2+dfsg-21.1build5_arm64.deb
+Size: 1699984
+MD5sum: 4340a82e1104629a95fdfee521eb82d8
+SHA1: 413ba3146cf1c09e3a43701204d59995f608ffce
+SHA256: 0d9f01336620c9d205c2aaf2996272b65b8d92fc75bb19a0b218758dfdf81be9
+Description: Qt 6 core module
+
+Package: noble-libqt6dbus6t64
+Version: 6.4.2+dfsg-21.1build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 956
+Depends: libc6, libdbus-1-3, libqt6core6t64, libstdc++6, qt6-base-abi
+Provides: libqt6dbus6t64
+Filename: pool/trixie/noble-libqt6dbus6t64_6.4.2+dfsg-21.1build5_arm64.deb
+Size: 256600
+MD5sum: 506f4ce3051112ec8dd19bd529a85152
+SHA1: d53919fcf746ca8eafaa6339d27ead8042456eb9
+SHA256: 5e01f3f1673a3b8aa9e986e57ca45c7911366682cf4476fef89b47e130355278
+Description: Qt 6 D-Bus module
+
+Package: noble-libqt6gui6t64
+Version: 6.4.2+dfsg-21.1build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 10128
+Depends: fontconfig, libc6, libdrm2, libegl1, libfontconfig1, libfreetype6, libglib2.0-0t64, libglx0, libharfbuzz0b, libice6, libinput10, libjpeg8, libmd4c0, libmtdev1t64, libopengl0, libpng16-16t64, libqt6core6t64, libqt6dbus6t64, libsm6, libstdc++6, libts0t64, libudev1, libx11-6, libx11-xcb1, libxcb-glx0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-randr0, libxcb-render-util0, libxcb-render0, libxcb-shape0, libxcb-shm0, libxcb-sync1, libxcb-xfixes0, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0, qt6-base-abi, zlib1g
+Provides: libqt6gui6t64
+Filename: pool/trixie/noble-libqt6gui6t64_6.4.2+dfsg-21.1build5_arm64.deb
+Size: 2947802
+MD5sum: bc5c925f917221f57b137b9843f4524b
+SHA1: ad18784faadbffed1e08000104aa67149172e286
+SHA256: a9366cbab985a8c6024ffd44298a9e8c18be2dd42c9546b8a4c284b9b2197cb8
+Description: Qt 6 GUI module
+
+Package: noble-libqt6widgets6t64
+Version: 6.4.2+dfsg-21.1build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 7712
+Depends: libc6, libqt6core6t64, libqt6gui6t64, libstdc++6, qt6-base-abi
+Provides: libqt6widgets6t64
+Filename: pool/trixie/noble-libqt6widgets6t64_6.4.2+dfsg-21.1build5_arm64.deb
+Size: 2576888
+MD5sum: 21469609bba0d65ac48393d047b6f856
+SHA1: 2c44335750d8fab887b354251aad84f09ff9f6ed
+SHA256: f7e5dcf6fdf424c613845eef46ba6de77c9edee321f6beb4369e3d532840c292
+Description: Qt 6 widgets module
+
+Package: noble-librabbitmq4
+Version: 0.11.0-1build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6, libssl3t64
+Provides: librabbitmq4
+Filename: pool/trixie/noble-librabbitmq4_0.11.0-1build2_arm64.deb
+Size: 36830
+MD5sum: e863669db791b02fb8c3d14df6d54e76
+SHA1: ec3a45914db9b68b8f32cdb0c1834e5e66b50180
+SHA256: af631667589cbf3f685b9c1ecc17e0738b30d67331e773ffa121f9ae4b3e41ec
+Description: AMQP client library written in C
+
+Package: noble-librav1e0
+Version: 0.7.1-2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2168
+Depends: libc6, libgcc-s1
+Provides: librav1e0
+Filename: pool/trixie/noble-librav1e0_0.7.1-2_arm64.deb
+Size: 758890
+MD5sum: d0a3e14e7a1ac82a9540693eb4568572
+SHA1: 1e9c3a8def3d6aa1c10e8eca695b5e1a246cc385
+SHA256: d08476037648185290c49736836a8736cdf9b7e88895c8d26f55a932da14b3e6
+Description: Fastest and safest AV1 encoder - shared library
+
+Package: noble-librsvg2-2
+Version: 2.58.0+dfsg-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 6144
+Depends: libc6, libcairo-gobject2, libcairo2, libgcc-s1, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libpango-1.0-0, libpangocairo-1.0-0, libxml2
+Provides: librsvg2-2
+Filename: pool/trixie/noble-librsvg2-2_2.58.0+dfsg-1build1_arm64.deb
+Size: 2026152
+MD5sum: 9bc2e880a54846c80dcb727a240dd05b
+SHA1: 4f6cada54b300ad53a28f9b3286c2f88da20f808
+SHA256: 2135ac2c4294d13fa6749df0b94da28a356588eb00b88aa33e6e43a48afb16fd
+Description: SAX-based renderer library for SVG files (runtime)
+
+Package: noble-librsvg2-common
+Version: 2.58.0+dfsg-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 160
+Depends: librsvg2-2, libgdk-pixbuf-2.0-0, libglib2.0-0t64
+Provides: librsvg2-common
+Filename: pool/trixie/noble-librsvg2-common_2.58.0+dfsg-1build1_arm64.deb
+Size: 11050
+MD5sum: 576ad37a562a7a1582b8d4c70a8451c7
+SHA1: b0a7c9f40af575b454836efe8b3c28bb37f4bac5
+SHA256: bae7776728d49fcf1df233fecf9169322516ebec2ee2bbb5802f057eea254d56
+Description: SAX-based renderer library for SVG files (extra runtime)
+
+Package: noble-libsbc1
+Version: 2.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: libc6
+Provides: libsbc1
+Filename: pool/trixie/noble-libsbc1_2.0-1build1_arm64.deb
+Size: 28768
+MD5sum: 535f6ddf3cb55169e3f4637f2075861b
+SHA1: 45978c34786e5dba4d3cc0316ddcfefbbcd058a6
+SHA256: 66ede5d83265a8203839d178e1749bf0e0b4943b181f712245e5d841d63cb013
+Description: Sub Band CODEC library - runtime
+
+Package: noble-libsdl2-2.0-0
+Version: 2.30.0+dfsg-1ubuntu3.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2048
+Depends: libasound2t64, libc6, libdecor-0-0, libdrm2, libgbm1, libpulse0, libsamplerate0, libwayland-client0, libwayland-cursor0, libwayland-egl1, libx11-6, libxcursor1, libxext6, libxfixes3, libxi6, libxkbcommon0, libxrandr2, libxss1
+Provides: libsdl2-2.0-0
+Filename: pool/trixie/noble-libsdl2-2.0-0_2.30.0+dfsg-1ubuntu3.1_arm64.deb
+Size: 666064
+MD5sum: 86669865dce0d4f872026a162832b365
+SHA1: 8f109baecfd52573671edf9ac5dba3914bb646db
+SHA256: d3090680683c052f99d084161b28b12c2dd017b07ffdbf5fe05e0a17472bd08f
+Description: Simple DirectMedia Layer
+
+Package: noble-libseccomp2
+Version: 2.5.5-1ubuntu3.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 180
+Depends: libc6
+Provides: libseccomp2
+Filename: pool/trixie/noble-libseccomp2_2.5.5-1ubuntu3.1_arm64.deb
+Size: 50402
+MD5sum: 4d1df78bf697a5368210161e741d5851
+SHA1: d3a10fc1ae93d3c3aaf036252e5eb297aed76f96
+SHA256: a7bdbbf91d36d12133833c368c2cf02df022387fc9184d246e4558814c02ece6
+Description: high level interface to Linux seccomp filter
+
+Package: noble-libselinux1
+Version: 3.5-2ubuntu2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 248
+Depends: libc6, libpcre2-8-0
+Provides: libselinux1
+Filename: pool/trixie/noble-libselinux1_3.5-2ubuntu2.1_arm64.deb
+Size: 77586
+MD5sum: de08aeda140aaac13b1af9160ace9a35
+SHA1: fac6d0794d9cdba93b1fe0d9f25563c132042b56
+SHA256: c0fedfd040fe8d5c8d9d024739ee4b9f08ed399778f34e9137a1a4023eb85df1
+Description: SELinux runtime shared libraries
+
+Package: noble-libsharpyuv0
+Version: 1.3.2-0.4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: libc6
+Provides: libsharpyuv0
+Filename: pool/trixie/noble-libsharpyuv0_1.3.2-0.4build3_arm64.deb
+Size: 14070
+MD5sum: ab73a095ce6a3d71bd805ee7e8bddb74
+SHA1: be6e7ed59f0f539a85fb1f796f6bf5b868f76796
+SHA256: 82299e9e99b708d6a1d3e51ee3475530326994f262bdb0b9b6dbed11e38a3aa1
+Description: Library for sharp RGB to YUV conversion
+
+Package: noble-libsmbclient0
+Version: 2:4.19.5+dfsg-4ubuntu9.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 268
+Depends: samba-libs, libbsd0, libc6, libndr3, libtalloc2, libtevent0t64
+Provides: libsmbclient0
+Filename: pool/trixie/noble-libsmbclient0_4.19.5+dfsg-4ubuntu9.4_arm64.deb
+Size: 60580
+MD5sum: 834b803fe88c993f465165409e7ee086
+SHA1: a697abcf6f336c401157bab93a85c38cefe2f9ae
+SHA256: fb5633565d3c1b260a9992ba9c0a5f0e0978fd224aab04bcd7629e9698c47676
+Description: shared library for communication with SMB/CIFS servers
+
+Package: noble-libsnappy1v5
+Version: 1.1.10-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 144
+Depends: libc6, libstdc++6
+Provides: libsnappy1v5
+Filename: pool/trixie/noble-libsnappy1v5_1.1.10-1build1_arm64.deb
+Size: 27950
+MD5sum: 592bd80789eee78d40243af5d4984e0b
+SHA1: 92d029c086b4ff164cfa51fbc969ce80b79d93cc
+SHA256: e46caf7da0366945572f15170b12ae0dd545e75d23bd448f394f3fdc82e2bf93
+Description: fast compression/decompression library
+
+Package: noble-libsndio7.0
+Version: 1.9.0-0.3build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: libasound2t64, libbsd0, libc6
+Provides: libsndio7.0
+Filename: pool/trixie/noble-libsndio7.0_1.9.0-0.3build3_arm64.deb
+Size: 27940
+MD5sum: 4113b94f45eb4891bea996a1be044c7e
+SHA1: 37440a973923cc9c7b5a5ccf4ec00594d78af9d8
+SHA256: c772d44231e87497945683b942a1cac68c1650c1c29ea0a722c262fad0eff79d
+Description: Small audio and MIDI framework from OpenBSD, runtime libraries
+
+Package: noble-libsoup-3.0-0
+Version: 3.4.4-5ubuntu0.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 756
+Depends: glib-networking, libsoup-3.0-common, libbrotli1, libc6, libglib2.0-0t64, libgssapi-krb5-2, libnghttp2-14, libpsl5t64, libsqlite3-0, zlib1g
+Provides: libsoup-3.0-0
+Filename: pool/trixie/noble-libsoup-3.0-0_3.4.4-5ubuntu0.7_arm64.deb
+Size: 285834
+MD5sum: 395d51582ad076472a8dd0d72c55a868
+SHA1: bc1c1d6e1cbc0437e2e616f87dd34d61b802b097
+SHA256: 4d732b6edd6d55f1bf95362a9833c72ef4ffc519b81e9d008a289eed7d5f903a
+Description: HTTP library implementation in C -- Shared library
+
+Package: noble-libspa-0.2-bluetooth
+Version: 1.0.5-1ubuntu3.2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1252
+Depends: libspa-0.2-modules, libbluetooth3, libc6, libdbus-1-3, libfreeaptx0, libglib2.0-0t64, liblc3-1, libldacbt-abr2, libldacbt-enc2, libopus0, libsbc1, libusb-1.0-0
+Provides: libspa-0.2-bluetooth
+Filename: pool/trixie/noble-libspa-0.2-bluetooth_1.0.5-1ubuntu3.2_arm64.deb
+Size: 313060
+MD5sum: 7844eb778b3e1ecdf42b1f4387910c35
+SHA1: 8cc0e20246f990ccebe1318954c31913d4df845f
+SHA256: 4ac735108c3c424532cbfff12352499a2480848726f9f110a8db0d743eafaf82
+Description: libraries for the PipeWire multimedia server - bluetooth plugins
+
+Package: noble-libsqlite3-0
+Version: 3.45.1-1ubuntu2.5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1544
+Depends: libc6
+Provides: libsqlite3-0
+Filename: pool/trixie/noble-libsqlite3-0_3.45.1-1ubuntu2.5_arm64.deb
+Size: 695252
+MD5sum: 7aca1bae050367d360c75f0f92fb88a5
+SHA1: 3b0cb81e780e1a38d424b8e55004902ba859d9d1
+SHA256: 572095d1204fa6b78ef9740c30309918ebb6badec9014d9275adc3897484a246
+Description: SQLite 3 shared library
+
+Package: noble-libssh-4
+Version: 0.10.6-2ubuntu0.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 528
+Depends: libc6, libgssapi-krb5-2, libssl3t64, zlib1g
+Provides: libssh-4
+Filename: pool/trixie/noble-libssh-4_0.10.6-2ubuntu0.3_arm64.deb
+Size: 187942
+MD5sum: 898368203ed7282e0b6288da809063a9
+SHA1: 520495eb94cbb132e7292cfe7bb3dd57370e3eec
+SHA256: 01a6dfc968e8facdd65fabf490de9dd7cad1c7ec77946da0195bd07a1c8f81b4
+Description: tiny C SSH library (OpenSSL flavor)
+
+Package: noble-libssh-gcrypt-4
+Version: 0.10.6-2ubuntu0.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 652
+Depends: libc6, libgcrypt20, libgpg-error0, libgssapi-krb5-2, zlib1g
+Provides: libssh-gcrypt-4
+Filename: pool/trixie/noble-libssh-gcrypt-4_0.10.6-2ubuntu0.3_arm64.deb
+Size: 223162
+MD5sum: cec62535263f47b7734db3f2e2878e0a
+SHA1: 6cd7945fa40fce08250f67d1a602804ddee32b4b
+SHA256: f1d25fa648c847a8ddd44286cb857aed41f6eba1ae6ed32687c0e080154c4f4b
+Description: tiny C SSH library (gcrypt flavor)
+
+Package: noble-libssl3t64
+Version: 3.0.13-0ubuntu3.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 5628
+Depends: libc6
+Provides: libssl3t64
+Filename: pool/trixie/noble-libssl3t64_3.0.13-0ubuntu3.7_arm64.deb
+Size: 1772312
+MD5sum: 0ef86f21d6252b5f772d0336cabea313
+SHA1: 0f9d35069cf5e4f1a643fafc3010b96bd1b3382d
+SHA256: 3555b6a55ba9d85636373341da4a3a381330b88201d2a2e74e7ec85893341582
+Description: Secure Sockets Layer toolkit - shared libraries
+
+Package: noble-libsvtav1enc1d1
+Version: 1.7.0+dfsg-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3284
+Depends: libc6
+Provides: libsvtav1enc1d1
+Filename: pool/trixie/noble-libsvtav1enc1d1_1.7.0+dfsg-2build1_arm64.deb
+Size: 1275254
+MD5sum: 2b91255be4f39b113944349508a7ba4e
+SHA1: 9d7b5c61b62fea2ac96f6f46283e4fcb6b4cee4c
+SHA256: 121cd430b84e2f48a396a971686d085747dc828717224455ba04aae9ee8364e9
+Description: Scalable Video Technology for AV1 (libsvtav1enc shared library)
+
+Package: noble-libsystemd0
+Version: 255.4-1ubuntu8.12
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 1108
+Depends: libc6, libcap2, libgcrypt20, liblz4-1, liblzma5, libzstd1
+Provides: libsystemd0
+Filename: pool/trixie/noble-libsystemd0_255.4-1ubuntu8.12_arm64.deb
+Size: 421964
+MD5sum: 6c7865ded13ca65cee091e8435ec63ef
+SHA1: 613a66fee795ca77de436a928757100d1ab97579
+SHA256: f6b5862350b314d962fe40d45e96944fdfbe0ad2f15e5d9cf9a06aae70c26070
+Description: systemd utility library
+
+Package: noble-libtesseract5
+Version: 5.3.4-1build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 3160
+Depends: libarchive13t64, libc6, libcurl4t64, libgcc-s1, libgomp1, liblept5, libstdc++6
+Provides: libtesseract5
+Filename: pool/trixie/noble-libtesseract5_5.3.4-1build5_arm64.deb
+Size: 1229390
+MD5sum: 6103751f0adde4b05df86f7fb182c4c8
+SHA1: b39961e60c3dd847b36c2d5a510a8ce13c937a15
+SHA256: c4a17753606aa269f03ccf5d647efca7fc62b31689ccbd6e96dbfae0ada9cde8
+Description: Tesseract OCR library
+
+Package: noble-libtheora0
+Version: 1.1.1+dfsg.1-16.1build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 632
+Depends: libc6, libcairo2, libogg0
+Provides: libtheora0
+Filename: pool/trixie/noble-libtheora0_1.1.1+dfsg.1-16.1build3_arm64.deb
+Size: 223252
+MD5sum: 1dea4bc692179d0c30a7b51f2e166dbd
+SHA1: 6e5a90924571f38f9a35c12665a1fcb7f3db9138
+SHA256: a23a859ab1188f37875eae83a2512beb0cf46ddf9d84754b9bab314d8bd0a437
+Description: Theora Video Compression Codec
+
+Package: noble-libtiff6
+Version: 4.5.1+git230720-4ubuntu2.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 628
+Depends: libc6, libdeflate0, libjbig0, libjpeg8, liblerc4, liblzma5, libwebp7, libzstd1, zlib1g
+Provides: libtiff6
+Filename: pool/trixie/noble-libtiff6_4.5.1+git230720-4ubuntu2.4_arm64.deb
+Size: 190836
+MD5sum: a5e4dc16f0aa5b178accb5b97ca77e47
+SHA1: eac834dc4d4b85c021c2758e5d83c258c705d7a3
+SHA256: 03d13c95b3310ecf35e58a0a9d3082c81ca45d85e2318e5b10983dd020568fa6
+Description: Tag Image File Format (TIFF) library
+
+Package: noble-libtinfo6
+Version: 6.4+20240113-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 380
+Depends: libc6
+Provides: libtinfo6
+Filename: pool/trixie/noble-libtinfo6_6.4+20240113-1ubuntu2_arm64.deb
+Size: 101956
+MD5sum: 8f5acbfdcaa7e21dace4016f6191e6d6
+SHA1: 28c7dca504ed27833906515663438bf11688a93c
+SHA256: 79158dfb332afc0953790f4a18daefd97be83edee268fe2d7f8be01345d2c528
+Description: shared low-level terminfo library for terminal handling
+
+Package: noble-libudev1
+Version: 255.4-1ubuntu8.12
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 400
+Depends: libc6, libcap2
+Provides: libudev1
+Filename: pool/trixie/noble-libudev1_255.4-1ubuntu8.12_arm64.deb
+Size: 173842
+MD5sum: 21542c10109e7218831db81937fd4646
+SHA1: a870020356a37f83c82494d1d0e16726308c8e28
+SHA256: 6ab0144a667daf07305e616fe9bd5a7c0fc4dd9b0f046225daaab9702a503cfc
+Description: libudev shared library
+
+Package: noble-libunwind8
+Version: 1.6.2-3build1.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 320
+Depends: libc6, liblzma5
+Provides: libunwind8
+Filename: pool/trixie/noble-libunwind8_1.6.2-3build1.1_arm64.deb
+Size: 52814
+MD5sum: 8db0c884dd0fb32837fdd4e386421151
+SHA1: 25506cb6fa0ef3e1aca430b7c8f76cda0fe76242
+SHA256: 2d3977a2d9b3a014be36ec87ec337203c6ea542bf955305265da4e9d826431f8
+Description: library to determine the call-chain of a program - runtime
+
+Package: noble-libv4l-0t64
+Version: 1.26.1-4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 464
+Depends: libv4lconvert0t64, libc6
+Provides: libv4l-0t64
+Filename: pool/trixie/noble-libv4l-0t64_1.26.1-4build3_arm64.deb
+Size: 45192
+MD5sum: 22fcc31ead4f80bc09033fee5469d051
+SHA1: 66a1dfec0039821af0a9b32ddd8200ad8f31ab3b
+SHA256: 2e354e859b5c1e73bff82b899e880c26e71310a4f4bd5c06442386c3f258ca97
+Description: Collection of video4linux support libraries
+
+Package: noble-libv4l2rds0t64
+Version: 1.26.1-4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 152
+Depends: libc6
+Provides: libv4l2rds0t64
+Filename: pool/trixie/noble-libv4l2rds0t64_1.26.1-4build3_arm64.deb
+Size: 19176
+MD5sum: 1bae57345349d6b8e8537a861e2f44b0
+SHA1: 1da1556e307f317d46bc9b3faf762b4924079922
+SHA256: 60082440d81731f14ac3579d00e976e7628c5d229105a68fdd63f5eaf584b43e
+Description: Video4Linux Radio Data System (RDS) decoding library
+
+Package: noble-libv4lconvert0t64
+Version: 1.26.1-4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 420
+Depends: libc6, libjpeg8
+Provides: libv4lconvert0t64
+Filename: pool/trixie/noble-libv4lconvert0t64_1.26.1-4build3_arm64.deb
+Size: 87840
+MD5sum: 209c3ce2ee24c92e2964a1bba1852f60
+SHA1: cd218ad5f8943f6f74a8b33d8a5b3b2c62b6d517
+SHA256: cbe3123477efe5fa6944c7c7882d0e6160a0302da7d040114fa81e32afb7eeaa
+Description: Video4linux frame format conversion library
+
+Package: noble-libva-drm2
+Version: 2.20.0-2ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6, libdrm2, libva2, libva2
+Provides: libva-drm2
+Filename: pool/trixie/noble-libva-drm2_2.20.0-2ubuntu0.1_arm64.deb
+Size: 6348
+MD5sum: 973ebbe29b4690082a89618fee06021b
+SHA1: 80d3f117cca24c6a94c96e5941d885f788150622
+SHA256: d4f2deb0d29a5531a6f32c56f332c2c2fa6e7e8fc8e3085fa1ebf6326b803826
+Description: Video Acceleration (VA) API for Linux -- DRM runtime
+
+Package: noble-libva-x11-2
+Version: 2.20.0-2ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6, libdrm2, libva2, libva2, libx11-6, libx11-xcb1, libxcb-dri3-0, libxcb1, libxext6, libxfixes3
+Provides: libva-x11-2
+Filename: pool/trixie/noble-libva-x11-2_2.20.0-2ubuntu0.1_arm64.deb
+Size: 11206
+MD5sum: d8b3bb04df1325f73e43216beb441b84
+SHA1: 6b1595b588fe1e35c20064a4cbb64810935c0bfa
+SHA256: 0af33d9e2a740022407c8bf839d7de0f137c45a166a86958edd8512ee3402b73
+Description: Video Acceleration (VA) API for Linux -- X11 runtime
+
+Package: noble-libva2
+Version: 2.20.0-2ubuntu0.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 244
+Depends: libc6
+Provides: libva2
+Filename: pool/trixie/noble-libva2_2.20.0-2ubuntu0.1_arm64.deb
+Size: 65134
+MD5sum: 93b31a84abae91f88bf4f189eb49d081
+SHA1: f1febf665e964459d4e666363fbd96f79bbdd80c
+SHA256: dfee9a41f5cb66be632b342630251ae0b86121211057a99a02e781065f2aae4e
+Description: Video Acceleration (VA) API for Linux -- runtime
+
+Package: noble-libvpx9
+Version: 1.14.0-1ubuntu2.3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2740
+Depends: libc6
+Provides: libvpx9
+Filename: pool/trixie/noble-libvpx9_1.14.0-1ubuntu2.3_arm64.deb
+Size: 1231958
+MD5sum: 88523058e52110203ee36859f04a48a0
+SHA1: 3b33efa9b3e30017091df55302ef558123a26e66
+SHA256: da9e57debfe0eb7207221ce8db556372d8200bf895ff0094a77a9cc119e4b396
+Description: VP8 and VP9 video codec (shared library)
+
+Package: noble-libvulkan1
+Version: 1.3.275.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 644
+Depends: libc6
+Provides: libvulkan1
+Filename: pool/trixie/noble-libvulkan1_1.3.275.0-1build1_arm64.deb
+Size: 147508
+MD5sum: 8f2d068cc3a745008554ce1ccbd3021b
+SHA1: 2431e21a9f9d700482344376cdd0199fea37fb00
+SHA256: 9f65ae440a314256c63f8d96b4714988fe0f512d3b4c79357e177559860e683a
+Description: Vulkan loader library
+
+Package: noble-libwacom9
+Version: 2.10.0-2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6, libevdev2, libglib2.0-0t64, libgudev-1.0-0, libwacom-common
+Provides: libwacom9
+Filename: pool/trixie/noble-libwacom9_2.10.0-2_arm64.deb
+Size: 22774
+MD5sum: 79e70816e838e28d6863f481968f4581
+SHA1: 3fa90ad6745d7e2fff548ade4ee200ebc824f8ec
+SHA256: a26fa5f5ed374637c979bf987182bce24e6b0a14bea1d4000488ca46667546da
+Description: Wacom model feature query library
+
+Package: noble-libwayland-client0
+Version: 1.22.0-2.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6, libffi8
+Provides: libwayland-client0
+Filename: pool/trixie/noble-libwayland-client0_1.22.0-2.1build1_arm64.deb
+Size: 24548
+MD5sum: 69cdebad0d8ad32c54f1e92017741550
+SHA1: fec1d3cbf110ee25de3d9fef2b8ceea2c12cd041
+SHA256: 0070adb0393c1f2859954285f095e995b3ca1cd012a4f3a3ae6b16b0a9a2876d
+Description: wayland compositor infrastructure - client library
+
+Package: noble-libwayland-cursor0
+Version: 1.22.0-2.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 120
+Depends: libc6, libwayland-client0
+Provides: libwayland-cursor0
+Filename: pool/trixie/noble-libwayland-cursor0_1.22.0-2.1build1_arm64.deb
+Size: 9556
+MD5sum: 699454183e0761fb7b5d3b1be7328816
+SHA1: c2478e9a4ea49c37733195154398b3aa755379fd
+SHA256: 6aba26579921a9f6577ec11434b2cc08995d4b609dbffca5b15398a795443c93
+Description: wayland compositor infrastructure - cursor library
+
+Package: noble-libwayland-egl1
+Version: 1.22.0-2.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6
+Provides: libwayland-egl1
+Filename: pool/trixie/noble-libwayland-egl1_1.22.0-2.1build1_arm64.deb
+Size: 4864
+MD5sum: 4a8074b81ecb97d79b99f8eeb6e3332e
+SHA1: 381fb7abc8b57249faf04644cf19be60e52d1d32
+SHA256: e56a811f08808ed200b55cdbd041befc4f48e7bff12924b661cc869437b804b8
+Description: wayland compositor infrastructure - EGL library
+
+Package: noble-libwayland-server0
+Version: 1.22.0-2.1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 176
+Depends: libc6, libffi8
+Provides: libwayland-server0
+Filename: pool/trixie/noble-libwayland-server0_1.22.0-2.1build1_arm64.deb
+Size: 32976
+MD5sum: 2b76c2d650e761b1861c3aa34935beec
+SHA1: 35635062924bf1c72d107ac9eb3d4f3e0353e3a2
+SHA256: b3d165bb784a5f26e1c1d1aacce0fb9d6f57a09b6c623aa0dfe2543f8599e477
+Description: wayland compositor infrastructure - server library
+
+Package: noble-libwbclient0
+Version: 2:4.19.5+dfsg-4ubuntu9.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 168
+Depends: libc6
+Provides: libwbclient0
+Filename: pool/trixie/noble-libwbclient0_4.19.5+dfsg-4ubuntu9.4_arm64.deb
+Size: 70984
+MD5sum: 9420b6da9a8e445e2b91a5b586c6e169
+SHA1: 5da5dd2332aa53a6000f419da6be64ed85f0a4e1
+SHA256: 8c863e84edbe23a7521b8ef929115dfa12c1241fce17be62422b33d3010fe1c1
+Description: Samba winbind client library
+
+Package: noble-libwebp7
+Version: 1.3.2-0.4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 432
+Depends: libc6, libsharpyuv0
+Provides: libwebp7
+Filename: pool/trixie/noble-libwebp7_1.3.2-0.4build3_arm64.deb
+Size: 190796
+MD5sum: 6fbbb0bf73d93eae1331c3e73dc2175e
+SHA1: f7e9e57c1b5333fd9eed4021d6a50bfd40510b99
+SHA256: bee64fcaea868d2e24ac8d7723a7252c193947725c577ab0dfa9426b57c1ed31
+Description: Lossy compression of digital photographic images
+
+Package: noble-libwebpmux3
+Version: 1.3.2-0.4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 112
+Depends: libc6, libwebp7
+Provides: libwebpmux3
+Filename: pool/trixie/noble-libwebpmux3_1.3.2-0.4build3_arm64.deb
+Size: 24530
+MD5sum: ed03b604e14fb1d4fb8ce81a1edda169
+SHA1: 297fa6914ae8968c4a1c3c15fe90d69bcebe26bc
+SHA256: fd89a32ce6834bcc2b995b8de7ff8d1a260d7679645c44b2f4bac897f412911e
+Description: Lossy compression of digital photographic images
+
+Package: noble-libx265-199
+Version: 3.5-2build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2940
+Depends: libc6, libnuma1, libstdc++6
+Provides: libx265-199
+Filename: pool/trixie/noble-libx265-199_3.5-2build1_arm64.deb
+Size: 700696
+MD5sum: 6d3bcbba519408aefbdbf8da5efd3304
+SHA1: 14ea805091523c57f3dc7c3ae8ae68715d6c2d0f
+SHA256: 0a8414f72cbedd08c700c1366c6e9ec4676731d1723e729faf68b8cb2c38af37
+Description: H.265/HEVC video stream encoder (shared library)
+
+Package: noble-libxcb-dri3-0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-dri3-0
+Filename: pool/trixie/noble-libxcb-dri3-0_1.15-1ubuntu2_arm64.deb
+Size: 6206
+MD5sum: 92778dc883376019bb2dc26c7fb7b2a9
+SHA1: ff783cd31ef2a7a32d3e7b3a628472bd757a8c6d
+SHA256: 0ed365ee61c52ec04ac38906396486155645b84d36f5cd59fd34f139dbe03b44
+Description: X C Binding, dri3 extension
+
+Package: noble-libxcb-glx0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 172
+Depends: libc6, libxcb1
+Provides: libxcb-glx0
+Filename: pool/trixie/noble-libxcb-glx0_1.15-1ubuntu2_arm64.deb
+Size: 22786
+MD5sum: a9ecb2f0d71769a39366f5eefbed8641
+SHA1: 162bd92604080fd6fb5c7b420b613bf7cd027320
+SHA256: 77ac3c6f40c3a8a146d078a7de2dde9ca2e5ad80a372c8a097c2f83c6ab23829
+Description: X C Binding, glx extension
+
+Package: noble-libxcb-present0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-present0
+Filename: pool/trixie/noble-libxcb-present0_1.15-1ubuntu2_arm64.deb
+Size: 5012
+MD5sum: 5b3b2ae9f298b5a4ff4a80546201a19b
+SHA1: 75bfe7181218328b9e2c37d86463c3cdc8806ea9
+SHA256: c9e8f7e6083ea7e5f2672310ada49efc445d5b3c193faf52ec98863c927d75b0
+Description: X C Binding, present extension
+
+Package: noble-libxcb-randr0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 172
+Depends: libc6, libxcb1
+Provides: libxcb-randr0
+Filename: pool/trixie/noble-libxcb-randr0_1.15-1ubuntu2_arm64.deb
+Size: 16368
+MD5sum: 6c0937dba6a2461994f712a07b178b34
+SHA1: d77a19f71702152e8a2239e28f0d914469dfef4d
+SHA256: 882f50011749404da240a3d0e8416139ef8e4287c9a7824f87ea5c1f3202b6fb
+Description: X C Binding, randr extension
+
+Package: noble-libxcb-render0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-render0
+Filename: pool/trixie/noble-libxcb-render0_1.15-1ubuntu2_arm64.deb
+Size: 14954
+MD5sum: 193421c99d054036cbae840fb8c4e138
+SHA1: ff441a88596918ada77b6798a83d765ac661fdc9
+SHA256: 5bb60f3e464ce09c45e383c40abc050b30d7a283c65b2d6404a30f813e8e9738
+Description: X C Binding, render extension
+
+Package: noble-libxcb-res0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-res0
+Filename: pool/trixie/noble-libxcb-res0_1.15-1ubuntu2_arm64.deb
+Size: 5890
+MD5sum: 59609930d3087353950a3f96a306983e
+SHA1: f0b286213a4d27aa1c02ed7affa020238d85b4c5
+SHA256: b8d9821d0bda5c8f8e972e08775f53fc14a899c3e0776c17372d13e4c159ec0f
+Description: X C Binding, res extension
+
+Package: noble-libxcb-shape0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-shape0
+Filename: pool/trixie/noble-libxcb-shape0_1.15-1ubuntu2_arm64.deb
+Size: 5330
+MD5sum: 9e456114f0a9a9daa3a978f70aaf8289
+SHA1: 40e37c7e79e426bae70a9813636a63839ce44533
+SHA256: 80678ca2ffdf4b2c9210300687069d1348e7b5c316bfbcce4a457f00f1cbaf27
+Description: X C Binding, shape extension
+
+Package: noble-libxcb-shm0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-shm0
+Filename: pool/trixie/noble-libxcb-shm0_1.15-1ubuntu2_arm64.deb
+Size: 5042
+MD5sum: 9b187b61efb063d3481d16857f3ed706
+SHA1: 9e076500842688ee807356c132cbc7b48f69e697
+SHA256: b719373f3e7a527906d2b08cce5e8e48a3cca460b6e9f52da57185f510b098a3
+Description: X C Binding, shm extension
+
+Package: noble-libxcb-sync1
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-sync1
+Filename: pool/trixie/noble-libxcb-sync1_1.15-1ubuntu2_arm64.deb
+Size: 8532
+MD5sum: 77bb72685d2f94134c090b495dbba3dc
+SHA1: 3d7b2f025bcc5e72947e4f5354c33a09bc9aeef7
+SHA256: 20b0784319afc90700dc802cc1706ed792b552cc81c3c9ff4c0891934ff2f22d
+Description: X C Binding, sync extension
+
+Package: noble-libxcb-xfixes0
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libc6, libxcb1
+Provides: libxcb-xfixes0
+Filename: pool/trixie/noble-libxcb-xfixes0_1.15-1ubuntu2_arm64.deb
+Size: 9262
+MD5sum: 2781bce5e258dbc502170bebee1590df
+SHA1: 7f71e857c9ffe82334abfab8a50de56919d20c2a
+SHA256: 5b87ea7b3eab29144fbaea01247fa2ea020c8dbce2f898490a21366f192aa64a
+Description: X C Binding, xfixes extension
+
+Package: noble-libxcb-xkb1
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 172
+Depends: libc6, libxcb1
+Provides: libxcb-xkb1
+Filename: pool/trixie/noble-libxcb-xkb1_1.15-1ubuntu2_arm64.deb
+Size: 29774
+MD5sum: 015cdad0f67bf16c922ddf561bc825ff
+SHA1: 8817f3360a740bfc90abd9484e0ab11077d17084
+SHA256: fb196a69414eba9de4297864920e4041784e14d78c8c74fc8671b98fc512c15e
+Description: X C Binding, XKEYBOARD extension
+
+Package: noble-libxcb1
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 240
+Depends: libc6, libxau6, libxdmcp6
+Provides: libxcb1
+Filename: pool/trixie/noble-libxcb1_1.15-1ubuntu2_arm64.deb
+Size: 45890
+MD5sum: 17704089b8c1e8ebc9a078f1d77f577e
+SHA1: 4762083b4f43bf047697ab6ec7961779e14d453f
+SHA256: 3edf529e284970bdb8ba8880443e863585964c9b93da8e76930fa0ad60911bfa
+Description: X C Binding
+
+Package: noble-libxcb1-dev
+Version: 1.15-1ubuntu2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 780
+Depends: libxcb1, libpthread-stubs0-dev, libxau-dev, libxdmcp-dev
+Provides: libxcb1-dev
+Filename: pool/trixie/noble-libxcb1-dev_1.15-1ubuntu2_arm64.deb
+Size: 90336
+MD5sum: ab8d5a6bd364d7668571cba6ed6ca46e
+SHA1: 144aa5b4e87c74575a4d764738307916cb9bce54
+SHA256: 60cb038c161aae2884537c10ec867c2f87684d8f8bf0e36e98c8b8f29071c686
+Description: X C Binding, development files
+
+Package: noble-libxkbcommon-x11-0
+Version: 1.6.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libxkbcommon0, libc6, libxcb-xkb1, libxcb1
+Provides: libxkbcommon-x11-0
+Filename: pool/trixie/noble-libxkbcommon-x11-0_1.6.0-1build1_arm64.deb
+Size: 13014
+MD5sum: 6177c6a2f5abe2fdcafa92e6ee73d96c
+SHA1: 7b9eeea3884d36b4d5d4e644f7540cf2eeb73790
+SHA256: bf63dce29fea90ce0448a1f6466dd4a19ba0e4e766528baf9109376417481e2d
+Description: library to create keymaps with the XKB X11 protocol
+
+Package: noble-libxkbcommon0
+Version: 1.6.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 368
+Depends: xkb-data, libc6
+Provides: libxkbcommon0
+Filename: pool/trixie/noble-libxkbcommon0_1.6.0-1build1_arm64.deb
+Size: 120802
+MD5sum: 4da42ba46c15a2e097d24a1f1ce94e65
+SHA1: e433072aede0c78d207560ff6ef4c6fc8833949c
+SHA256: 5b0afa0130e167ed47a8004410a1b335c36a7ab93ed7936dc5378a1f7d7f980b
+Description: library interface to the XKB compiler - shared library
+
+Package: noble-libxkbregistry0
+Version: 1.6.0-1build1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 108
+Depends: libxkbcommon0, libc6, libxml2
+Provides: libxkbregistry0
+Filename: pool/trixie/noble-libxkbregistry0_1.6.0-1build1_arm64.deb
+Size: 13394
+MD5sum: adf4b7ee12e2ad59f6e659dbb16f0a4f
+SHA1: 131f6921739003add4f54cf33ba65d5860e79d76
+SHA256: b43e8d8379fe5d821282a8ce97c842d556e2705f222cf2cd635e2e0cbbc513f2
+Description: library to query available RMLVO
+
+Package: noble-libxml2
+Version: 2.9.14+dfsg-1.3ubuntu3.7
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2124
+Depends: libc6, libicu74, liblzma5, zlib1g
+Provides: libxml2
+Filename: pool/trixie/noble-libxml2_2.9.14+dfsg-1.3ubuntu3.7_arm64.deb
+Size: 734758
+MD5sum: f019ef8724290d438742fe4865b0756c
+SHA1: 83db8948bdab85febb558f6886f4b0dacac3dbe8
+SHA256: e4d720231d60e234b94dd71afe341c3bd64b4486221413b63884a369e5d1329f
+Description: GNOME XML library
+
+Package: noble-mesa-common-dev
+Version: 25.2.8-0ubuntu0.24.04.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4336
+Depends: libgl-dev, libglx-dev, libx11-dev, libdrm-dev
+Provides: mesa-common-dev
+Filename: pool/trixie/noble-mesa-common-dev_25.2.8-0ubuntu0.24.04.1_arm64.deb
+Size: 3122030
+MD5sum: 3fc066c1eac61f67c0a05dc26f84ad83
+SHA1: cc1094330501bfff441a1c6522b3d06488fcfbf1
+SHA256: 83e977b184700f7a5e5b74dee4d203616c46ff87015260969431473d4f467577
+Description: Developer documentation for Mesa
+
+Package: noble-mesa-libgallium
+Version: 25.2.8-0ubuntu0.24.04.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 46184
+Depends: libc6, libdrm-amdgpu1, libdrm2, libelf1t64, libexpat1, libgcc-s1, libllvm20, libsensors5, libstdc++6, libx11-xcb1, libxcb-dri3-0, libxcb-present0, libxcb-randr0, libxcb-sync1, libxcb-xfixes0, libxcb1, libxshmfence1, libzstd1, zlib1g
+Provides: mesa-libgallium
+Filename: pool/trixie/noble-mesa-libgallium_25.2.8-0ubuntu0.24.04.1_arm64.deb
+Size: 12109940
+MD5sum: 9290572fd0e7b223c68ac40b8c2dc7ba
+SHA1: d4dcc01c3a2d3119b175e66c97358f629cdd9aa8
+SHA256: e7dfacbf48ee22339e8eb767ec3ca5a7d7b4ecefd3772c8991181e915c12965b
+Description: shared infrastructure for Mesa drivers
+
+Package: noble-pipewire-audio
+Version: 1.0.5-1ubuntu3.2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 40
+Depends: libspa-0.2-bluetooth, pipewire-alsa, pipewire-pulse, wireplumber
+Provides: pipewire-audio
+Filename: pool/trixie/noble-pipewire-audio_1.0.5-1ubuntu3.2_all.deb
+Size: 3694
+MD5sum: ee3d6c16d0a9d9d430668e5e75bb5c8c
+SHA1: dc4b820184e6111f37336f0eda32e60402c5852e
+SHA256: d4ac02a207c2d88569b871d34ef7d05159613027759958b8a5e9c4283af963a5
+Description: recommended set of PipeWire packages for a standard audio desktop use
+
+Package: noble-python3
+Version: 3.12.3-0ubuntu2.1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 136
+Depends: python3.12, libpython3-stdlib
+Provides: python3
+Filename: pool/trixie/noble-python3_3.12.3-0ubuntu2.1_arm64.deb
+Size: 22344
+MD5sum: 0b69c04210aa062bb46e608c295be452
+SHA1: 6e4c84741254d21063e59d658b34c6c9449feebf
+SHA256: f8ba917b69db11c92d167a5bc69abb29a45b15cca7347ac73de13fd2df9dc838
+Description: interactive high-level object-oriented language (default python3 version)
+
+Package: noble-python3-cairo
+Version: 1.25.1-2build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 616
+Depends: python3, python3, python3:any, libc6, libcairo2
+Provides: python3-cairo
+Filename: pool/trixie/noble-python3-cairo_1.25.1-2build2_arm64.deb
+Size: 120450
+MD5sum: d0f27389e71464883057fb2a3a9cca52
+SHA1: 4546936ff22593180ad2f25114906334499cc885
+SHA256: 80e90da983137b34d830aa805d990fab9fb9485846592174e2d7fd7b3f753c6a
+Description: Python3 bindings for the Cairo vector graphics library
+
+Package: noble-python3-certifi
+Version: 2023.11.17-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 388
+Depends: ca-certificates, python3:any
+Provides: python3-certifi
+Filename: pool/trixie/noble-python3-certifi_2023.11.17-1_all.deb
+Size: 156750
+MD5sum: a761f0e6ee7c5c4f2ac8b44672d71345
+SHA1: 8f97f4c1c423f62cc3c83038a63c8150f973131a
+SHA256: b5479cd1d96a8ccd2a437a187ea21a597d31f12e86dd97bc201f193479e88e26
+Description: root certificates for validating SSL certs and verifying TLS hosts (python3)
+
+Package: noble-python3-dbus
+Version: 1.3.2-5build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 588
+Depends: python3, python3, python3:any, libc6, libdbus-1-3, libglib2.0-0t64
+Provides: python3-dbus
+Filename: pool/trixie/noble-python3-dbus_1.3.2-5build3_arm64.deb
+Size: 98234
+MD5sum: 4593ac04d0d1cd3857a1157cd1ce2d06
+SHA1: 2a9859573e56c0a69959e3cac4bfe949d3d0819c
+SHA256: 0910dddcbefb343689f345ace698ee22ec08ac83a6a50f8bcfa160c06f0e14cc
+Description: simple interprocess messaging system (Python 3 interface)
+
+Package: noble-python3-gi
+Version: 3.48.2-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 908
+Depends: gir1.2-glib-2.0, gir1.2-girepository-2.0, python3, python3, python3:any, libc6, libffi8, libgirepository-1.0-1, libgirepository-1.0-1-with-libffi8, libglib2.0-0t64
+Provides: python3-gi
+Filename: pool/trixie/noble-python3-gi_3.48.2-1_arm64.deb
+Size: 231872
+MD5sum: 8a7ee3c5b1a42f22bc7cbad5afeef77d
+SHA1: 252db4bca1041b0b5af36d496e20291a7cea76f1
+SHA256: b7999f9614cc1c06e6e2221e2e667fe1d0b5e1c5a8cc57ebc7a6f560e9f2e322
+Description: Python 3 bindings for gobject-introspection libraries
+
+Package: noble-python3-gi-cairo
+Version: 3.48.2-1
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 116
+Depends: python3-cairo, python3-gi, python3, python3, libc6, libcairo-gobject2, libcairo2, libglib2.0-0t64
+Provides: python3-gi-cairo
+Filename: pool/trixie/noble-python3-gi-cairo_3.48.2-1_arm64.deb
+Size: 7326
+MD5sum: 15e6d362822710283b5306a49d230c01
+SHA1: 4b3723cf9a33649b9b19f7179d1d5d44aa938503
+SHA256: d7e17ff586b0de3f8d4783d89f50fa22420e48a1d0732df8cff6ce0a71c0e54e
+Description: Python 3 Cairo bindings for the GObject library
+
+Package: noble-python3-idna
+Version: 3.6-2ubuntu0.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 400
+Depends: python3:any
+Provides: python3-idna
+Filename: pool/trixie/noble-python3-idna_3.6-2ubuntu0.1_all.deb
+Size: 47528
+MD5sum: 41410af230efd1921815336c3ef6c4ba
+SHA1: 043815561e312e462a14d7a198241de3e3145d03
+SHA256: ef3c34767893a624d405a96bafd590cf8faf36ea57df08cda6713afd46c9279c
+Description: Python IDNA2008 (RFC 5891) handling (Python 3)
+
+Package: noble-python3-mutagen
+Version: 1.46.0-2
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 860
+Depends: python3:any
+Provides: python3-mutagen
+Filename: pool/trixie/noble-python3-mutagen_1.46.0-2_all.deb
+Size: 122316
+MD5sum: 7497e2ac3ca47bcc80dc685df0403f4c
+SHA1: 3c2caa6358d28183d40f3ee1e7bf3ade33455383
+SHA256: 8f02001038afe2d79b5d9d1a41ba436453dd5422cc9b65e5e0306c15b8703f4f
+Description: audio metadata editing library (Python 3)
+
+Package: noble-python3-requests
+Version: 2.31.0+dfsg-1ubuntu1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 300
+Depends: python3-certifi, python3-chardet, python3-idna, python3-urllib3, python3:any, ca-certificates
+Provides: python3-requests
+Filename: pool/trixie/noble-python3-requests_2.31.0+dfsg-1ubuntu1.1_all.deb
+Size: 49438
+MD5sum: 573ebc5aa05db03383df0b6650dd0cd3
+SHA1: a6cf9272317adc0a5f539e716b926dfbf51f014a
+SHA256: 3f8cb55798f508c95f3672c700f5c74b524a658bf77deb81cc8bc60fa626cc37
+Description: elegant and simple HTTP library for Python3, built for human beings
+
+Package: noble-python3-urllib3
+Version: 2.0.7-1ubuntu0.6
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 540
+Depends: python3:any
+Provides: python3-urllib3
+Filename: pool/trixie/noble-python3-urllib3_2.0.7-1ubuntu0.6_all.deb
+Size: 93776
+MD5sum: 831a07cb55017c3e7e8fe976e98de5c8
+SHA1: d24e46178de528c545e8d8c51fca19a4a0e8a241
+SHA256: f1b2824bd1e67c0a6d081076ea29ab2a18cb391c43d60c8810f80ba7e9e4c509
+Description: HTTP library with thread-safe connection pooling for Python3
+
+Package: noble-python3-websockets
+Version: 10.4-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 480
+Depends: python3:any
+Provides: python3-websockets
+Filename: pool/trixie/noble-python3-websockets_10.4-1_all.deb
+Size: 62510
+MD5sum: 8e9524318b6df6ec9ca08a64cc3b9a70
+SHA1: 480bb1585c10ab1341b659c2eff4f0f98ae357e8
+SHA256: 11596768e258e14cb8a43cf501ff2a7c6881335eca9e71f496c53dc597c36de4
+Description: implementation of the WebSocket Protocol (RFC 6455)
+
+Package: noble-python3.12
+Version: 3.12.3-1ubuntu0.11
+Architecture: arm64
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 808
+Depends: python3.12-minimal, libpython3.12-stdlib, media-types, tzdata
+Provides: python3.12
+Filename: pool/trixie/noble-python3.12_3.12.3-1ubuntu0.11_arm64.deb
+Size: 649988
+MD5sum: 791f0c82c2236ea40b04bf59f9d5ceba
+SHA1: 04caad885c776c103ba92bd933169d154c958a03
+SHA256: 279f339af4aa03eeaa5f7a3e65c28df5ddf8f1f943ced5edd312f51d4c00ac2a
+Description: Interactive high-level object-oriented language (version 3.12)
+
+Package: noble-python3.12-minimal
+Version: 3.12.3-1ubuntu0.11
+Architecture: arm64
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 7800
+Depends: libpython3.12-minimal, libexpat1, zlib1g
+Provides: python3.12-minimal
+Filename: pool/trixie/noble-python3.12-minimal_3.12.3-1ubuntu0.11_arm64.deb
+Size: 2234450
+MD5sum: 84b0ea0532f5eab5c4c1b1ac69884838
+SHA1: 114ca9b09c2c787dca39ed24a3a4a3f9f685a1f4
+SHA256: bde95db4863e8d205f7967502ec93e27576a0dcd836f93e2259798699ab25f2f
+Description: Minimal subset of the Python language (version 3.12)
+
+Package: noble-qt5-gtk2-platformtheme
+Version: 5.0.0+git23.g335dbec-6build5
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 652
+Depends: libc6, libgdk-pixbuf-2.0-0, libglib2.0-0t64, libgtk2.0-0t64, libpango-1.0-0, libqt5core5t64, libqt5dbus5t64, libqt5gui5t64, libqt5widgets5t64, libstdc++6, libx11-6, qtbase-abi-5-15-13
+Provides: qt5-gtk2-platformtheme
+Filename: pool/trixie/noble-qt5-gtk2-platformtheme_5.0.0+git23.g335dbec-6build5_arm64.deb
+Size: 166332
+MD5sum: ec1272ff09c1343c9d281af79287ce57
+SHA1: e44a4f0345c844b9027d9bac27fc3954edae6c5a
+SHA256: fcb515bcd119ffcdcfd1dcdfa12b643ab3a8be60f371d49d4833647d9c69d8a3
+Description: Qt 5 extra widget styles - GTK+ 2 Platform theme
+
+Package: noble-samba-libs
+Version: 2:4.19.5+dfsg-4ubuntu9.4
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 29356
+Depends: libacl1, libavahi-client3, libavahi-common3, libbsd0, libc6, libcap2, libgnutls30t64, libicu74, libjansson4, libkeyutils1, libldap2, libldb2, libpam0g, libpopt0, libsystemd0, libtalloc2, libtdb1, libtevent0t64, libtirpc3t64, libwbclient0, zlib1g
+Provides: samba-libs
+Filename: pool/trixie/noble-samba-libs_4.19.5+dfsg-4ubuntu9.4_arm64.deb
+Size: 6054114
+MD5sum: da88871e1e35944c058f0d2e5c369c2d
+SHA1: 23a24660169d151b9e59c5dd98e3a2f2b8a179cf
+SHA256: 1a3a60d3c906bf44491bd600f8cfd93ec5443fc1650f6b7774da5515299963a3
+Description: Samba core libraries
+
+Package: noble-session-migration
+Version: 0.3.9build1
+Architecture: arm64
+Maintainer: Didier Roche <didrocks@ubuntu.com>
+Installed-Size: 164
+Depends: libc6, libglib2.0-0t64, init-system-helpers
+Provides: session-migration
+Filename: pool/trixie/noble-session-migration_0.3.9build1_arm64.deb
+Size: 8510
+MD5sum: e624ee51eb8799af3bb2d9395b833992
+SHA1: 7d77a53b73a3d626840867a7741248357ff721ca
+SHA256: 58305e8d3f1123d27f586c4883431a2433e2a53eee3c5432c170dd617978f10d
+Description: Tool to migrate in user session settings
+
+Package: noble-smplayer
+Version: 23.12.0+ds0-1build2
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4716
+Depends: mpv, libc6, libgcc-s1, libqt5core5t64, libqt5dbus5t64, libqt5gui5t64, libqt5network5t64, libqt5qml5, libqt5widgets5t64, libqt5xml5t64, libstdc++6, libx11-6, zlib1g
+Provides: smplayer
+Filename: pool/trixie/noble-smplayer_23.12.0+ds0-1build2_arm64.deb
+Size: 2015930
+MD5sum: f1c8aad8a26959837201ed80ae0086d6
+SHA1: 129befd0dbeaeff2ec6c2c2b225894963e087038
+SHA256: 03904b2f278a79eb42c2ff2d62c1e945470a3560c33488784b102049321248c0
+Description: Complete front-end for MPlayer and mpv
+
+Package: noble-ubuntu-wallpapers
+Version: 24.04.2
+Architecture: all
+Maintainer: Ubuntu Artwork Team <ubuntu-art@lists.ubuntu.com>
+Installed-Size: 9364
+Depends: ubuntu-wallpapers-noble
+Provides: ubuntu-wallpapers
+Filename: pool/trixie/noble-ubuntu-wallpapers_24.04.2_all.deb
+Size: 9456202
+MD5sum: eb406c90cf47bae3bfa256f4bfd6a19b
+SHA1: 3d4d2c6e2d353bca73ac9e1055e2ed2835221df0
+SHA256: ab192272059dae7f79e28f8a3c7375843fa935c4d385dbb480ba7827da829f40
+Description: Ubuntu Wallpapers
+
+Package: noble-v4l-utils
+Version: 1.26.1-4build3
+Architecture: arm64
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2644
+Depends: libv4l-0t64, libv4l2rds0t64, libc6, libgcc-s1, libstdc++6, libudev1
+Provides: v4l-utils
+Filename: pool/trixie/noble-v4l-utils_1.26.1-4build3_arm64.deb
+Size: 686274
+MD5sum: 5dd3e681b64fdd3431212b643bf910a8
+SHA1: 71e124f581f9ac8d0c68c9a371d6b0356bdcfb29
+SHA256: d7f8cfc56f3dd107f7f00939af320c1d1aa9d37ecee4e515d40a285e2ac4abec
+Description: Collection of command line video4linux utilities
+
+Package: noble-x11proto-dev
+Version: 2023.2-1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 2076
+Depends: xorg-sgml-doctools
+Provides: x11proto-dev
+Filename: pool/trixie/noble-x11proto-dev_2023.2-1_all.deb
+Size: 597322
+MD5sum: afb7001c0c79e3e777cb9d6d8cfd29ea
+SHA1: 0f46b4569239cae7259cc6c9341973ec43ce13a6
+SHA256: 5bdb2ec7c892b824fd0f51201680f86ee571ba98537df740a0d1ad06082d8c21
+Description: X11 extension protocols and auxiliary headers
+
+Package: noble-xkb-data
+Version: 2.41-2ubuntu1.1
+Architecture: all
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 4136
+Provides: xkb-data
+Filename: pool/trixie/noble-xkb-data_2.41-2ubuntu1.1_all.deb
+Size: 390390
+MD5sum: 30538bfc765ab833dc1ff7cf9d2d98d5
+SHA1: 84ab61035377c388f93cf7dd490e642faf24ef3a
+SHA256: c11e1a8fce673196c14443b5ec9766aed2a498c4043de2a2c43304876b660dd7
+Description: X Keyboard Extension (XKB) configuration data
+

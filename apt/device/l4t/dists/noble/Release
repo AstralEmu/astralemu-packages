@@ -1,0 +1,40 @@
+Origin: AstralEmu Packages (l4t)
+Label: astralemu-l4t
+Suite: noble
+Codename: noble
+Architectures: all arm64 armhf 
+Components: main
+Description: AstralEmu l4t packages for noble
+Date: Sun, 22 Feb 2026 04:59:26 +0000
+MD5Sum:
+ 7cf34e770d0dc9d45c5638dec00b20bf              216 Release
+ 6a5608d19cb58fc2fc4c8964efc03510             7875 main/binary-all/Packages
+ 1627bc48dc910e2f8ae46c4ba548bf59             3101 main/binary-all/Packages.gz
+ 53dfd53e7c86c1e8e9a8133584f62c20            45210 main/binary-arm64/Packages
+ 4db93d601988292d4f5f7a7b03a9673d            13491 main/binary-arm64/Packages.gz
+ 84063befc8c4c097f769ae930b0338d1            12082 main/binary-armhf/Packages
+ 2358ed78f41da9b1e6e6bae6da50e7c7             4381 main/binary-armhf/Packages.gz
+SHA1:
+ dad5fce012e65fae1bca6bf23156ec39b219806b              216 Release
+ 1072e3eed8a0be3078aa59d3896f1a2065fbb2b1             7875 main/binary-all/Packages
+ b6aea0c8f076fa8d2f58ac7a537664a65a98c261             3101 main/binary-all/Packages.gz
+ a9dbc357180a0a0a7885380be9787b18e0cf4acb            45210 main/binary-arm64/Packages
+ 8a94fde5b2e5aebcbe4389bda2c5e3b15b063422            13491 main/binary-arm64/Packages.gz
+ cebeb3af2ce47239b30c649229341ebc0b4d495f            12082 main/binary-armhf/Packages
+ d55a4c345c6d45ccd926defe7e24d46f29093c20             4381 main/binary-armhf/Packages.gz
+SHA256:
+ 41a862fd57c3b71a6febb14146d683dc2360d1a50a1ae8022caa9da4e124364e              216 Release
+ 1fa229c3554da9eae261ded5c6e8b292b5e6ae3af094bc2e221e9a4cc63a84ba             7875 main/binary-all/Packages
+ 80bf89ee280b6b5218858912e948c168699d6c19cbff4c9fcfd65fc8d8ddca2c             3101 main/binary-all/Packages.gz
+ 3059e9f012443451e6c3c59d6b12dcc1725baff54f3d7f44fd125d22a186ef71            45210 main/binary-arm64/Packages
+ aac7a75e92977b66ab3fe6f4aa6f18c9ef02e1d78f65bfb1df2f34462c6ef8a5            13491 main/binary-arm64/Packages.gz
+ 4c9c92d74c8d8170abe8d386c15c0dd9d6c9b1d9faf27e7d0cb72f69f4f6238e            12082 main/binary-armhf/Packages
+ beda385d5542c456de8244cd11d0e3fe0ec0cd39f0aec18cb45d23429b074884             4381 main/binary-armhf/Packages.gz
+SHA512:
+ 5aa38cda7ef6eaa5092b445161afec2a5d3ce05de158a764df34edd2ecc9fa95835820bafd6e231b15227dd7f9e7872feeddfb5a522b6972cb53d2d25805334e              216 Release
+ 5939f9e44acb189c994ffca5192879fe13cf6de1e604a43bb0e0b9cc13211f06da4d00b66edb9d8bd1530bac6e88c249da5f86b4d961431da48c95bfd50180a9             7875 main/binary-all/Packages
+ 19cd62a881590516da2773a2fe9961a0bddf2f7743fe6ba9816cb6f4449427f89b0b27e5fab1bdc45494b8e6f7e4d2c4d2b896b884650875d134c79729cec211             3101 main/binary-all/Packages.gz
+ 4e219edf98ec2e0a266123caa453f6b9e1d73bdc609c08f6118bd351b041400c5ead0369b34cbc34a42b830ec5f7ae10394be6b763adecd215261b1b2fa81d78            45210 main/binary-arm64/Packages
+ d8d16ac3f3972a1d443c90889feb3c88fa5a7236d392423fdfd9d4e4eb9c5543c55dccfe07bcabeb9c5dd427a2aab8aa55bbe620aef20c218102bc086c6e8880            13491 main/binary-arm64/Packages.gz
+ 705aca0385228d59331212d1fcc9ecec62564752119f9c276cd8f8efe115a6af1d18395f1f1995df0409e7aab51d6e9833294c5d07ee1c3281c81205e1fe692a            12082 main/binary-armhf/Packages
+ 25ed47f6b0b5946d945f236e2359c477d7e27c57b0f710ca1078bba37a76126e2e867679345ed61f597ce88cd97848f545fdf4e8b07a238ffe6cf3cf1ea5f1cc             4381 main/binary-armhf/Packages.gz

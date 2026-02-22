@@ -1,0 +1,52 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: AstralEmu Packages (deps-noble)
+Label: astralemu-deps-noble
+Suite: trixie
+Codename: trixie
+Architectures: all arm64 
+Components: main
+Description: AstralEmu shared dependencies (noble) packages for trixie
+Date: Sun, 22 Feb 2026 04:59:27 +0000
+MD5Sum:
+ b20571216644b9844c01fef25aa39f89              251 Release
+ e8b89cd394103f8fe5e0888530e8d108             8408 main/binary-all/Packages
+ 69727c8ca751ef493815168bacd31b46             3010 main/binary-all/Packages.gz
+ 2aad5b5c69743542d95f51291f39dda7           124870 main/binary-arm64/Packages
+ d39e88fe7f4eff434e43f48578743ead            36322 main/binary-arm64/Packages.gz
+SHA1:
+ 58e4bf98eb11954efe8e030b27a450b898fbe3af              251 Release
+ 994e9ebd523e50f27b12dffd00a4e6aa894072fd             8408 main/binary-all/Packages
+ 3737e5920cd4ab2b0abd478857dee35f3b364f27             3010 main/binary-all/Packages.gz
+ 1c69e9c52626a83dfa7ba171fca63c9369da6681           124870 main/binary-arm64/Packages
+ 6c41e3937e1d335b73499d64def036d0f5c3f2b7            36322 main/binary-arm64/Packages.gz
+SHA256:
+ bca3153bc3c4961dcc80342e5da1a028d1a509768c4a0e90ebc3cb5b6cb64a35              251 Release
+ 07e7a2f35f55d3023923e64f99eb03e8ad6f56b844fdd7b9aa3082a90fad14c2             8408 main/binary-all/Packages
+ 2ee96ce6047eff6a3a5105c2e2f96312ffa077dba752daccbc0d5ddd8458b11c             3010 main/binary-all/Packages.gz
+ b885bba3b370b3e83e6edb0755c8d019242e1f4bddb9fbd884e1c1168550b15a           124870 main/binary-arm64/Packages
+ e75c9f00c72d4239cbf675f4fd6b81a7ad64bd8db8fd1e0443a8775ea56e96de            36322 main/binary-arm64/Packages.gz
+SHA512:
+ 10091c0757e4a76db6858583f6279fa9969a1a0a199e3a5c12486a601717d76b5c48ba053c0d58c2d8871995f8f212244927a021cdf70fbfada2a40d19064f3b              251 Release
+ 57f0af2d529550c9651cf9c747d1a0978a819c08a4e99e31b0fc30f03af23445f8910ff9800fe6d3b4d77d7ca92247413105a82cb45b4ffa3d81eeeef95312ff             8408 main/binary-all/Packages
+ e8a2fd2d2490ea1e870601c499f4e0e6f37089bd30f0fbebd0a382cb6c05e8c9029ca3dcb9f54f8a87c7baf98c894d19f2cb8caac1ada5b57c6463e46c6a6767             3010 main/binary-all/Packages.gz
+ 12de65abb3919003d63b2f8ad2d257510b83dfe2d90ba55012408aba8c6fc28c1adf0aefda25e1e756801c37844036c6adede05955417058e5cb4033faca4f4d           124870 main/binary-arm64/Packages
+ fa5b022f78cc6e2cbaa27efd2a7987c903d58943a93cd9edf964292d77f1c0a274b97e3175052ca78200f52dbf912a344068db486faffa86a4a84a4c86a1c3e1            36322 main/binary-arm64/Packages.gz
+-----BEGIN PGP SIGNATURE-----
+
+iQJQBAEBCgA6FiEErnAFP+8xgFPD+pElJ71GkUfwh4EFAmmajS8cHG5vcmVwbHlA
+YXN0cmFsZW11LmdpdGh1Yi5pbwAKCRAnvUaRR/CHgR9lD/4zQ2SDjCsgmS6qqIX7
+DMqiDJADieDuKZ2vbgU3t002Te7TvqZGeBYBGwwZywYvBMv7amQsgl/8O2Yo+0BU
+4oC7QCA+0WNmB0qgPF+wIf/jIVtfs5ZtTLFRrs9Z3QYCYr654iWK2DLebRAYVuGf
+BKGndv18AjEX18NwkBFl3A0XSyFlLi2OFEUqn4xajumKc1OM5PURP0yDuvot9kx/
+0lEoqwwQF/jT9QMPHNU06MH1orCnCzUOxPO01DU/92S2gYQtxaMMF3qBgZoo4Old
+t/qDLqFDG8I9gODpRepNqGYumu7tsYEVnodkc5b8yEKhdEX4p9XIfetwxwKwVd8H
+HFkVR2U3vqaku/cQo2hI46FMHqe3+J1fWUDg/giUvVwjOU2YWetlB9n6HF0/2YK2
+0QAhh8Qe6u4irhYb8mC9NxQ9Beogkew7VEL7TPyw6tQQaKQXRhSho5I4JNZAqMnK
+wZjRcNVWW/pyK5AJnXRru62PWolWCwQ8OICbbwRW4/mcUmhOlK5FN42ytc+cWQJv
+2gQZt8F+dsw97Yt/7QmPleq3canXDWiqB7yJHUfgBK0nnHZfo2vIn0qWtj4ULq6l
+KEtRUttGYOLE7fzkALNkjuVDA7L7nRPKeUn3tFNLOz9oybhcPkra7CYo+fLps6DS
+2Mkw9poqaJb4kxYhnf6IcEYPVA==
+=nqaq
+-----END PGP SIGNATURE-----
