@@ -46,9 +46,10 @@ build_core() {
 }
 
 # Batch 3: N64, PSX and Saturn cores
-# mupen64plus-next: pre-generate asm_defines_nasm.h to avoid race condition with nasm on x86
+# mupen64plus-next on x86: pre-build the nasm object in -j1 to force sequential
+# asm_defines.c → awk → asm_defines_nasm.h → linkage_x64.o dependency chain
 build_core mupen64plus-libretro-nx mupen64plus-next "" "" \
-  'make -j1 mupen64plus-core/src/asm_defines/asm_defines.o platform=unix CC="ccache gcc" CFLAGS="$CFLAGS" 2>/dev/null && strings mupen64plus-core/src/asm_defines/asm_defines.o | tr -d "\r" | awk -v dest_dir="./mupen64plus-core/src/asm_defines" -f ./mupen64plus-core/tools/gen_asm_defines.awk || true'
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && make -j1 platform=unix CC="ccache gcc" CXX="ccache g++" LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 mupen64plus-core/src/device/r4300/new_dynarec/x64/linkage_x64.o || true'
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 
