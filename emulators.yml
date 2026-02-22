@@ -29,6 +29,19 @@
 # Power scoring:
 #   Emulators with power_arm > device.power are skipped for ARM devices (same for power_amd/amd64).
 #   This prevents building heavy emulators on weak devices.
+#   Device scores account for AstralEmu's 40-60% performance boost over stock distro packages.
+#
+#   ARM hierarchy:
+#     1 — Trivial    : 8/16-bit, DS, frontends (melonDS, ES-DE, libretro-light)
+#     2 — Light      : PS1, PSP, 3DS (duckstation, ppsspp, azahar)
+#     3 — Medium     : GC/Wii, heavy libretro cores (dolphin, libretro-heavy)
+#     4 — Heavy      : Xbox x86→ARM translation (xemu)
+#     5 — Extreme    : reserved for future heavy emulators
+#
+#   AMD hierarchy:
+#     1 — Light      : most emulators run natively on x86 (melonDS, ES-DE, azahar, ppsspp, duckstation)
+#     2 — Medium     : heavier x86 builds (dolphin, xemu, libretro-heavy)
+#     3 — Heavy      : reserved for future demanding emulators (Switch, PS3)
 
 emulators:
   # --- Standalone emulators ---
@@ -39,7 +52,7 @@ emulators:
     tracker_file: azahar-version
     build_time: 25
     power_arm: 2
-    power_amd: 3
+    power_amd: 1
     true_arm: true
     true_amd: true
 
@@ -51,7 +64,7 @@ emulators:
     tracker_file: dolphin-commit
     build_time: 40
     power_arm: 3
-    power_amd: 3
+    power_amd: 2
     true_arm: true
     true_amd: true
 
@@ -62,8 +75,8 @@ emulators:
     version_branch: master
     tracker_file: duckstation-commit
     build_time: 30
-    power_arm: 3
-    power_amd: 3
+    power_arm: 2
+    power_amd: 1
     true_arm: true
     true_amd: true
     extra_caches:
@@ -79,8 +92,8 @@ emulators:
     version_branch: master
     tracker_file: duckstation-commit
     build_time: 45
-    power_arm: 3
-    power_amd: 3
+    power_arm: 2
+    power_amd: 1
     true_arm: true
     true_amd: true
     depends_on: [duckstation-deps]
@@ -96,8 +109,8 @@ emulators:
     version_source: gitlab-release
     tracker_file: esde-version
     build_time: 20
-    power_arm: 2
-    power_amd: 2
+    power_arm: 1
+    power_amd: 1
     true_arm: true
     true_amd: true
 
@@ -119,7 +132,7 @@ emulators:
     tracker_file: ppsspp-version
     build_time: 20
     power_arm: 2
-    power_amd: 2
+    power_amd: 1
     true_arm: true
     true_amd: true
 
@@ -129,7 +142,7 @@ emulators:
     version_source: github-release
     tracker_file: xemu-version
     build_time: 40
-    power_arm: 5
+    power_arm: 4
     power_amd: 2
     true_arm: true
     true_amd: true
@@ -139,7 +152,7 @@ emulators:
     version_source: hash-only
     build_time: 60
     power_arm: 3
-    power_amd: 3
+    power_amd: 2
     true_arm: true
     true_amd: true
     artifact_type: cores
@@ -148,7 +161,7 @@ emulators:
     version_source: hash-only
     build_time: 50
     power_arm: 3
-    power_amd: 3
+    power_amd: 2
     true_arm: true
     true_amd: true
     artifact_type: cores
@@ -157,7 +170,7 @@ emulators:
     version_source: hash-only
     build_time: 50
     power_arm: 3
-    power_amd: 3
+    power_amd: 2
     true_arm: true
     true_amd: true
     artifact_type: cores
