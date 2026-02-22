@@ -19,6 +19,7 @@
 #   cflags     — C compiler flags (arch targeting + optimizations, WITHOUT LTO)
 #   cxxflags   — C++ compiler flags (usually same as cflags, WITHOUT LTO)
 #   power      — Device power score (1-5), used to filter emulators too heavy for this device
+#                Scores account for AstralEmu's 40-60% performance boost over stock distro packages
 #   sources    — List of package sources to mirror for this device (optional)
 #
 # Source fields:
@@ -37,7 +38,7 @@ devices:
   - id: l4t
     name: "Nintendo Switch (Tegra X1)"
     arch: arm64
-    power: 3
+    power: 4
     platform: linux/arm64
     runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
@@ -54,7 +55,7 @@ devices:
   - id: rpi4
     name: "Raspberry Pi 4 (Cortex-A72)"
     arch: arm64
-    power: 2
+    power: 3
     platform: linux/arm64
     runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
@@ -65,7 +66,7 @@ devices:
   - id: armv8-2
     name: "ARMv8.2-A (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
     arch: arm64
-    power: 4
+    power: 5
     platform: linux/arm64
     runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
@@ -87,7 +88,7 @@ devices:
   - id: x86-v2
     name: "x86-64-v2 (Intel Sandy Bridge+ / AMD Bulldozer+)"
     arch: amd64
-    power: 3
+    power: 4
     platform: linux/amd64
     runner: ubuntu-24.04
     base_image: ubuntu:24.04
@@ -98,7 +99,7 @@ devices:
   - id: x86-v3
     name: "x86-64-v3 (Intel Haswell+ / AMD Ryzen / Steam Deck)"
     arch: amd64
-    power: 4
+    power: 5
     platform: linux/amd64
     runner: ubuntu-24.04
     base_image: ubuntu:24.04
