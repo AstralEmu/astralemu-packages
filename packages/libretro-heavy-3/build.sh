@@ -18,6 +18,7 @@ build_core() {
   local name=$2
   local subdir=${3:-}
   local make_args=${4:-}
+  local pre_make=${5:-}
 
   echo "=== Building $name ==="
   if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
@@ -32,6 +33,7 @@ build_core() {
   cd "$name"
   [[ -n "$subdir" ]] && cd "$subdir"
   make clean 2>/dev/null || true
+  [[ -n "$pre_make" ]] && eval "$pre_make"
   timeout ${BUILD_TIMEOUT}s make -j$(nproc) platform=unix $make_args \
     CC="ccache gcc" CXX="ccache g++" \
     LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 || {
@@ -44,7 +46,9 @@ build_core() {
 }
 
 # Batch 3: N64, PSX and Saturn cores
-build_core mupen64plus-libretro-nx mupen64plus-next
+# mupen64plus-next: pre-generate asm_defines_nasm.h to avoid race condition with nasm on x86
+build_core mupen64plus-libretro-nx mupen64plus-next "" "" \
+  'make -j1 mupen64plus-core/src/asm_defines/asm_defines.o platform=unix CC="ccache gcc" CFLAGS="$CFLAGS" 2>/dev/null && strings mupen64plus-core/src/asm_defines/asm_defines.o | tr -d "\r" | awk -v dest_dir="./mupen64plus-core/src/asm_defines" -f ./mupen64plus-core/tools/gen_asm_defines.awk || true'
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 
