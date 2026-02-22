@@ -14,6 +14,10 @@ permissions:
   contents: write
   actions: write
 
+concurrency:
+  group: build-emulators
+  cancel-in-progress: true
+
 env:
   CACHE_KEY: emu-deps-base-v4
   BUILD_TIMEOUT: 19800  # 5h30 in seconds (leave 30min for cache save)
