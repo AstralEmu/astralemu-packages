@@ -42,8 +42,8 @@ SOURCE_DISTRO=$(cat "$INTDIR/meta/source_distro" 2>/dev/null || echo "unknown")
 
 # Map arch to deb convention
 case "$PKG_ARCH" in
-  aarch64)        DEB_ARCH="arm64" ;;
-  x86_64)         DEB_ARCH="amd64" ;;
+  aarch64|arm64)  DEB_ARCH="arm64" ;;
+  x86_64|amd64)   DEB_ARCH="amd64" ;;
   armhf)          DEB_ARCH="armhf" ;;
   all|noarch|any) DEB_ARCH="all" ;;
   *)              DEB_ARCH="$PKG_ARCH" ;;
