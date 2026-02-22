@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.fsH8I4nAi5/BUILD
++ /bin/rm -rf /tmp/tmp.fsH8I4nAi5/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ /bin/mkdir -p /tmp/tmp.fsH8I4nAi5/BUILDROOT
++ /bin/mkdir /tmp/tmp.fsH8I4nAi5/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ ls /tmp/tmp.4DpRNGoJXN/root/lib /tmp/tmp.4DpRNGoJXN/root/usr
++ cp -a /tmp/tmp.4DpRNGoJXN/root/lib /tmp/tmp.4DpRNGoJXN/root/usr /tmp/tmp.fsH8I4nAi5/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl/
++ umask 022
++ cd /tmp/tmp.fsH8I4nAi5/BUILD
++ /bin/rm -rf /tmp/tmp.fsH8I4nAi5/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.fsH8I4nAi5/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0

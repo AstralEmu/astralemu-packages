@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.tNs2CJ8nkm/BUILD
++ /bin/rm -rf /tmp/tmp.tNs2CJ8nkm/BUILDROOT/chromium-browser-9.126.0.6478.234.1-1.aarch64
++ /bin/mkdir -p /tmp/tmp.tNs2CJ8nkm/BUILDROOT
++ /bin/mkdir /tmp/tmp.tNs2CJ8nkm/BUILDROOT/chromium-browser-9.126.0.6478.234.1-1.aarch64
++ ls /tmp/tmp.Bw5t03Lia3/root/etc /tmp/tmp.Bw5t03Lia3/root/opt /tmp/tmp.Bw5t03Lia3/root/usr
++ cp -a /tmp/tmp.Bw5t03Lia3/root/etc /tmp/tmp.Bw5t03Lia3/root/opt /tmp/tmp.Bw5t03Lia3/root/usr /tmp/tmp.tNs2CJ8nkm/BUILDROOT/chromium-browser-9.126.0.6478.234.1-1.aarch64/
++ umask 022
++ cd /tmp/tmp.tNs2CJ8nkm/BUILD
++ /bin/rm -rf /tmp/tmp.tNs2CJ8nkm/BUILDROOT/chromium-browser-9.126.0.6478.234.1-1.aarch64
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.tNs2CJ8nkm/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0

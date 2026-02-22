@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.JDUdYCKQOZ/BUILD
++ /bin/rm -rf /tmp/tmp.JDUdYCKQOZ/BUILDROOT/switch-bsp-5.1.2.26-1.noarch
++ /bin/mkdir -p /tmp/tmp.JDUdYCKQOZ/BUILDROOT
++ /bin/mkdir /tmp/tmp.JDUdYCKQOZ/BUILDROOT/switch-bsp-5.1.2.26-1.noarch
++ ls /tmp/tmp.n2y6yVfBJI/root/etc /tmp/tmp.n2y6yVfBJI/root/opt /tmp/tmp.n2y6yVfBJI/root/usr
++ cp -a /tmp/tmp.n2y6yVfBJI/root/etc /tmp/tmp.n2y6yVfBJI/root/opt /tmp/tmp.n2y6yVfBJI/root/usr /tmp/tmp.JDUdYCKQOZ/BUILDROOT/switch-bsp-5.1.2.26-1.noarch/
++ umask 022
++ cd /tmp/tmp.JDUdYCKQOZ/BUILD
++ /bin/rm -rf /tmp/tmp.JDUdYCKQOZ/BUILDROOT/switch-bsp-5.1.2.26-1.noarch
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.JDUdYCKQOZ/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0
