@@ -13,8 +13,6 @@ jobs:
     secrets: inherit
 
   build:
-    needs: mirror
-    if: "!cancelled()"
     uses: ./.github/workflows/build-emulators.yml
     with:
       force: true
