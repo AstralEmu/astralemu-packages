@@ -1,0 +1,29 @@
+name: Cancel All Runs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel all running and queued workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          SELF_RUN_ID="${{ github.run_id }}"
+          echo "Cancelling all runs except self ($SELF_RUN_ID)..."
+
+          for status in in_progress queued waiting; do
+            gh run list --status "$status" --limit 100 --json databaseId --jq '.[].databaseId' | while read -r run_id; do
+              [ "$run_id" = "$SELF_RUN_ID" ] && continue
+              echo "Cancelling run $run_id..."
+              gh run cancel "$run_id" 2>/dev/null || true
+            done
+          done
+
+          echo "Done."

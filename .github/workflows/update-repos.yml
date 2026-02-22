@@ -751,7 +751,7 @@ jobs:
   # ==================================================================
   deploy:
     needs: [normalize, build-repo-seed, build-repo]
-    if: always() && needs.normalize.outputs.count > 0
+    if: "!cancelled() && needs.normalize.outputs.count > 0"
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout

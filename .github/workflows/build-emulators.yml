@@ -310,7 +310,7 @@ jobs:
 
   chain-1-dep:
     needs: [prepare, chain-1-ind]
-    if: always() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_1_dep)[0] != null
+    if: "!cancelled() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_1_dep)[0] != null"
     uses: ./.github/workflows/build-chain.yml
     with:
       chain_matrix: ${{ needs.prepare.outputs.chain_1_dep }}
@@ -324,7 +324,7 @@ jobs:
 
   chain-2-dep:
     needs: [prepare, chain-2-ind]
-    if: always() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_2_dep)[0] != null
+    if: "!cancelled() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_2_dep)[0] != null"
     uses: ./.github/workflows/build-chain.yml
     with:
       chain_matrix: ${{ needs.prepare.outputs.chain_2_dep }}
@@ -338,7 +338,7 @@ jobs:
 
   chain-3-dep:
     needs: [prepare, chain-3-ind]
-    if: always() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_3_dep)[0] != null
+    if: "!cancelled() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_3_dep)[0] != null"
     uses: ./.github/workflows/build-chain.yml
     with:
       chain_matrix: ${{ needs.prepare.outputs.chain_3_dep }}
@@ -352,14 +352,14 @@ jobs:
 
   chain-4-dep:
     needs: [prepare, chain-4-ind]
-    if: always() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_4_dep)[0] != null
+    if: "!cancelled() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.chain_4_dep)[0] != null"
     uses: ./.github/workflows/build-chain.yml
     with:
       chain_matrix: ${{ needs.prepare.outputs.chain_4_dep }}
 
   aggregators:
     needs: [prepare, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep]
-    if: always() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.aggregators)[0] != null
+    if: "!cancelled() && needs.prepare.result == 'success' && fromJSON(needs.prepare.outputs.aggregators)[0] != null"
     uses: ./.github/workflows/build-chain.yml
     with:
       chain_matrix: ${{ needs.prepare.outputs.aggregators }}
@@ -426,7 +426,7 @@ jobs:
   update-repo-seed:
     needs: [prepare, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators, build-support]
     if: >-
-      always() &&
+      !cancelled() &&
       (needs.chain-1-ind.result == 'success' ||
        needs.chain-2-ind.result == 'success' ||
        needs.chain-3-ind.result == 'success' ||
@@ -445,7 +445,7 @@ jobs:
   update-repo:
     needs: [prepare, update-repo-seed, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators, build-support]
     if: >-
-      always() &&
+      !cancelled() &&
       fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
       (needs.chain-1-ind.result == 'success' ||
        needs.chain-2-ind.result == 'success' ||
@@ -472,7 +472,7 @@ jobs:
   # ===========================================================================
   save-trackers:
     needs: [prepare, update-repo-seed, update-repo]
-    if: always() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')
+    if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout main
