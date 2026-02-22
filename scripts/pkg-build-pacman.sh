@@ -39,8 +39,8 @@ SOURCE_FORMAT=$(cat "$INTDIR/meta/source_format")
 
 # Map arch
 case "$PKG_ARCH" in
-  aarch64)        PAC_ARCH="aarch64" ;;
-  x86_64)         PAC_ARCH="x86_64" ;;
+  aarch64|arm64)  PAC_ARCH="aarch64" ;;
+  x86_64|amd64)   PAC_ARCH="x86_64" ;;
   armhf)          PAC_ARCH="armv7h" ;;
   all|noarch|any) PAC_ARCH="any" ;;
   *)              PAC_ARCH="$PKG_ARCH" ;;

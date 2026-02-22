@@ -256,26 +256,26 @@ jobs:
             case "$FORMAT" in
               deb)
                 case "$arch" in
-                  aarch64) echo "arm64" ;;
-                  x86_64)  echo "amd64" ;;
-                  armhf)   echo "armhf" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "arm64" ;;
+                  x86_64|amd64)  echo "amd64" ;;
+                  armhf)         echo "armhf" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
               rpm)
                 case "$arch" in
-                  aarch64) echo "aarch64" ;;
-                  x86_64)  echo "x86_64" ;;
-                  armhf)   echo "armv7hl" ;;
-                  all)     echo "noarch" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "aarch64" ;;
+                  x86_64|amd64)  echo "x86_64" ;;
+                  armhf)         echo "armv7hl" ;;
+                  all)           echo "noarch" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
               pacman)
                 case "$arch" in
-                  aarch64) echo "aarch64" ;;
-                  x86_64)  echo "x86_64" ;;
-                  armhf)   echo "armv7h" ;;
-                  all)     echo "any" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "aarch64" ;;
+                  x86_64|amd64)  echo "x86_64" ;;
+                  armhf)         echo "armv7h" ;;
+                  all)           echo "any" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
             esac
           }
@@ -287,17 +287,17 @@ jobs:
             case "$format" in
               deb)
                 local deb_arch
-                case "$arch" in aarch64) deb_arch="arm64";; x86_64) deb_arch="amd64";; *) deb_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) deb_arch="arm64";; x86_64|amd64) deb_arch="amd64";; *) deb_arch="$arch";; esac
                 expected="${name}_$(echo "$version" | sed 's/^[0-9]*://')_${deb_arch}.deb"
                 ;;
               rpm)
                 local rpm_arch
-                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) rpm_arch="aarch64";; x86_64|amd64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
                 ;;
               pacman)
                 local pac_arch
-                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) pac_arch="aarch64";; x86_64|amd64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
                 ;;
             esac
@@ -536,26 +536,26 @@ jobs:
             case "$FORMAT" in
               deb)
                 case "$arch" in
-                  aarch64) echo "arm64" ;;
-                  x86_64)  echo "amd64" ;;
-                  armhf)   echo "armhf" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "arm64" ;;
+                  x86_64|amd64)  echo "amd64" ;;
+                  armhf)         echo "armhf" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
               rpm)
                 case "$arch" in
-                  aarch64) echo "aarch64" ;;
-                  x86_64)  echo "x86_64" ;;
-                  armhf)   echo "armv7hl" ;;
-                  all)     echo "noarch" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "aarch64" ;;
+                  x86_64|amd64)  echo "x86_64" ;;
+                  armhf)         echo "armv7hl" ;;
+                  all)           echo "noarch" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
               pacman)
                 case "$arch" in
-                  aarch64) echo "aarch64" ;;
-                  x86_64)  echo "x86_64" ;;
-                  armhf)   echo "armv7h" ;;
-                  all)     echo "any" ;;
-                  *)       echo "$arch" ;;
+                  aarch64|arm64) echo "aarch64" ;;
+                  x86_64|amd64)  echo "x86_64" ;;
+                  armhf)         echo "armv7h" ;;
+                  all)           echo "any" ;;
+                  *)             echo "$arch" ;;
                 esac ;;
             esac
           }
@@ -567,17 +567,17 @@ jobs:
             case "$format" in
               deb)
                 local deb_arch
-                case "$arch" in aarch64) deb_arch="arm64";; x86_64) deb_arch="amd64";; *) deb_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) deb_arch="arm64";; x86_64|amd64) deb_arch="amd64";; *) deb_arch="$arch";; esac
                 expected="${name}_$(echo "$version" | sed 's/^[0-9]*://')_${deb_arch}.deb"
                 ;;
               rpm)
                 local rpm_arch
-                case "$arch" in aarch64) rpm_arch="aarch64";; x86_64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) rpm_arch="aarch64";; x86_64|amd64) rpm_arch="x86_64";; armhf) rpm_arch="armv7hl";; all) rpm_arch="noarch";; *) rpm_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//' | tr ':~' '..' | sed 's/-/./g')-1.${rpm_arch}.rpm"
                 ;;
               pacman)
                 local pac_arch
-                case "$arch" in aarch64) pac_arch="aarch64";; x86_64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
+                case "$arch" in aarch64|arm64) pac_arch="aarch64";; x86_64|amd64) pac_arch="x86_64";; armhf) pac_arch="armv7h";; all) pac_arch="any";; *) pac_arch="$arch";; esac
                 expected="${name}-$(echo "$version" | sed 's/+[^-]*//; s/^[0-9]*://; s/-/./g')-1-${pac_arch}.pkg.tar.zst"
                 ;;
             esac
