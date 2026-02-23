@@ -50,7 +50,7 @@ build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
 # Falls back to portable function pointer approach, fully compatible with LTO+PIC
 build_core scummvm scummvm "backends/platform/libretro" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c'
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c || true'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2

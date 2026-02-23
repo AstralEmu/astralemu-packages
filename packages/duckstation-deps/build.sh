@@ -18,7 +18,8 @@ git checkout "$COMMIT"
 echo "Building zstd from source..."
 git clone --depth 1 --branch v1.5.7 https://github.com/facebook/zstd.git /tmp/zstd-src
 make -C /tmp/zstd-src lib -j"$(nproc)"
-make -C /tmp/zstd-src install PREFIX=/deps
+make -C /tmp/zstd-src install PREFIX=/usr/local
+ldconfig
 rm -rf /tmp/zstd-src
 
 # Build dependencies with official script

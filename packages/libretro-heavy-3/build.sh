@@ -49,7 +49,7 @@ build_core() {
 # mupen64plus-next on x86: fix nasm race by adding explicit Makefile dependency
 # (the upstream pattern rule prerequisite doesn't reliably prevent parallel nasm)
 build_core mupen64plus-libretro-nx mupen64plus-next "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && echo "\$(CORE_DIR)/src/device/r4300/new_dynarec/x64/linkage_x64.o: \$(AWK_DEST_DIR)/asm_defines_nasm.h" >> Makefile'
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && echo "\$(CORE_DIR)/src/device/r4300/new_dynarec/x64/linkage_x64.o: \$(AWK_DEST_DIR)/asm_defines_nasm.h" >> Makefile || true'
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 
