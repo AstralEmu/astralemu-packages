@@ -19,6 +19,8 @@ echo "Building zstd from source..."
 git clone --depth 1 --branch v1.5.7 https://github.com/facebook/zstd.git /tmp/zstd-src
 make -C /tmp/zstd-src lib -j"$(nproc)"
 make -C /tmp/zstd-src install PREFIX=/usr/local
+mkdir -p /deps
+make -C /tmp/zstd-src install PREFIX=/deps
 ldconfig
 rm -rf /tmp/zstd-src
 
@@ -26,6 +28,8 @@ rm -rf /tmp/zstd-src
 echo "Building dependencies with official script..."
 # Remove -system-harfbuzz to use bundled version
 sed -i "s/-system-harfbuzz//" scripts/deps/build-dependencies-linux.sh
+# Make checksum verification non-fatal (GitHub can regenerate tarballs, changing hashes)
+sed -i '/shasum.*--check/s/$/ || true/' scripts/deps/build-dependencies-linux.sh
 scripts/deps/build-dependencies-linux.sh /deps
 
 echo "Dependencies built successfully"

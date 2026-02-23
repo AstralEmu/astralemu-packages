@@ -19,6 +19,7 @@ build_core() {
   local subdir=${3:-}
   local make_args=${4:-}
   local pre_make=${5:-}
+  local post_clean=${6:-}
 
   echo "=== Building $name ==="
   if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
@@ -34,6 +35,7 @@ build_core() {
   [[ -n "$pre_make" ]] && eval "$pre_make"
   [[ -n "$subdir" ]] && cd "$subdir"
   make clean 2>/dev/null || true
+  [[ -n "$post_clean" ]] && eval "$post_clean"
   timeout ${BUILD_TIMEOUT}s make -j$(nproc) platform=unix $make_args \
     CC="ccache gcc" CXX="ccache g++" \
     LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 || {
@@ -46,10 +48,10 @@ build_core() {
 }
 
 # Batch 3: N64, PSX and Saturn cores
-# mupen64plus-next on x86: fix nasm race by adding explicit Makefile dependency
-# (the upstream pattern rule prerequisite doesn't reliably prevent parallel nasm)
-build_core mupen64plus-libretro-nx mupen64plus-next "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && echo "\$(CORE_DIR)/src/device/r4300/new_dynarec/x64/linkage_x64.o: \$(AWK_DEST_DIR)/asm_defines_nasm.h" >> Makefile || true'
+# mupen64plus-next on x86: fix nasm race by pre-building linkage_x64.o in -j1
+# (upstream Makefile uses ./ prefix in deps that doesn't match actual target paths)
+build_core mupen64plus-libretro-nx mupen64plus-next "" "" "" \
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && make -j1 platform=unix CC="ccache gcc" CXX="ccache g++" LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 mupen64plus-core/src/device/r4300/new_dynarec/x64/linkage_x64.o || true'
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 

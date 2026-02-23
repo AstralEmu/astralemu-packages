@@ -19,6 +19,7 @@ build_core() {
   local subdir=${3:-}
   local make_args=${4:-}
   local pre_make=${5:-}
+  local post_clean=${6:-}
 
   echo "=== Building $name ==="
   if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
@@ -34,6 +35,7 @@ build_core() {
   [[ -n "$pre_make" ]] && eval "$pre_make"
   [[ -n "$subdir" ]] && cd "$subdir"
   make clean 2>/dev/null || true
+  [[ -n "$post_clean" ]] && eval "$post_clean"
   timeout ${BUILD_TIMEOUT}s make -j$(nproc) platform=unix $make_args \
     CC="ccache gcc" CXX="ccache g++" \
     LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 || {
@@ -48,8 +50,8 @@ build_core() {
 # Batch 2: Flycast, ScummVM
 build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
-# Falls back to portable function pointer approach, fully compatible with LTO+PIC
-build_core scummvm scummvm "backends/platform/libretro" "" \
+# sed runs in post_clean (after make clean fetches libretro-common pseudo-submodule)
+build_core scummvm scummvm "backends/platform/libretro" "" "" \
   '[[ "$DEVICE_ARCH" == "amd64" ]] && sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c || true'
 
 ccache -s
