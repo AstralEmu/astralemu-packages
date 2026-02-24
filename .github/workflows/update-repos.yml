@@ -1040,87 +1040,88 @@ jobs:
           sign_dnf_repo "gh-pages-dir/dnf/device/${DEVICE}" "${DEVICE}" "dnf/device/${DEVICE}"
           sign_dnf_repo "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}" "deps-${SOURCE_DISTRO}" "dnf/deps/${SOURCE_DISTRO}"
 
-      - name: Generate landing page
+      - name: Generate pages
         run: |
-          if [[ -f intermediates-data/pages/template.html ]]; then
-            pandoc README.md --from gfm --to html5 \
-              --template intermediates-data/pages/template.html \
-              --metadata title="AstralEmu Packages" \
-              -o gh-pages-dir/index.html
-          fi
+          TEMPLATE="intermediates-data/pages/template.html"
+          [[ -f "$TEMPLATE" ]] || exit 0
 
-      - name: Generate directory listings
-        run: |
           README_HTML=""
           if [[ -f README.md ]]; then
             README_HTML=$(pandoc README.md --from gfm --to html5 2>/dev/null || true)
           fi
 
-          find gh-pages-dir -type d | sort | while read -r dir; do
-            [[ "$dir" == *".git"* ]] && continue
-            rel_path="${dir#gh-pages-dir/}"
-            [[ "$rel_path" == "gh-pages-dir" ]] && continue
-            # Skip root (handled by landing page)
-            [[ -z "$rel_path" ]] && continue
+          # Render body content into the pandoc template
+          render_page() {
+            local title="$1" body_file="$2" output="$3"
+            awk -v title="$title" '
+              /\$title\$/ { gsub(/\$title\$/, title) }
+              /\$body\$/ { while ((getline line < bf) > 0) print line; next }
+              { print }
+            ' bf="$body_file" "$TEMPLATE" > "$output"
+          }
 
-            # Collect entries
-            ROWS=""
+          # Build directory listing HTML into a file
+          build_listing() {
+            local dir="$1" rel_path="$2" show_readme="$3" out="$4"
+            > "$out"
 
-            # Parent link
-            ROWS+='<tr><td class="icon">&#x1F4C1;</td><td><a href="..">..</a></td><td class="size"></td></tr>'
+            if [[ -z "$rel_path" ]]; then
+              # Root: listing first, README below
+              echo '<h2>Repository</h2>' >> "$out"
+            else
+              echo "<h2>&#x1F4C2; /${rel_path}</h2>" >> "$out"
+            fi
 
+            echo '<table>' >> "$out"
+            # Parent link (not for root)
+            if [[ -n "$rel_path" ]]; then
+              echo '<tr><td style="width:2em;text-align:center"><a href="..">&#x1F4C1;</a></td><td><a href="..">..</a></td><td style="text-align:right;font-family:monospace"><a href=".."></a></td></tr>' >> "$out"
+            fi
             # Directories
             for item in "$dir"/*/; do
               [[ -d "$item" ]] || continue
+              local name
               name=$(basename "$item")
               [[ "$name" == ".git" ]] && continue
-              ROWS+="<tr><td class=\"icon\">&#x1F4C1;</td><td><a href=\"${name}/\">${name}/</a></td><td class=\"size\"></td></tr>"
+              echo "<tr><td style=\"width:2em;text-align:center\"><a href=\"${name}/\">&#x1F4C1;</a></td><td><a href=\"${name}/\">${name}/</a></td><td style=\"text-align:right;font-family:monospace\"><a href=\"${name}/\"></a></td></tr>" >> "$out"
             done
-
             # Files
             for item in "$dir"/*; do
               [[ -f "$item" ]] || continue
+              local name size
               name=$(basename "$item")
               [[ "$name" == "index.html" ]] && continue
               size=$(du -h "$item" | cut -f1)
-              ROWS+="<tr><td class=\"icon\">&#x1F4C4;</td><td><a href=\"${name}\">${name}</a></td><td class=\"size\">${size}</td></tr>"
+              echo "<tr><td style=\"width:2em;text-align:center\"><a href=\"${name}\">&#x1F4C4;</a></td><td><a href=\"${name}\">${name}</a></td><td style=\"text-align:right;font-family:monospace\"><a href=\"${name}\">${size}</a></td></tr>" >> "$out"
             done
+            echo '</table>' >> "$out"
 
-            # Only top-level format dirs (apt/, dnf/, pacman/) get the README
-            readme_section=""
-            case "$rel_path" in
-              apt|dnf|pacman)
-                if [[ -n "$README_HTML" ]]; then
-                  readme_section="<hr><div class=\"readme\">${README_HTML}</div>"
-                fi ;;
-            esac
+            # README for top-level format dirs
+            if [[ "$show_readme" == "true" ]] && [[ -n "$README_HTML" ]]; then
+              echo '<hr>' >> "$out"
+              echo "$README_HTML" >> "$out"
+            fi
+          }
 
-            cat > "$dir/index.html" << HTMLEOF
-          <!DOCTYPE html>
-          <html><head>
-          <meta charset="utf-8">
-          <title>Index of /${rel_path}</title>
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; color: #24292e; }
-            h1 { border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; font-size: 1.5em; }
-            table { border-collapse: collapse; width: 100%; }
-            td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; }
-            .icon { width: 24px; text-align: center; }
-            .size { text-align: right; color: #586069; font-family: monospace; }
-            a { text-decoration: none; color: #0366d6; }
-            a:hover { text-decoration: underline; }
-            .readme { margin-top: 24px; line-height: 1.6; }
-            .readme h1, .readme h2, .readme h3 { border-bottom: 1px solid #e1e4e8; padding-bottom: 8px; }
-            .readme code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-            .readme pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; }
-          </style>
-          </head><body>
-          <h1>Index of /${rel_path}</h1>
-          <table>${ROWS}</table>
-          ${readme_section}
-          </body></html>
-          HTMLEOF
+          BODY_TMP=$(mktemp)
+
+          # Root page: directory listing + README below
+          build_listing "gh-pages-dir" "" "true" "$BODY_TMP"
+          render_page "AstralEmu Packages" "$BODY_TMP" "gh-pages-dir/index.html"
+
+          # All subdirectory pages
+          find gh-pages-dir -mindepth 1 -type d | sort | while read -r dir; do
+            [[ "$dir" == *".git"* ]] && continue
+            rel_path="${dir#gh-pages-dir/}"
+
+            show_readme="false"
+            case "$rel_path" in apt|dnf|pacman) show_readme="true" ;; esac
+
+            build_listing "$dir" "$rel_path" "$show_readme" "$BODY_TMP"
+            render_page "Index of /${rel_path}" "$BODY_TMP" "$dir/index.html"
           done
+
+          rm -f "$BODY_TMP"
 
       - name: Deploy to gh-pages
         run: |
