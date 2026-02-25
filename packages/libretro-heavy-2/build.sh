@@ -50,9 +50,10 @@ build_core() {
 # Batch 2: Flycast, ScummVM
 build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
-# sed runs in post_clean (after make clean fetches libretro-common pseudo-submodule)
+# make clean deletes deps/, make -n re-triggers $(shell configure_submodules.sh) fetch,
+# then sed patches the re-fetched file before the real build starts
 build_core scummvm scummvm "backends/platform/libretro" "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c || true'
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && { make -n platform=unix 2>/dev/null || true; sed -i "/#define CO_USE_INLINE_ASM/d" deps/libretro-common/libco/amd64.c 2>/dev/null || true; }'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2

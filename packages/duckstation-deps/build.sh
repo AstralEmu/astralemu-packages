@@ -28,8 +28,8 @@ rm -rf /tmp/zstd-src
 echo "Building dependencies with official script..."
 # Remove -system-harfbuzz to use bundled version
 sed -i "s/-system-harfbuzz//" scripts/deps/build-dependencies-linux.sh
-# Make checksum verification non-fatal (GitHub can regenerate tarballs, changing hashes)
-sed -i '/shasum.*--check/s/$/ || true/' scripts/deps/build-dependencies-linux.sh
+# Remove checksum verification (GitHub regenerates commit tarballs, changing hashes)
+sed -i '/shasum.*--check/d' scripts/deps/build-dependencies-linux.sh
 scripts/deps/build-dependencies-linux.sh /deps
 
 echo "Dependencies built successfully"

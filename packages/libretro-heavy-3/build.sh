@@ -48,10 +48,18 @@ build_core() {
 }
 
 # Batch 3: N64, PSX and Saturn cores
-# mupen64plus-next on x86: fix nasm race by pre-building linkage_x64.o in -j1
-# (upstream Makefile uses ./ prefix in deps that doesn't match actual target paths)
+# mupen64plus-next on x86: pre-generate nasm headers that the parallel build races on.
+# Make's dependency chain doesn't reliably order asm_defines generation before nasm.
+# Fix: compile asm_defines.o via Make (needs project CFLAGS), then run AWK manually.
 build_core mupen64plus-libretro-nx mupen64plus-next "" "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && make -j1 platform=unix CC="ccache gcc" CXX="ccache g++" LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 mupen64plus-core/src/device/r4300/new_dynarec/x64/linkage_x64.o || true'
+  'if [[ "$DEVICE_ARCH" == "amd64" ]]; then
+    D=./mupen64plus-core/src/asm_defines
+    make -j1 platform=unix CC="ccache gcc" CXX="ccache g++" SKIPDEPEND=1 WERROR=0 "$D/asm_defines.o" 2>&1 || true
+    if [[ -f "$D/asm_defines.o" ]]; then
+      strings "$D/asm_defines.o" | tr -d "\r" | awk -v dest_dir="$D" -f ./mupen64plus-core/tools/gen_asm_defines.awk
+      echo "Pre-generated: $(ls "$D"/asm_defines_*.h 2>/dev/null)"
+    fi
+  fi'
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 
