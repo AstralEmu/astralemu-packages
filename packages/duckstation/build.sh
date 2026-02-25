@@ -15,13 +15,21 @@ git fetch --unshallow 2>/dev/null || git fetch origin
 git checkout "$COMMIT"
 git submodule update --init --recursive
 
+# Link prebuilt deps where cmake expects them (dep/prebuilt/linux-{arch})
+# New DuckStationDependencies.cmake ignores CMAKE_PREFIX_PATH and uses NO_DEFAULT_PATH
+case "$DEVICE_ARCH" in
+  amd64) DEPS_DIR="linux-x64" ;;
+  arm64) DEPS_DIR="linux-arm64" ;;
+esac
+mkdir -p dep/prebuilt
+ln -sfn /deps dep/prebuilt/"$DEPS_DIR"
+
 mkdir -p build && cd build
 
 if [[ ! -f build.ninja ]]; then
   cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_PREFIX_PATH=/deps \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DCMAKE_EXE_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \

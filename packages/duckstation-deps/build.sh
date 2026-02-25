@@ -1,36 +1,37 @@
 #!/bin/bash
 set -e
 
-# Skip if deps already built (cache hit)
+# Skip if deps already cached
 if [[ -d /deps/lib ]] && ls /deps/lib/*.so* 1>/dev/null 2>&1; then
-  echo "Dependencies already cached, skipping build"
+  echo "Dependencies already cached, skipping download"
   echo "completed" > /workspace/build-status
   exit 0
 fi
 
-# Clone source
-git clone --depth 1 https://github.com/stenzek/duckstation.git /workspace/src-duck
-cd /workspace/src-duck
-git fetch --depth 1 origin "$COMMIT"
-git checkout "$COMMIT"
+# Upstream removed build-dependencies-linux.sh (commit cdf6d5bd, Feb 21 2026)
+# and switched to prebuilt dependency tarballs hosted on GitHub releases.
+DEPS_RELEASE="release-20260224"
+case "$DEVICE_ARCH" in
+  amd64) DEPS_TARBALL="deps-linux-x64.tar.xz" ;;
+  arm64) DEPS_TARBALL="deps-linux-cross-arm64.tar.xz" ;;
+  *)     echo "Unsupported architecture: $DEVICE_ARCH"; exit 1 ;;
+esac
 
-# Build zstd >= 1.5.7 (duckstation requires it, Ubuntu 24.04 ships 1.5.5)
-echo "Building zstd from source..."
-git clone --depth 1 --branch v1.5.7 https://github.com/facebook/zstd.git /tmp/zstd-src
-make -C /tmp/zstd-src lib -j"$(nproc)"
-make -C /tmp/zstd-src install PREFIX=/usr/local
+DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/$DEPS_TARBALL"
+echo "Downloading prebuilt deps: $DEPS_URL"
+curl -L -o /tmp/deps.tar.xz "$DEPS_URL"
+
+# Extract to /deps
 mkdir -p /deps
-make -C /tmp/zstd-src install PREFIX=/deps
-ldconfig
-rm -rf /tmp/zstd-src
+tar xf /tmp/deps.tar.xz -C /deps
+# If tarball has a single top-level directory, flatten it
+SUBDIRS=(/deps/*/)
+if [[ ${#SUBDIRS[@]} -eq 1 ]] && [[ -d "${SUBDIRS[0]}lib" ]]; then
+  mv "${SUBDIRS[0]}"* /deps/ 2>/dev/null || true
+  mv "${SUBDIRS[0]}".* /deps/ 2>/dev/null || true
+  rmdir "${SUBDIRS[0]}" 2>/dev/null || true
+fi
+rm /tmp/deps.tar.xz
 
-# Build dependencies with official script
-echo "Building dependencies with official script..."
-# Remove -system-harfbuzz to use bundled version
-sed -i "s/-system-harfbuzz//" scripts/deps/build-dependencies-linux.sh
-# Remove checksum verification (GitHub regenerates commit tarballs, changing hashes)
-sed -i '/shasum.*--check/d' scripts/deps/build-dependencies-linux.sh
-scripts/deps/build-dependencies-linux.sh /deps
-
-echo "Dependencies built successfully"
+echo "Dependencies downloaded successfully"
 echo "completed" > /workspace/build-status
