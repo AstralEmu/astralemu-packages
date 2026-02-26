@@ -51,7 +51,7 @@ build_core() {
 # mupen64plus-next on x86: asm_defines.o must be compiled without LTO so that
 # strings(1) can extract @ASM_DEFINE markers and AWK can generate the nasm headers.
 # With -flto gcc emits GIMPLE IR, strings finds nothing, and the headers are empty.
-MUPEN_PRE='[[ "$DEVICE_ARCH" == "amd64" ]] && echo '"'"'$(AWK_DEST_DIR)/asm_defines.o: CFLAGS += -fno-lto'"'"' >> Makefile || true'
+MUPEN_PRE='[[ "$DEVICE_ARCH" == "amd64" ]] && { echo '"'"'$(AWK_DEST_DIR)/asm_defines.o: CFLAGS += -fno-lto'"'"' >> Makefile; sed -i "/#define CO_USE_INLINE_ASM/d" libretro-common/libco/amd64.c; } || true'
 build_core mupen64plus-libretro-nx mupen64plus-next "" "" "$MUPEN_PRE"
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
