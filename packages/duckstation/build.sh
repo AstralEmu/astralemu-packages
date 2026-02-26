@@ -20,7 +20,7 @@ if ! ls /deps/lib/*.so* 1>/dev/null 2>&1; then
   DEPS_RELEASE="release-20260224"
   case "$DEVICE_ARCH" in
     amd64) DEPS_TARBALL="deps-linux-x64.tar.xz" ;;
-    arm64) DEPS_TARBALL="deps-linux-cross-arm64.tar.xz" ;;
+    arm64) DEPS_TARBALL="deps-linux-arm64.tar.xz" ;;
   esac
   DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/$DEPS_TARBALL"
   echo "Deps not cached, downloading: $DEPS_URL"

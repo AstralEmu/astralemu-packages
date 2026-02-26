@@ -50,11 +50,18 @@ build_core() {
 # Batch 2: Flycast, ScummVM
 build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
-# make clean deletes deps/. deps/libretro-common is NOT a git submodule — it's managed by
-# configure_submodules.sh. Re-run the script to restore deps/, then sed patch libco.
-# When make runs, configure_submodules.sh sees deps/ already exists and skips the fetch.
-build_core scummvm scummvm "backends/platform/libretro" "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && { bash ./configure_submodules.sh; sed -i "/#define CO_USE_INLINE_ASM/d" deps/libretro-common/libco/amd64.c; } || true'
+# deps/libretro-common is managed by configure_submodules.sh (NOT a git submodule).
+# The script runs during Makefile parsing via $(shell) and resets dirty repos with
+# git reset --hard, undoing any direct sed patches. Wrap it to auto-patch libco/amd64.c
+# after every fetch/reset cycle.
+_SCUMMVM_WRAP='#!/bin/bash
+DIR="$(dirname "$0")"
+OUT=$("$DIR/configure_submodules.sh.orig" "$@")
+P=$3/${5:-$(echo $1 | sed "s|.*/||")}
+[ -f "$P/libco/amd64.c" ] && sed -i "/#define CO_USE_INLINE_ASM/d" "$P/libco/amd64.c"
+echo "$OUT"'
+build_core scummvm scummvm "backends/platform/libretro" "" \
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && { S=backends/platform/libretro/scripts/configure_submodules.sh; [[ ! -f "${S}.orig" ]] && cp "$S" "${S}.orig"; echo "$_SCUMMVM_WRAP" > "$S"; chmod +x "$S"; } || true'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2
