@@ -48,12 +48,11 @@ build_core() {
 }
 
 # Batch 3: N64, PSX and Saturn cores
-# mupen64plus-next on x86: upstream Makefile has a nasm race condition where
-# linkage_x64.asm needs asm_defines_nasm.h but parallel make starts nasm before
-# the header is generated. Force serial build on x86 to avoid the race entirely.
-MUPEN_ARGS=""
-[[ "$DEVICE_ARCH" == "amd64" ]] && MUPEN_ARGS="-j1"
-build_core mupen64plus-libretro-nx mupen64plus-next "" "$MUPEN_ARGS"
+# mupen64plus-next on x86: asm_defines.o must be compiled without LTO so that
+# strings(1) can extract @ASM_DEFINE markers and AWK can generate the nasm headers.
+# With -flto gcc emits GIMPLE IR, strings finds nothing, and the headers are empty.
+MUPEN_PRE='[[ "$DEVICE_ARCH" == "amd64" ]] && echo '"'"'$(AWK_DEST_DIR)/asm_defines.o: CFLAGS += -fno-lto'"'"' >> Makefile || true'
+build_core mupen64plus-libretro-nx mupen64plus-next "" "" "$MUPEN_PRE"
 build_core beetle-psx-libretro beetle-psx
 build_core yabause yabause "yabause/src/libretro" "HAVE_SSE=0"
 
