@@ -29,6 +29,7 @@ mkdir -p build && cd build
 if [[ ! -f build.ninja ]]; then
   cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_PREFIX_PATH=/deps \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
