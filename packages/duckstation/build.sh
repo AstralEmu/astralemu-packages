@@ -15,8 +15,29 @@ git fetch --unshallow 2>/dev/null || git fetch origin
 git checkout "$COMMIT"
 git submodule update --init --recursive
 
+# Download prebuilt deps if not already cached in /deps
+if ! ls /deps/lib/*.so* 1>/dev/null 2>&1; then
+  DEPS_RELEASE="release-20260224"
+  case "$DEVICE_ARCH" in
+    amd64) DEPS_TARBALL="deps-linux-x64.tar.xz" ;;
+    arm64) DEPS_TARBALL="deps-linux-cross-arm64.tar.xz" ;;
+  esac
+  DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/$DEPS_TARBALL"
+  echo "Deps not cached, downloading: $DEPS_URL"
+  curl -L -o /tmp/deps.tar.xz "$DEPS_URL"
+  mkdir -p /deps
+  tar xf /tmp/deps.tar.xz -C /deps
+  SUBDIRS=(/deps/*/)
+  if [[ ${#SUBDIRS[@]} -eq 1 ]] && [[ -d "${SUBDIRS[0]}lib" ]]; then
+    mv "${SUBDIRS[0]}"* /deps/ 2>/dev/null || true
+    mv "${SUBDIRS[0]}".* /deps/ 2>/dev/null || true
+    rmdir "${SUBDIRS[0]}" 2>/dev/null || true
+  fi
+  rm -f /tmp/deps.tar.xz
+fi
+
 # Link prebuilt deps where cmake expects them (dep/prebuilt/linux-{arch})
-# New DuckStationDependencies.cmake ignores CMAKE_PREFIX_PATH and uses NO_DEFAULT_PATH
+# DuckStationDependencies.cmake sets CMAKE_PREFIX_PATH to dep/prebuilt/{platform}
 case "$DEVICE_ARCH" in
   amd64) DEPS_DIR="linux-x64" ;;
   arm64) DEPS_DIR="linux-arm64" ;;
@@ -29,7 +50,6 @@ mkdir -p build && cd build
 if [[ ! -f build.ninja ]]; then
   cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_PREFIX_PATH=/deps \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \

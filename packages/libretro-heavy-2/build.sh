@@ -50,11 +50,11 @@ build_core() {
 # Batch 2: Flycast, ScummVM
 build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
-# make clean deletes deps/, so restore via git submodule update (reliable, unlike make -n),
-# then sed patches libco before the real build. configure_submodules.sh during make is a
-# no-op since the submodule is already at the recorded commit (won't overwrite our patch).
+# make clean deletes deps/. deps/libretro-common is NOT a git submodule — it's managed by
+# configure_submodules.sh. Re-run the script to restore deps/, then sed patch libco.
+# When make runs, configure_submodules.sh sees deps/ already exists and skips the fetch.
 build_core scummvm scummvm "backends/platform/libretro" "" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && { (cd "$CORES_DIR/scummvm" && git submodule update --init --recursive); sed -i "/#define CO_USE_INLINE_ASM/d" deps/libretro-common/libco/amd64.c; } || true'
+  '[[ "$DEVICE_ARCH" == "amd64" ]] && { bash ./configure_submodules.sh; sed -i "/#define CO_USE_INLINE_ASM/d" deps/libretro-common/libco/amd64.c; } || true'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2
