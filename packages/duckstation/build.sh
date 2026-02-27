@@ -47,21 +47,41 @@ ln -sfn /deps dep/prebuilt/"$DEPS_DIR"
 
 # Native ARM64: cross-compile deps don't include Qt6 host tools (moc, uic, rcc).
 # cmake finds system Qt6CoreTools (6.4.2) which mismatches prebuilt Qt6 (6.10.2).
-# Shim system Qt6 tool configs into deps dir with matching version number.
+# Generate minimal cmake shims that import system tools with matching version.
+# Can't copy system configs — they use _IMPORT_PREFIX (relative paths) which resolve
+# wrong when placed under /deps.
 if [[ "$DEVICE_ARCH" == "arm64" ]]; then
-  for PKG in Qt6CoreTools Qt6GuiTools Qt6WidgetsTools Qt6DBusTools Qt6LinguistTools; do
-    SYS_DIR=$(find /usr -path "*/cmake/$PKG" -type d 2>/dev/null | head -1)
-    if [[ -n "$SYS_DIR" ]]; then
-      mkdir -p "/deps/lib/cmake/$PKG"
-      cp -r "$SYS_DIR"/* "/deps/lib/cmake/$PKG/" 2>/dev/null || true
-      cat > "/deps/lib/cmake/$PKG/${PKG}ConfigVersion.cmake" << SHIMEOF
+  _qt_find() { find /usr -name "$1" \( -path "*/qt6/*" -o -path "*/libexec/*" \) -type f 2>/dev/null | head -1; }
+  _qt_shim() {
+    local pkg=$1; shift
+    local dir="/deps/lib/cmake/$pkg"
+    mkdir -p "$dir"
+    cat > "$dir/${pkg}ConfigVersion.cmake" << 'CVEOF'
 set(PACKAGE_VERSION "6.10.2")
 set(PACKAGE_VERSION_EXACT FALSE)
 set(PACKAGE_VERSION_COMPATIBLE TRUE)
 set(PACKAGE_VERSION_UNSUITABLE FALSE)
-SHIMEOF
-    fi
-  done
+CVEOF
+    local conf="$dir/${pkg}Config.cmake"
+    echo "# Shim: import system Qt6 tools for native ARM64 build" > "$conf"
+    while [[ $# -gt 0 ]]; do
+      local target=$1 bin=$2; shift 2
+      local loc; loc=$(_qt_find "$bin")
+      [[ -z "$loc" ]] && loc=$(which "$bin" 2>/dev/null)
+      if [[ -n "$loc" ]]; then
+        cat >> "$conf" << TEOF
+if(NOT TARGET ${target})
+  add_executable(${target} IMPORTED)
+  set_target_properties(${target} PROPERTIES IMPORTED_LOCATION "${loc}")
+endif()
+TEOF
+      fi
+    done
+  }
+  _qt_shim Qt6CoreTools       Qt6::moc moc   Qt6::rcc rcc
+  _qt_shim Qt6WidgetsTools    Qt6::uic uic
+  _qt_shim Qt6DBusTools       Qt6::qdbuscpp2xml qdbuscpp2xml   Qt6::qdbusxml2cpp qdbusxml2cpp
+  _qt_shim Qt6LinguistTools   Qt6::lrelease lrelease   Qt6::lupdate lupdate   Qt6::lconvert lconvert
 fi
 
 mkdir -p build && cd build
