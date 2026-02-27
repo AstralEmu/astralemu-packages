@@ -20,7 +20,7 @@ if ! ls /deps/lib/*.so* 1>/dev/null 2>&1; then
   DEPS_RELEASE="release-20260224"
   case "$DEVICE_ARCH" in
     amd64) DEPS_TARBALL="deps-linux-x64.tar.xz" ;;
-    arm64) DEPS_TARBALL="deps-linux-arm64.tar.xz" ;;
+    arm64) DEPS_TARBALL="deps-linux-cross-arm64.tar.xz" ;;
   esac
   DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/$DEPS_TARBALL"
   echo "Deps not cached, downloading: $DEPS_URL"
@@ -44,6 +44,25 @@ case "$DEVICE_ARCH" in
 esac
 mkdir -p dep/prebuilt
 ln -sfn /deps dep/prebuilt/"$DEPS_DIR"
+
+# Native ARM64: cross-compile deps don't include Qt6 host tools (moc, uic, rcc).
+# cmake finds system Qt6CoreTools (6.4.2) which mismatches prebuilt Qt6 (6.10.2).
+# Shim system Qt6 tool configs into deps dir with matching version number.
+if [[ "$DEVICE_ARCH" == "arm64" ]]; then
+  for PKG in Qt6CoreTools Qt6GuiTools Qt6WidgetsTools Qt6DBusTools Qt6LinguistTools; do
+    SYS_DIR=$(find /usr -path "*/cmake/$PKG" -type d 2>/dev/null | head -1)
+    if [[ -n "$SYS_DIR" ]]; then
+      mkdir -p "/deps/lib/cmake/$PKG"
+      cp -r "$SYS_DIR"/* "/deps/lib/cmake/$PKG/" 2>/dev/null || true
+      cat > "/deps/lib/cmake/$PKG/${PKG}ConfigVersion.cmake" << SHIMEOF
+set(PACKAGE_VERSION "6.10.2")
+set(PACKAGE_VERSION_EXACT FALSE)
+set(PACKAGE_VERSION_COMPATIBLE TRUE)
+set(PACKAGE_VERSION_UNSUITABLE FALSE)
+SHIMEOF
+    fi
+  done
+fi
 
 mkdir -p build && cd build
 
