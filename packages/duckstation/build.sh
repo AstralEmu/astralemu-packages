@@ -77,6 +77,10 @@ endif()
 TEOF
       fi
     done
+    # Include system macros (e.g. Qt6LinguistToolsMacros.cmake defines qt_add_lrelease)
+    local sys_macros
+    sys_macros=$(find /usr -path "*/cmake/$pkg/${pkg}Macros.cmake" -type f 2>/dev/null | head -1)
+    [[ -n "$sys_macros" ]] && echo "include(\"$sys_macros\")" >> "$conf"
   }
   _qt_shim Qt6CoreTools       Qt6::moc moc   Qt6::rcc rcc
   _qt_shim Qt6WidgetsTools    Qt6::uic uic
