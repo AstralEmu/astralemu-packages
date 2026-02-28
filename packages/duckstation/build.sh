@@ -77,15 +77,40 @@ endif()
 TEOF
       fi
     done
-    # Include system macros (e.g. Qt6LinguistToolsMacros.cmake defines qt_add_lrelease)
-    local sys_macros
-    sys_macros=$(find /usr -path "*/cmake/$pkg/${pkg}Macros.cmake" -type f 2>/dev/null | head -1)
-    [[ -n "$sys_macros" ]] && echo "include(\"$sys_macros\")" >> "$conf"
   }
   _qt_shim Qt6CoreTools       Qt6::moc moc   Qt6::rcc rcc
   _qt_shim Qt6WidgetsTools    Qt6::uic uic
   _qt_shim Qt6DBusTools       Qt6::qdbuscpp2xml qdbuscpp2xml   Qt6::qdbusxml2cpp qdbusxml2cpp
   _qt_shim Qt6LinguistTools   Qt6::lrelease lrelease   Qt6::lupdate lupdate   Qt6::lconvert lconvert
+  # qt_add_lrelease was added in Qt 6.7; system Qt 6.4.2 doesn't have it.
+  # Provide a standalone implementation that compiles .ts -> .qm via lrelease.
+  cat >> "/deps/lib/cmake/Qt6LinguistTools/Qt6LinguistToolsConfig.cmake" << 'LREOF'
+function(qt_add_lrelease target)
+  cmake_parse_arguments(arg "EXCLUDE_FROM_ALL" "QM_FILES_OUTPUT_VARIABLE" "TS_FILES;OPTIONS" ${ARGN})
+  set(_qm_files)
+  foreach(_ts IN LISTS arg_TS_FILES)
+    get_filename_component(_base "${_ts}" NAME_WLE)
+    set(_qm "${CMAKE_CURRENT_BINARY_DIR}/${_base}.qm")
+    add_custom_command(OUTPUT "${_qm}"
+      COMMAND Qt6::lrelease "${CMAKE_CURRENT_SOURCE_DIR}/${_ts}" -qm "${_qm}" ${arg_OPTIONS}
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_ts}"
+      VERBATIM)
+    list(APPEND _qm_files "${_qm}")
+  endforeach()
+  if(arg_EXCLUDE_FROM_ALL)
+    add_custom_target(${target}_lrelease DEPENDS ${_qm_files})
+  else()
+    add_custom_target(${target}_lrelease ALL DEPENDS ${_qm_files})
+  endif()
+  add_dependencies(${target} ${target}_lrelease)
+  if(arg_QM_FILES_OUTPUT_VARIABLE)
+    set(${arg_QM_FILES_OUTPUT_VARIABLE} ${_qm_files} PARENT_SCOPE)
+  endif()
+endfunction()
+function(qt6_add_lrelease)
+  qt_add_lrelease(${ARGV})
+endfunction()
+LREOF
 fi
 
 mkdir -p build && cd build
