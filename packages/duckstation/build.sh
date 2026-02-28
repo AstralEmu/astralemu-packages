@@ -45,72 +45,22 @@ esac
 mkdir -p dep/prebuilt
 ln -sfn /deps dep/prebuilt/"$DEPS_DIR"
 
-# Native ARM64: cross-compile deps don't include Qt6 host tools (moc, uic, rcc).
-# cmake finds system Qt6CoreTools (6.4.2) which mismatches prebuilt Qt6 (6.10.2).
-# Generate minimal cmake shims that import system tools with matching version.
-# Can't copy system configs — they use _IMPORT_PREFIX (relative paths) which resolve
-# wrong when placed under /deps.
+# Native ARM64: cross-compile deps only have x86_64 Qt6 tools (moc/rcc/uic)
+# and moc 6.4 output is incompatible with Qt 6.10 headers ("moc has changed
+# too much"). Strip Qt6 from prebuilt deps and use system Qt6 entirely.
+# Non-Qt deps (SDL3, libbacktrace, freetype, spirv-cross) remain from tarball.
 if [[ "$DEVICE_ARCH" == "arm64" ]]; then
-  _qt_find() { find /usr -name "$1" \( -path "*/qt6/*" -o -path "*/libexec/*" \) -type f 2>/dev/null | head -1; }
-  _qt_shim() {
-    local pkg=$1; shift
-    local dir="/deps/lib/cmake/$pkg"
-    mkdir -p "$dir"
-    cat > "$dir/${pkg}ConfigVersion.cmake" << 'CVEOF'
-set(PACKAGE_VERSION "6.10.2")
-set(PACKAGE_VERSION_EXACT FALSE)
-set(PACKAGE_VERSION_COMPATIBLE TRUE)
-set(PACKAGE_VERSION_UNSUITABLE FALSE)
-CVEOF
-    local conf="$dir/${pkg}Config.cmake"
-    echo "# Shim: import system Qt6 tools for native ARM64 build" > "$conf"
-    while [[ $# -gt 0 ]]; do
-      local target=$1 bin=$2; shift 2
-      local loc; loc=$(_qt_find "$bin")
-      [[ -z "$loc" ]] && loc=$(which "$bin" 2>/dev/null)
-      if [[ -n "$loc" ]]; then
-        cat >> "$conf" << TEOF
-if(NOT TARGET ${target})
-  add_executable(${target} IMPORTED)
-  set_target_properties(${target} PROPERTIES IMPORTED_LOCATION "${loc}")
-endif()
-TEOF
-      fi
-    done
-  }
-  _qt_shim Qt6CoreTools       Qt6::moc moc   Qt6::rcc rcc
-  _qt_shim Qt6WidgetsTools    Qt6::uic uic
-  _qt_shim Qt6DBusTools       Qt6::qdbuscpp2xml qdbuscpp2xml   Qt6::qdbusxml2cpp qdbusxml2cpp
-  _qt_shim Qt6LinguistTools   Qt6::lrelease lrelease   Qt6::lupdate lupdate   Qt6::lconvert lconvert
-  # qt_add_lrelease was added in Qt 6.7; system Qt 6.4.2 doesn't have it.
-  # Provide a standalone implementation that compiles .ts -> .qm via lrelease.
-  cat >> "/deps/lib/cmake/Qt6LinguistTools/Qt6LinguistToolsConfig.cmake" << 'LREOF'
-function(qt_add_lrelease target)
-  cmake_parse_arguments(arg "EXCLUDE_FROM_ALL" "QM_FILES_OUTPUT_VARIABLE" "TS_FILES;OPTIONS" ${ARGN})
-  set(_qm_files)
-  foreach(_ts IN LISTS arg_TS_FILES)
-    get_filename_component(_base "${_ts}" NAME_WLE)
-    set(_qm "${CMAKE_CURRENT_BINARY_DIR}/${_base}.qm")
-    add_custom_command(OUTPUT "${_qm}"
-      COMMAND Qt6::lrelease "${CMAKE_CURRENT_SOURCE_DIR}/${_ts}" -qm "${_qm}" ${arg_OPTIONS}
-      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_ts}"
-      VERBATIM)
-    list(APPEND _qm_files "${_qm}")
-  endforeach()
-  if(arg_EXCLUDE_FROM_ALL)
-    add_custom_target(${target}_lrelease DEPENDS ${_qm_files})
-  else()
-    add_custom_target(${target}_lrelease ALL DEPENDS ${_qm_files})
-  endif()
-  add_dependencies(${target} ${target}_lrelease)
-  if(arg_QM_FILES_OUTPUT_VARIABLE)
-    set(${arg_QM_FILES_OUTPUT_VARIABLE} ${_qm_files} PARENT_SCOPE)
-  endif()
-endfunction()
-function(qt6_add_lrelease)
-  qt_add_lrelease(${ARGV})
-endfunction()
-LREOF
+  rm -rf /deps/include/Qt* /deps/lib/libQt6* /deps/lib/cmake/Qt6* /deps/mkspecs
+  # Remove Qt6 version req, path restriction, and deps-only verification
+  sed -i 's/find_package(Qt6 [0-9.]*/find_package(Qt6/' \
+    CMakeModules/DuckStationDependencies.cmake
+  sed -i '/NO_DEFAULT_PATH PATHS.*cmake\/Qt6/d' \
+    CMakeModules/DuckStationDependencies.cmake
+  sed -i '/unpatched Qt/{N;N;N;d}' \
+    CMakeModules/DuckStationDependencies.cmake
+  # qt_add_lrelease (Qt 6.7+) doesn't exist in system Qt 6.4 — use qt_add_translation
+  sed -i 's/qt_add_lrelease(.*/qt_add_translation(QM_FILES ${TS_FILES})/' \
+    src/duckstation-qt/CMakeLists.txt
 fi
 
 mkdir -p build && cd build
