@@ -56,6 +56,8 @@ if [[ "$DEVICE_ARCH" == "arm64" ]]; then
     CMakeModules/DuckStationDependencies.cmake
   sed -i '/NO_DEFAULT_PATH PATHS.*cmake\/Qt6/d' \
     CMakeModules/DuckStationDependencies.cmake
+  # GuiPrivate is a separate cmake component in Qt 6.7+ but not in 6.4
+  sed -i 's/ GuiPrivate//' CMakeModules/DuckStationDependencies.cmake
   sed -i '/unpatched Qt/{N;N;N;d}' \
     CMakeModules/DuckStationDependencies.cmake
   # qt_add_lrelease (Qt 6.7+) doesn't exist in system Qt 6.4 — use qt_add_translation
