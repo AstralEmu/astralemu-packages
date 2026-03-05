@@ -15,25 +15,31 @@ git fetch --unshallow 2>/dev/null || git fetch origin
 git checkout "$COMMIT"
 git submodule update --init --recursive
 
-# Download prebuilt deps if not already cached in /deps
+# Download/build deps if not already cached in /deps
 if ! ls /deps/lib/*.so* 1>/dev/null 2>&1; then
-  DEPS_RELEASE="release-20260224"
-  case "$DEVICE_ARCH" in
-    amd64) DEPS_TARBALL="deps-linux-x64.tar.xz" ;;
-    arm64) DEPS_TARBALL="deps-linux-cross-arm64.tar.xz" ;;
-  esac
-  DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/$DEPS_TARBALL"
-  echo "Deps not cached, downloading: $DEPS_URL"
-  curl -L -o /tmp/deps.tar.xz "$DEPS_URL"
   mkdir -p /deps
-  tar xf /tmp/deps.tar.xz -C /deps
-  SUBDIRS=(/deps/*/)
-  if [[ ${#SUBDIRS[@]} -eq 1 ]] && [[ -d "${SUBDIRS[0]}lib" ]]; then
-    mv "${SUBDIRS[0]}"* /deps/ 2>/dev/null || true
-    mv "${SUBDIRS[0]}".* /deps/ 2>/dev/null || true
-    rmdir "${SUBDIRS[0]}" 2>/dev/null || true
-  fi
-  rm -f /tmp/deps.tar.xz
+  case "$DEVICE_ARCH" in
+    amd64)
+      DEPS_RELEASE="release-20260224"
+      DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/deps-linux-x64.tar.xz"
+      echo "Deps not cached, downloading: $DEPS_URL"
+      curl -L -o /tmp/deps.tar.xz "$DEPS_URL"
+      tar xf /tmp/deps.tar.xz -C /deps
+      SUBDIRS=(/deps/*/)
+      if [[ ${#SUBDIRS[@]} -eq 1 ]] && [[ -d "${SUBDIRS[0]}lib" ]]; then
+        mv "${SUBDIRS[0]}"* /deps/ 2>/dev/null || true
+        mv "${SUBDIRS[0]}".* /deps/ 2>/dev/null || true
+        rmdir "${SUBDIRS[0]}" 2>/dev/null || true
+      fi
+      rm -f /tmp/deps.tar.xz
+      ;;
+    arm64)
+      echo "Deps not cached, building from source for ARM64..."
+      git clone --depth 1 https://github.com/duckstation/dependencies.git /tmp/duck-deps-src
+      /tmp/duck-deps-src/build-dependencies-linux.sh /deps
+      rm -rf /tmp/duck-deps-src
+      ;;
+  esac
 fi
 
 # Link prebuilt deps where cmake expects them (dep/prebuilt/linux-{arch})
@@ -44,26 +50,6 @@ case "$DEVICE_ARCH" in
 esac
 mkdir -p dep/prebuilt
 ln -sfn /deps dep/prebuilt/"$DEPS_DIR"
-
-# Native ARM64: cross-compile deps only have x86_64 Qt6 tools (moc/rcc/uic)
-# and moc 6.4 output is incompatible with Qt 6.10 headers ("moc has changed
-# too much"). Strip Qt6 from prebuilt deps and use system Qt6 entirely.
-# Non-Qt deps (SDL3, libbacktrace, freetype, spirv-cross) remain from tarball.
-if [[ "$DEVICE_ARCH" == "arm64" ]]; then
-  rm -rf /deps/include/Qt* /deps/lib/libQt6* /deps/lib/cmake/Qt6* /deps/mkspecs
-  # Remove Qt6 version req, path restriction, and deps-only verification
-  sed -i 's/find_package(Qt6 [0-9.]*/find_package(Qt6/' \
-    CMakeModules/DuckStationDependencies.cmake
-  sed -i '/NO_DEFAULT_PATH PATHS.*cmake\/Qt6/d' \
-    CMakeModules/DuckStationDependencies.cmake
-  # GuiPrivate is a separate cmake component in Qt 6.7+ but not in 6.4
-  sed -i 's/ GuiPrivate//' CMakeModules/DuckStationDependencies.cmake
-  sed -i '/unpatched Qt/{N;N;N;d}' \
-    CMakeModules/DuckStationDependencies.cmake
-  # qt_add_lrelease (Qt 6.7+) doesn't exist in system Qt 6.4 — use qt_add_translation
-  sed -i 's/qt_add_lrelease(.*/qt_add_translation(QM_FILES ${TS_FILES})/' \
-    src/duckstation-qt/CMakeLists.txt
-fi
 
 mkdir -p build && cd build
 
