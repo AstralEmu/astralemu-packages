@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: build-emulators
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CACHE_KEY: emu-deps-base-v4
