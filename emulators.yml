@@ -45,7 +45,7 @@
 
 emulators:
   # --- Standalone emulators ---
-  - id: azahar
+  - id: azahar-emu
     repo: azahar-emu/azahar
     repo_host: github
     version_source: github-release
@@ -56,7 +56,7 @@ emulators:
     true_arm: true
     true_amd: true
 
-  - id: dolphin
+  - id: dolphin-emu
     repo: dolphin-emu/dolphin
     repo_host: github
     version_source: github-commit
@@ -103,7 +103,7 @@ emulators:
         mount: /deps
         save: false
 
-  - id: esde
+  - id: emulationstation-de
     repo: es-de/emulationstation-de
     repo_host: gitlab
     version_source: gitlab-release

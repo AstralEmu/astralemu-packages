@@ -31,7 +31,7 @@ EXISTING_REPO=""
 CACHE_DIR=""
 IGNORE_FILE=""
 MAX_PARALLEL=8
-MAX_PKG_SIZE=$((95 * 1024 * 1024))  # 95 MB — GitHub rejects files > 100 MB
+MAX_PKG_SIZE=$((100 * 1024 * 1024))  # 100 MB — GitHub rejects files > 100 MB
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
