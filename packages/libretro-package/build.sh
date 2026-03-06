@@ -6,9 +6,9 @@ DEVICE_ARCH="${DEVICE_ARCH}"
 
 cd /workspace
 
-if ls cores/*.so 1>/dev/null 2>&1; then
+if find cores/ -name '*.so' 2>/dev/null | grep -q .; then
   mkdir -p pkg/root/usr/lib/libretro pkg/meta
-  cp cores/*.so pkg/root/usr/lib/libretro/
+  find cores/ -name '*.so' -exec cp {} pkg/root/usr/lib/libretro/ \;
 
   echo "libretro-cores-${DEVICE_ID}" > pkg/meta/name
   echo "1.0.0" > pkg/meta/version
