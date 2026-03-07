@@ -14,7 +14,7 @@ git checkout "$LATEST"
 # Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
 pip3 install --break-system-packages meson --upgrade
 
-GALLIUM="swrast,virgl"
+GALLIUM="llvmpipe,softpipe,virgl"
 VULKAN=""
 
 if $IS_X86; then
