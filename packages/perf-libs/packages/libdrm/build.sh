@@ -7,7 +7,7 @@ fi
 
 cd /workspace/src-libdrm
 git fetch --tags
-LATEST=$(git tag -l 'libdrm-[0-9]*' | sort -V | tail -1)
+LATEST=$(git tag -l 'libdrm-[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1)
 echo "Using libdrm: $LATEST"
 git checkout "$LATEST"
 
