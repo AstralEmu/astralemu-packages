@@ -111,7 +111,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
-          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}-${{ github.run_id }}
+          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}
 
       - name: Save extra cache
         if: always() && matrix.entry.extra_cache_save == 'true' && matrix.entry.extra_cache_key != ''
