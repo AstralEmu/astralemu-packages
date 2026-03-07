@@ -7,7 +7,7 @@ fi
 
 cd /workspace/src-libva
 git fetch --tags
-LATEST=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1)
+LATEST=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' | grep -v '_' | sort -V | tail -1)
 echo "Using libva: $LATEST"
 git checkout "$LATEST"
 
