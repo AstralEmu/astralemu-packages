@@ -7,7 +7,7 @@ fi
 
 cd /workspace/src-ffmpeg
 git fetch --tags
-LATEST=$(git tag -l 'n[0-9]*.[0-9]*.[0-9]*' | grep -v dev | sort -V | tail -1)
+LATEST=$(git tag -l 'n[0-9]*.[0-9]*' | grep -v dev | sort -V | tail -1)
 echo "Using FFmpeg: $LATEST"
 git checkout "$LATEST"
 
@@ -23,8 +23,9 @@ git checkout "$LATEST"
   --enable-libdrm \
   --disable-doc \
   --disable-debug \
-  --extra-cflags="$DEVICE_CFLAGS -flto=thin" \
-  --extra-cxxflags="$DEVICE_CXXFLAGS -flto=thin" \
+  --enable-lto=thin \
+  --extra-cflags="$DEVICE_CFLAGS" \
+  --extra-cxxflags="$DEVICE_CXXFLAGS" \
   --cc="ccache gcc" \
   --cxx="ccache g++"
 

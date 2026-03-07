@@ -39,10 +39,7 @@ meson setup build --prefix=/usr --buildtype=release \
   -Dllvm=enabled \
   -Dshared-llvm=enabled \
   -Dgallium-va=enabled \
-  -Dgallium-vdpau=enabled \
-  -Dgallium-xa=disabled \
-  -Dvideo-codecs=all \
-  -Dgallium-nine=true
+  -Dvideo-codecs=all
 
 ninja -C build -j"$NPROC"
 DESTDIR="$PREFIX" ninja -C build install

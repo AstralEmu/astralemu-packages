@@ -21,7 +21,7 @@ cmake .. -G Ninja \
   -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
   -DSDL_SHARED=ON \
   -DSDL_STATIC=OFF \
-  -DSDL_TEST=OFF
+  -DSDL_TESTS=OFF
 
 ninja -j"$NPROC"
 DESTDIR="$PREFIX" ninja install
