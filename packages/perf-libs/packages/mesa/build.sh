@@ -11,6 +11,9 @@ LATEST=$(git tag -l 'mesa-[0-9]*' | sort -V | tail -1)
 echo "Using Mesa: $LATEST"
 git checkout "$LATEST"
 
+# Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
+pip3 install --break-system-packages meson --upgrade
+
 GALLIUM="swrast,virgl"
 VULKAN=""
 
