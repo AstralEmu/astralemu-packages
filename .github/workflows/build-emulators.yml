@@ -67,7 +67,10 @@ jobs:
       - name: Fetch latest versions
         id: versions
         run: |
-          EMUS_JSON=$(yq -o=json '.emulators' emulators.yml)
+          # Merge emulators.yml + packages.yml into one array
+          EMUS_ONLY=$(yq -o=json '.emulators' emulators.yml)
+          PKGS_ONLY=$(yq -o=json '.packages // []' packages.yml)
+          EMUS_JSON=$(echo "$EMUS_ONLY" "$PKGS_ONLY" | jq -s '.[0] + .[1]')
           VERSIONS="{}"
 
           for i in $(seq 0 $(( $(echo "$EMUS_JSON" | jq 'length') - 1 ))); do
@@ -75,6 +78,7 @@ jobs:
             source=$(echo "$EMUS_JSON" | jq -r ".[$i].version_source")
             repo=$(echo "$EMUS_JSON" | jq -r ".[$i].repo // empty")
             host=$(echo "$EMUS_JSON" | jq -r ".[$i].repo_host // empty")
+            host_url=$(echo "$EMUS_JSON" | jq -r ".[$i].repo_host_url // empty")
             branch=$(echo "$EMUS_JSON" | jq -r ".[$i].version_branch // empty")
 
             case "$source" in
@@ -93,9 +97,9 @@ jobs:
                 fi
                 ;;
               gitlab-release)
-                # URL-encode the repo path for GitLab API
+                gitlab_host="${host_url:-gitlab.com}"
                 encoded_repo=$(echo "$repo" | sed 's|/|%2F|g')
-                version=$(curl -fsSL "https://gitlab.com/api/v4/projects/$encoded_repo/releases" | jq -r '.[0].tag_name // empty')
+                version=$(curl -fsSL "https://$gitlab_host/api/v4/projects/$encoded_repo/releases" | jq -r '.[0].tag_name // empty')
                 if [[ -z "$version" || "$version" == "null" ]]; then
                   echo "ERROR: Failed to fetch $emu_id version"
                   exit 1

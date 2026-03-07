@@ -12,6 +12,7 @@ source "$SCRIPT_DIR/cross-pkg-helpers.sh"
 INTDIR="$1"
 OUTDIR="$2"
 DEP_MAP=""
+TARGET_DISTRO=""
 # Convert to absolute paths
 [[ "$INTDIR" != /* ]] && INTDIR="$(cd "$INTDIR" && pwd)"
 mkdir -p "$OUTDIR"
@@ -21,6 +22,7 @@ shift 2
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dep-map) DEP_MAP="$2"; shift 2 ;;
+    --target-distro) TARGET_DISTRO="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -106,29 +108,25 @@ if [[ -s "$INTDIR/meta/depends" ]]; then
   done < "$INTDIR/meta/depends"
 fi
 
-# Optional provides/conflicts/obsoletes
+# Optional provides/conflicts/obsoletes (prefer distro-specific files if available)
 EXTRA_SPEC=""
-if [[ -s "$INTDIR/meta/provides" ]]; then
-  while IFS= read -r p; do
-    [[ -z "$p" ]] && continue
-    EXTRA_SPEC="${EXTRA_SPEC}Provides: ${p}
-"
-  done < "$INTDIR/meta/provides"
-fi
-if [[ -s "$INTDIR/meta/conflicts" ]]; then
-  while IFS= read -r c; do
-    [[ -z "$c" ]] && continue
-    EXTRA_SPEC="${EXTRA_SPEC}Conflicts: ${c}
-"
-  done < "$INTDIR/meta/conflicts"
-fi
-if [[ -s "$INTDIR/meta/replaces" ]]; then
-  while IFS= read -r r; do
-    [[ -z "$r" ]] && continue
-    EXTRA_SPEC="${EXTRA_SPEC}Obsoletes: ${r}
-"
-  done < "$INTDIR/meta/replaces"
-fi
+for field in provides conflicts replaces; do
+  field_file="$INTDIR/meta/$field"
+  [[ -n "$TARGET_DISTRO" && -s "$INTDIR/meta/${field}.${TARGET_DISTRO}" ]] && field_file="$INTDIR/meta/${field}.${TARGET_DISTRO}"
+  if [[ -s "$field_file" ]]; then
+    while IFS= read -r entry; do
+      [[ -z "$entry" ]] && continue
+      case "$field" in
+        provides)  EXTRA_SPEC="${EXTRA_SPEC}Provides: ${entry}
+" ;;
+        conflicts) EXTRA_SPEC="${EXTRA_SPEC}Conflicts: ${entry}
+" ;;
+        replaces)  EXTRA_SPEC="${EXTRA_SPEC}Obsoletes: ${entry}
+" ;;
+      esac
+    done < "$field_file"
+  fi
+done
 
 # ========================================================================
 # Build unified scriptlet bodies (single %pre/%post/%preun/%postun each)

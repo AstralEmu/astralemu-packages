@@ -16,11 +16,13 @@ OUTDIR="$2"
 mkdir -p "$OUTDIR"
 [[ "$OUTDIR" != /* ]] && OUTDIR="$(cd "$OUTDIR" && pwd)"
 DEP_MAP=""
+TARGET_DISTRO=""
 
 shift 2
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dep-map) DEP_MAP="$2"; shift 2 ;;
+    --target-distro) TARGET_DISTRO="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -114,25 +116,21 @@ if [[ -s "$INTDIR/meta/depends" ]]; then
   done < "$INTDIR/meta/depends"
 fi
 
-# Optional provides/conflicts/replaces
-if [[ -s "$INTDIR/meta/provides" ]]; then
-  while IFS= read -r p; do
-    [[ -z "$p" ]] && continue
-    echo "provides = $p" >> "$BUILDDIR/.PKGINFO"
-  done < "$INTDIR/meta/provides"
-fi
-if [[ -s "$INTDIR/meta/conflicts" ]]; then
-  while IFS= read -r c; do
-    [[ -z "$c" ]] && continue
-    echo "conflict = $c" >> "$BUILDDIR/.PKGINFO"
-  done < "$INTDIR/meta/conflicts"
-fi
-if [[ -s "$INTDIR/meta/replaces" ]]; then
-  while IFS= read -r r; do
-    [[ -z "$r" ]] && continue
-    echo "replaces = $r" >> "$BUILDDIR/.PKGINFO"
-  done < "$INTDIR/meta/replaces"
-fi
+# Optional provides/conflicts/replaces (prefer distro-specific files if available)
+for field in provides conflicts replaces; do
+  field_file="$INTDIR/meta/$field"
+  [[ -n "$TARGET_DISTRO" && -s "$INTDIR/meta/${field}.${TARGET_DISTRO}" ]] && field_file="$INTDIR/meta/${field}.${TARGET_DISTRO}"
+  if [[ -s "$field_file" ]]; then
+    while IFS= read -r entry; do
+      [[ -z "$entry" ]] && continue
+      case "$field" in
+        provides)  echo "provides = $entry" ;;
+        conflicts) echo "conflict = $entry" ;;
+        replaces)  echo "replaces = $entry" ;;
+      esac
+    done < "$field_file" >> "$BUILDDIR/.PKGINFO"
+  fi
+done
 
 # Add backup (conffiles) entries — pacman uses relative paths without leading /
 if [[ -s "$INTDIR/meta/conffiles" ]]; then

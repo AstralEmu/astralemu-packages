@@ -1,0 +1,93 @@
+# perf-libs — sub-library definitions
+#
+# Each entry maps to a build script in packages/<id>/build.sh
+# The build order is resolved automatically via topological sort on depends_on.
+#
+# Fields:
+#   id          — directory name under packages/
+#   depends_on  — list of ids that must be built before this one
+#   arch        — restrict to x86 or arm (omit = both)
+#   provides    — per-distro package names this lib satisfies
+#                 (also used as conflicts + replaces)
+
+libraries:
+  - id: llvm
+    provides:
+      noble: [libllvm18]
+      trixie: [libllvm19]
+      fedora41: [llvm-libs]
+      arch: [llvm-libs]
+
+  - id: libdrm
+    provides:
+      noble: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
+      trixie: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
+      fedora41: [libdrm]
+      arch: [libdrm]
+
+  - id: mesa
+    depends_on: [llvm, libdrm]
+    provides:
+      noble: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
+      trixie: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
+      fedora41: [mesa-dri-drivers, mesa-libGL, mesa-libEGL, mesa-vulkan-drivers, mesa-va-drivers]
+      arch: [mesa]
+
+  - id: vulkan-loader
+    provides:
+      noble: [libvulkan1]
+      trixie: [libvulkan1]
+      fedora41: [vulkan-loader]
+      arch: [vulkan-icd-loader]
+
+  - id: libva
+    provides:
+      noble: [libva2, libva-drm2, libva-x11-2]
+      trixie: [libva2, libva-drm2, libva-x11-2]
+      fedora41: [libva]
+      arch: [libva]
+
+  - id: intel-media-driver
+    depends_on: [libva]
+    arch: x86
+    provides:
+      noble: [intel-media-va-driver]
+      trixie: [intel-media-va-driver]
+      fedora41: [libva-intel-media-driver]
+      arch: [intel-media-driver]
+
+  - id: jemalloc
+    provides:
+      noble: [libjemalloc2]
+      trixie: [libjemalloc2]
+      fedora41: [jemalloc]
+      arch: [jemalloc]
+
+  - id: sdl3
+    provides:
+      noble: [libsdl3-0]
+      trixie: [libsdl3-0]
+      fedora41: [SDL3]
+      arch: [sdl3]
+
+  - id: zlib-ng
+    provides:
+      noble: [zlib1g]
+      trixie: [zlib1g]
+      fedora41: [zlib-ng-compat]
+      arch: [zlib]
+
+  - id: zstd
+    provides:
+      noble: [libzstd1]
+      trixie: [libzstd1]
+      fedora41: [zstd]
+      arch: [zstd]
+
+  - id: ffmpeg
+    depends_on: [zlib-ng, zstd, libva, vulkan-loader, libdrm]
+    provides:
+      noble: [libavcodec60, libavformat60, libavutil58, libavfilter9, libswscale7, libswresample4]
+      trixie: [libavcodec61, libavformat61, libavutil59, libavfilter10, libswscale8, libswresample5]
+      fedora41: [ffmpeg-free]
+      arch: [ffmpeg]

@@ -16,3 +16,14 @@ packages:
     power_amd: 1
     true_arm: true
     true_amd: true
+
+  # All performance-critical libraries in one job:
+  # LLVM → Mesa (GPU), libdrm, vulkan-loader, libva, intel-media-driver,
+  # jemalloc, SDL3, zlib-ng, FFmpeg, zstd
+  - id: perf-libs
+    version_source: hash-only
+    build_time: 200
+    power_arm: 3
+    power_amd: 2
+    true_arm: true
+    true_amd: true

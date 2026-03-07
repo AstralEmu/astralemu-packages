@@ -117,11 +117,13 @@ if [[ -n "$DEPENDS" ]]; then
   echo "Depends: $DEPENDS" >> "$BUILDDIR/DEBIAN/control"
 fi
 
-# Optional fields
+# Optional fields (prefer distro-specific files if available)
 for field in provides conflicts replaces; do
-  if [[ -s "$INTDIR/meta/$field" ]]; then
+  field_file="$INTDIR/meta/$field"
+  [[ -n "$TARGET_DISTRO" && -s "$INTDIR/meta/${field}.${TARGET_DISTRO}" ]] && field_file="$INTDIR/meta/${field}.${TARGET_DISTRO}"
+  if [[ -s "$field_file" ]]; then
     FIELD_UPPER=$(echo "$field" | sed 's/^./\U&/')
-    VALUE=$(paste -sd', ' "$INTDIR/meta/$field")
+    VALUE=$(paste -sd', ' "$field_file")
     echo "$FIELD_UPPER: $VALUE" >> "$BUILDDIR/DEBIAN/control"
   fi
 done
