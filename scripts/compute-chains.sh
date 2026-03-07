@@ -294,6 +294,7 @@ for (( i=0; i<emu_count; i++ )); do
         device_platform: .platform,
         device_cflags: .cflags,
         device_cxxflags: .cxxflags,
+        device_source_distro: .source_distro,
         device_name: .name,
         version: $version,
         version_short: $version_short,

@@ -388,50 +388,18 @@ jobs:
       chain_matrix: ${{ needs.prepare.outputs.aggregators }}
 
   # ===========================================================================
-  # BUILD-SUPPORT: Build setperf + astralemu-deps-repo (short jobs, combined)
-  # ===========================================================================
-  build-support:
-    needs: prepare
-    runs-on: ${{ matrix.device.runner }}
-    strategy:
-      matrix:
-        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-      fail-fast: false
-      max-parallel: 3
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Build astralemu-deps-repo package
-        run: |
-          cd packages/astralemu-deps-repo
-          chmod +x build.sh
-          ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}" "${{ matrix.device.source_distro }}"
-
-      - name: Upload deps-repo artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-astralemu-deps-repo-${{ matrix.device.id }}
-          path: "packages/astralemu-deps-repo/*.pkg.tar"
-          retention-days: 1
-          overwrite: true
-
-  # ===========================================================================
   # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
   # Seed device first (builds+deploys shared deps), then rest serialized
   # ===========================================================================
   update-repo-seed:
-    needs: [prepare, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators, build-support]
+    needs: [prepare, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators]
     if: >-
       !cancelled() &&
       (needs.chain-1-ind.result == 'success' ||
        needs.chain-2-ind.result == 'success' ||
        needs.chain-3-ind.result == 'success' ||
        needs.chain-4-ind.result == 'success' ||
-       needs.aggregators.result == 'success' ||
-       needs.build-support.result == 'success')
+       needs.aggregators.result == 'success')
     uses: ./.github/workflows/update-repos.yml
     with:
       artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
@@ -442,7 +410,7 @@ jobs:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
   update-repo:
-    needs: [prepare, update-repo-seed, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators, build-support]
+    needs: [prepare, update-repo-seed, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators]
     if: >-
       !cancelled() &&
       fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
@@ -450,8 +418,7 @@ jobs:
        needs.chain-2-ind.result == 'success' ||
        needs.chain-3-ind.result == 'success' ||
        needs.chain-4-ind.result == 'success' ||
-       needs.aggregators.result == 'success' ||
-       needs.build-support.result == 'success')
+       needs.aggregators.result == 'success')
     strategy:
       fail-fast: false
       max-parallel: 1

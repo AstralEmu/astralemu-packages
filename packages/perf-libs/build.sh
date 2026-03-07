@@ -157,7 +157,7 @@ echo "$DEVICE_ARCH" > /tmp/pkg/meta/arch
 echo "Performance-optimized system libraries for ${DEVICE_ID}" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
+echo "${SOURCE_DISTRO:-noble}" > /tmp/pkg/meta/source_distro
 echo "libs" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 
