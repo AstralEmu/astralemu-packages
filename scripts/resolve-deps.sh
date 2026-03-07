@@ -519,20 +519,20 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   existing_deps=$(echo "$existing_deps" | xargs)
   missing_deps=$(echo "$missing_deps" | xargs)
 
-  # Compare versions for existing deps
+  # Query source versions for ALL deps that need fetching (existing + missing)
+  # This is needed so PRE-SKIP can match versions for missing deps too
   incompatible_deps=""
   declare -A TGT_TO_SRC=()
   declare -A SRC_VERS=()
-  if [[ -n "$existing_deps" ]]; then
-    # Map to source names
-    source_query=""
-    for dep in $existing_deps; do
-      src_name=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
-      source_query="$source_query $src_name"
-      TGT_TO_SRC["$dep"]="$src_name"
-    done
-    source_query=$(echo "$source_query" | xargs)
+  source_query=""
+  for dep in $new_deps; do
+    src_name=$(map_dep_name "$dep" "$TARGET_FORMAT" "$SOURCE_FORMAT")
+    source_query="$source_query $src_name"
+    TGT_TO_SRC["$dep"]="$src_name"
+  done
+  source_query=$(echo "$source_query" | xargs)
 
+  if [[ -n "$source_query" ]]; then
     # Batch query source
     while IFS= read -r line; do
       [[ -z "$line" ]] && continue
@@ -540,8 +540,10 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
       ver="${line#*=}"
       SRC_VERS["$name"]="$ver"
     done <<< "$(batch_get_versions "$source_query" "$SOURCE_IMAGE" "$SOURCE_FORMAT")"
+  fi
 
-    # Compare major.minor.patch
+  # Compare versions for existing deps
+  if [[ -n "$existing_deps" ]]; then
     for dep in $existing_deps; do
       src_name="${TGT_TO_SRC[$dep]}"
       src_ver="${SRC_VERS[$src_name]:-MISSING}"
