@@ -1,0 +1,18 @@
+# AstralEmu - Package build definitions (non-emulator)
+#
+# Same format as emulators.yml — both are merged at build time.
+# These are system/runtime packages recompiled with device-optimized flags.
+#
+# To add a new package:
+#   1. Add an entry below with a unique id
+#   2. Create packages/<id>/build.sh with the build logic
+#   3. Commit and push — the CI will build it automatically
+
+packages:
+  - id: setperf
+    version_source: hash-only
+    build_time: 1
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true

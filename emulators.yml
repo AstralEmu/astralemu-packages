@@ -6,11 +6,11 @@
 #
 # To add a new emulator:
 #   1. Add an entry below with a unique id
-#   2. Create packages/<id>/build.sh with the build logic
+#   2. Create emulators/<id>/build.sh with the build logic
 #   3. Commit and push — the CI will build it automatically
 #
 # Fields:
-#   id              — Unique identifier (must match packages/<id>/build.sh)
+#   id              — Unique identifier (must match emulators/<id>/build.sh)
 #   repo            — GitHub/GitLab repository (owner/name)
 #   repo_host       — Repository host: github | gitlab
 #   version_source  — How to get the version: github-release | github-commit | gitlab-release | hash-only

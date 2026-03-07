@@ -90,7 +90,7 @@ jobs:
             -e DEVICE_ARCH=${{ matrix.entry.device_arch }} \
             -e DEVICE_CFLAGS="${{ matrix.entry.device_cflags }}" \
             -e DEVICE_CXXFLAGS="${{ matrix.entry.device_cxxflags }}" \
-            emu-deps-image bash /workspace/packages/${{ matrix.entry.emulator_id }}/build.sh
+            emu-deps-image bash /workspace/${{ matrix.entry.base_dir }}/${{ matrix.entry.emulator_id }}/build.sh
 
           # Check build-status files (emulator scripts write "completed" on success)
           EMU_ID="${{ matrix.entry.emulator_id }}"

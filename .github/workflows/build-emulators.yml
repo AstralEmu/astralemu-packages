@@ -390,32 +390,6 @@ jobs:
         with:
           ref: main
 
-      - name: Check for device-specific setperf
-        id: check
-        run: |
-          if [[ -f "packages/setperf/${{ matrix.device.id }}/setperf" ]]; then
-            echo "has_setperf=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_setperf=false" >> $GITHUB_OUTPUT
-            echo "No setperf for ${{ matrix.device.id }}, skipping"
-          fi
-
-      - name: Build setperf package
-        if: steps.check.outputs.has_setperf == 'true'
-        run: |
-          cd packages/setperf
-          chmod +x build.sh
-          ./build.sh "${{ matrix.device.id }}" "${{ matrix.device.arch }}"
-
-      - name: Upload setperf artifact
-        if: steps.check.outputs.has_setperf == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-setperf-${{ matrix.device.id }}
-          path: "packages/setperf/*.pkg.tar"
-          retention-days: 1
-          overwrite: true
-
       - name: Build astralemu-deps-repo package
         run: |
           cd packages/astralemu-deps-repo

@@ -1,8 +1,8 @@
 #!/bin/bash
-# compute-chains.sh — Compute build chains from emulators.yml + devices.yml
+# compute-chains.sh — Compute build chains from emulators.yml + packages.yml + devices.yml
 #
-# Reads emulator definitions and device list, applies power scoring,
-# bin-packs emulators into 4 parallel chains by build_time, and outputs
+# Reads emulator and package definitions, merges them, applies power scoring,
+# bin-packs into 4 parallel chains by build_time, and outputs
 # chain matrices split into independent/dependent levels.
 #
 # Inputs (env vars):
@@ -24,7 +24,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Convert YAML to JSON once, then use jq for everything
-EMUS_JSON=$(yq -o=json '.emulators' "$ROOT_DIR/emulators.yml")
+# Merge emulators.yml and packages.yml into one array, tagging each with _base_dir
+EMUS_ONLY=$(yq -o=json '.emulators' "$ROOT_DIR/emulators.yml")
+PKGS_ONLY=$(yq -o=json '.packages // []' "$ROOT_DIR/packages.yml")
+EMUS_JSON=$(echo "$EMUS_ONLY" "$PKGS_ONLY" | jq -s '
+  ([.[0][] | . + {_base_dir: "emulators"}]) +
+  ([.[1][] | . + {_base_dir: "packages"}])')
 DEVS_JSON=$(yq -o=json '.devices' "$ROOT_DIR/devices.yml")
 
 emu_count=$(echo "$EMUS_JSON" | jq 'length')
@@ -34,7 +39,8 @@ dev_count=$(echo "$DEVS_JSON" | jq 'length')
 HASHES="{}"
 for (( i=0; i<emu_count; i++ )); do
   emu_id=$(echo "$EMUS_JSON" | jq -r ".[$i].id")
-  script_path="$ROOT_DIR/packages/$emu_id/build.sh"
+  base_dir=$(echo "$EMUS_JSON" | jq -r ".[$i]._base_dir")
+  script_path="$ROOT_DIR/$base_dir/$emu_id/build.sh"
   config_entry=$(echo "$EMUS_JSON" | jq -c ".[$i]")
   if [[ -f "$script_path" ]]; then
     hash=$(cat "$script_path" <(echo -n "$config_entry") | sha256sum | cut -d' ' -f1)
@@ -95,6 +101,28 @@ for (( i=0; i<emu_count; i++ )); do
     BUILDS=$(echo "$BUILDS" | jq --arg id "$emu_id" '. + {($id): false}')
     echo "  $emu_id: SKIP (unchanged + succeeded)"
   fi
+done
+
+# --- Step 2b: If an aggregator/dependent needs building, force its deps too ---
+# Aggregators download artifacts from the same run, so deps must produce them.
+changed="true"
+while [[ "$changed" == "true" ]]; do
+  changed="false"
+  for (( i=0; i<emu_count; i++ )); do
+    emu_id=$(echo "$EMUS_JSON" | jq -r ".[$i].id")
+    should_build=$(echo "$BUILDS" | jq -r ".\"$emu_id\"")
+    [[ "$should_build" != "true" ]] && continue
+
+    deps=$(echo "$EMUS_JSON" | jq -r ".[$i].depends_on // [] | .[]")
+    for dep_id in $deps; do
+      dep_build=$(echo "$BUILDS" | jq -r ".\"$dep_id\"")
+      if [[ "$dep_build" != "true" ]]; then
+        BUILDS=$(echo "$BUILDS" | jq --arg id "$dep_id" '. + {($id): true}')
+        echo "  $dep_id: BUILD (required by $emu_id)"
+        changed="true"
+      fi
+    done
+  done
 done
 
 # --- Step 3: Assign emulators to 4 chains using build_time bin-packing ---
@@ -194,6 +222,7 @@ for (( i=0; i<emu_count; i++ )); do
   true_amd=$(echo "$emu_data" | jq -r '.true_amd // false')
   power_arm=$(echo "$emu_data" | jq -r '.power_arm // 1')
   power_amd=$(echo "$emu_data" | jq -r '.power_amd // 1')
+  base_dir=$(echo "$emu_data" | jq -r '._base_dir // "emulators"')
   artifact_type=$(echo "$emu_data" | jq -r '.artifact_type // "pkg"')
   is_aggregator=$(echo "$emu_data" | jq -r '.is_aggregator // false')
   extra_cache_key=$(echo "$emu_data" | jq -r '.extra_caches[0].key // empty')
@@ -244,6 +273,7 @@ for (( i=0; i<emu_count; i++ )); do
     # Build JSON entry
     entry=$(echo "$dev_data" | jq -c \
       --arg emu_id "$emu_id" \
+      --arg base_dir "$base_dir" \
       --arg version "$version" \
       --arg version_short "$version_short" \
       --arg hash "$hash" \
@@ -257,6 +287,7 @@ for (( i=0; i<emu_count; i++ )); do
       --arg extra_cache_save "$extra_cache_save" \
       '{
         emulator_id: $emu_id,
+        base_dir: $base_dir,
         device_id: .id,
         device_arch: .arch,
         device_runner: .runner,
