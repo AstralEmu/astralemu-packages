@@ -11,9 +11,11 @@ LATEST=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1)
 echo "Using jemalloc: $LATEST"
 git checkout "$LATEST"
 
-./autogen.sh --prefix=/usr \
+./autogen.sh
+./configure --prefix=/usr \
   CFLAGS="$DEVICE_CFLAGS -flto=thin" \
-  CXXFLAGS="$DEVICE_CXXFLAGS -flto=thin"
+  CXXFLAGS="$DEVICE_CXXFLAGS -flto=thin" \
+  LDFLAGS="$DEVICE_LDFLAGS"
 
 make -j"$NPROC"
 make DESTDIR="$PREFIX" install
