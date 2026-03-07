@@ -15,31 +15,10 @@ git fetch --unshallow 2>/dev/null || git fetch origin
 git checkout "$COMMIT"
 git submodule update --init --recursive
 
-# Download/build deps if not already cached in /deps
+# Deps are built by duckstation-deps job and cached in /deps
 if ! ls /deps/lib/*.so* 1>/dev/null 2>&1; then
-  mkdir -p /deps
-  case "$DEVICE_ARCH" in
-    amd64)
-      DEPS_RELEASE="release-20260224"
-      DEPS_URL="https://github.com/duckstation/dependencies/releases/download/$DEPS_RELEASE/deps-linux-x64.tar.xz"
-      echo "Deps not cached, downloading: $DEPS_URL"
-      curl -L -o /tmp/deps.tar.xz "$DEPS_URL"
-      tar xf /tmp/deps.tar.xz -C /deps
-      SUBDIRS=(/deps/*/)
-      if [[ ${#SUBDIRS[@]} -eq 1 ]] && [[ -d "${SUBDIRS[0]}lib" ]]; then
-        mv "${SUBDIRS[0]}"* /deps/ 2>/dev/null || true
-        mv "${SUBDIRS[0]}".* /deps/ 2>/dev/null || true
-        rmdir "${SUBDIRS[0]}" 2>/dev/null || true
-      fi
-      rm -f /tmp/deps.tar.xz
-      ;;
-    arm64)
-      echo "Deps not cached, building from source for ARM64..."
-      git clone --depth 1 https://github.com/duckstation/dependencies.git /tmp/duck-deps-src
-      /tmp/duck-deps-src/build-dependencies-linux.sh /deps
-      rm -rf /tmp/duck-deps-src
-      ;;
-  esac
+  echo "ERROR: /deps not populated — duckstation-deps job must run first" >&2
+  exit 1
 fi
 
 # Link prebuilt deps where cmake expects them (dep/prebuilt/linux-{arch})
