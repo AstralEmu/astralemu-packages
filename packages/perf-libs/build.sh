@@ -18,6 +18,10 @@ export PREFIX="/opt/perf-libs-staging"
 rm -rf "$PREFIX"
 mkdir -p "$PREFIX"
 
+# Use clang — required for -flto=thin (gcc only supports -flto)
+export CC=clang
+export CXX=clang++
+
 export NPROC=$(nproc)
 
 # Arch detection

@@ -26,8 +26,8 @@ git checkout "$LATEST"
   --enable-lto=thin \
   --extra-cflags="$DEVICE_CFLAGS" \
   --extra-cxxflags="$DEVICE_CXXFLAGS" \
-  --cc="ccache gcc" \
-  --cxx="ccache g++"
+  --cc="ccache clang" \
+  --cxx="ccache clang++"
 
 make -j"$NPROC"
 make DESTDIR="$PREFIX" install
