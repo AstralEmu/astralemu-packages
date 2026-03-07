@@ -26,6 +26,7 @@ git checkout "$LATEST"
   --enable-lto=thin \
   --extra-cflags="$DEVICE_CFLAGS" \
   --extra-cxxflags="$DEVICE_CXXFLAGS" \
+  --extra-ldflags="$DEVICE_LDFLAGS" \
   --cc="ccache clang" \
   --cxx="ccache clang++"
 

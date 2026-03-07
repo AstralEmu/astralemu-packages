@@ -22,6 +22,12 @@ mkdir -p "$PREFIX"
 export CC=clang
 export CXX=clang++
 
+# Use lld — required for ThinLTO (ld.bfd doesn't support it)
+export CC_LD=lld
+export CXX_LD=lld
+export LDFLAGS="-fuse-ld=lld"
+export DEVICE_LDFLAGS="-fuse-ld=lld"
+
 export NPROC=$(nproc)
 
 # Arch detection
