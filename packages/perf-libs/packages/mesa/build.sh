@@ -16,9 +16,9 @@ pip3 install --break-system-packages meson --upgrade
 
 # Mesa 26+ requires Rust >= 1.82 and bindgen (Ubuntu 24.04 ships Rust 1.75)
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
-  apt-get update && apt-get install -y --no-install-recommends bindgen
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
   source "$HOME/.cargo/env"
+  cargo install bindgen-cli
 fi
 
 GALLIUM="llvmpipe,softpipe,virgl"
