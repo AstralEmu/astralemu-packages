@@ -14,6 +14,11 @@ git checkout "$LATEST"
 # Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
 pip3 install --break-system-packages meson --upgrade
 
+# Mesa 26+ requires Rust for some drivers
+if ! command -v rustc &>/dev/null; then
+  apt-get update && apt-get install -y --no-install-recommends rustc bindgen
+fi
+
 GALLIUM="llvmpipe,softpipe,virgl"
 VULKAN=""
 
