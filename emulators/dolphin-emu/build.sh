@@ -27,7 +27,7 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_SHARED_LINKER_FLAGS="-ljemalloc" \
     -DENABLE_VULKAN=ON \
     -DENABLE_X11=ON \
-    -DENABLE_WAYLAND=OFF \
+    -DENABLE_WAYLAND=ON \
     -DENABLE_TESTS=OFF \
     -DENABLE_ANALYTICS=OFF
 fi

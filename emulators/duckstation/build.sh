@@ -46,7 +46,7 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto=thin" \
     -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-    -DENABLE_WAYLAND=OFF \
+    -DENABLE_WAYLAND=ON \
     -DENABLE_X11=ON
 fi
 
