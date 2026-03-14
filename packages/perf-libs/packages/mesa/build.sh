@@ -12,7 +12,7 @@ echo "Using Mesa: $LATEST"
 git checkout "$LATEST"
 
 # Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
-pip3 install --break-system-packages meson --upgrade
+pip3 install --break-system-packages meson mako --upgrade
 
 # Mesa 26+ requires Rust >= 1.82, bindgen >= 0.71.1, and libclc
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
