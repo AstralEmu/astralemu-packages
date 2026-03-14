@@ -16,7 +16,7 @@ pip3 install --break-system-packages meson mako --upgrade
 
 # Mesa 26+ requires Rust >= 1.82, bindgen >= 0.71.1, and libclc
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
-  apt-get update && apt-get install -y --no-install-recommends libclc-18
+  apt-get update && apt-get install -y --no-install-recommends libclc-18 libllvmspirvlib-18-dev
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
   source "$HOME/.cargo/env"
   cargo install bindgen-cli
