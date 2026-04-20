@@ -18,6 +18,13 @@ git submodule update --init --recursive
 { echo "#ifdef None"; echo "#undef None"; echo "#endif"; cat src/common/settings.h; } > src/common/settings.h.tmp
 mv src/common/settings.h.tmp src/common/settings.h
 
+# Backport upstream fix (azahar commit d4b5633, PR #2045): std::powf is not
+# in libstdc++ until C++26; release 2125.1 shipped with it and fails to
+# build on clang/libstdc++13. Idempotent: no-op once a release past d4b5633
+# lands.
+sed -i 's/std::powf(pwm, 1\.f \/ gamma)/std::pow(pwm, 1.f \/ gamma)/' \
+  src/citra_qt/notification_led.cpp
+
 mkdir -p build && cd build
 
 if [[ ! -f build.ninja ]]; then
