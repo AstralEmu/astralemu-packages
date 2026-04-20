@@ -52,11 +52,16 @@ jobs:
         with:
           ref: main
 
+      # Both downloads are tolerant — mirror-devices only produces one artifact
+      # set, build-emulators may skip the device-specific one for targets with
+      # no per_device packages. The normalize step below validates that at
+      # least one package file actually landed.
       - name: Download shared (build_target) artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: ${{ inputs.shared_artifact_pattern }}
           merge-multiple: true
+        continue-on-error: true
 
       - name: Download device-specific artifacts
         uses: actions/download-artifact@v4

@@ -138,7 +138,7 @@ jobs:
 
             # Only add device to matrix if it has actual new packages
             if [ "$DEVICE_HAS_NEW" == "true" ]; then
-              MATRIX=$(echo "$MATRIX" | jq -c ". + [{\"device_id\": \"$device_id\", \"source_distro\": \"$source_distro\"}]")
+              MATRIX=$(echo "$MATRIX" | jq -c ". + [{\"device_id\": \"$device_id\", \"source_distro\": \"$source_distro\", \"build_target\": \"$build_target\"}]")
               echo ">>> $device_id has new packages, added to build matrix"
             else
               rm -rf "new-pkgs-${device_id}"
@@ -221,9 +221,14 @@ jobs:
         include: ${{ fromJson(needs.mirror.outputs.matrix) }}
     uses: ./.github/workflows/update-repos.yml
     with:
-      artifact_pattern: mirror-${{ matrix.device_id }}
+      # Mirror pipeline only produces one per-device artifact (mirror-<id>); no
+      # shared build_target artifacts. Pass the mirror artifact as "shared" and
+      # a pattern that matches nothing for the device-specific slot.
+      shared_artifact_pattern: mirror-${{ matrix.device_id }}
+      device_artifact_pattern: __no_match_mirror__${{ matrix.device_id }}
       source_distro: ${{ matrix.source_distro }}
       device: ${{ matrix.device_id }}
+      build_target: ${{ matrix.build_target }}
       force_rebuild: false
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -255,3 +260,12 @@ jobs:
           git add .trackers/
           git commit -m "Update mirror trackers" || echo "No changes to commit"
           git push origin main
+
+  # ===========================================================================
+  # DEPLOY PAGES: Publish the final gh-pages state as a single Pages build.
+  # Same rationale as in build-emulators.yml.
+  # ===========================================================================
+  deploy-pages:
+    needs: update-repo
+    if: "!cancelled() && needs.update-repo.result == 'success'"
+    uses: ./.github/workflows/deploy-pages.yml

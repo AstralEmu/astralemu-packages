@@ -1,0 +1,47 @@
+name: Deploy GitHub Pages
+
+# Reusable workflow: publish the current gh-pages branch as a single Pages
+# deployment. Avoids the "dozens of failing builds" issue that happens when
+# Pages is configured to "Deploy from a branch" and the pipeline pushes many
+# commits to gh-pages in a row.
+#
+# Repo setting required (one-time):
+#   Settings -> Pages -> Build and deployment -> Source -> "GitHub Actions"
+#
+# Called from build-emulators.yml and mirror-devices.yml at the end of their
+# pipelines so a full run produces exactly one Pages build.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Queue concurrent Pages deployments instead of cancelling them — important
+# when build-emulators and mirror-devices finish near each other.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

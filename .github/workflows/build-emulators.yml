@@ -496,3 +496,12 @@ jobs:
           git add .trackers/
           git commit -m "Update version trackers" || echo "No changes"
           git push origin main
+
+  # ===========================================================================
+  # DEPLOY PAGES: Publish the final gh-pages state as a single Pages build.
+  # See .github/workflows/deploy-pages.yml for the rationale.
+  # ===========================================================================
+  deploy-pages:
+    needs: [update-repo-seed, update-repo]
+    if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
+    uses: ./.github/workflows/deploy-pages.yml
