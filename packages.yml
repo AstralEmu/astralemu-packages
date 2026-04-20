@@ -16,6 +16,9 @@ packages:
     power_amd: 1
     true_arm: true
     true_amd: true
+    # Hardware-specific: setperf/l4t/, setperf/rpi4/, ... contain per-device
+    # governor/clock rules. Build once per device (not per build_target).
+    per_device: true
 
   # All performance-critical libraries in one job:
   # LLVM → Mesa (GPU), libdrm, vulkan-loader, libva, intel-media-driver,

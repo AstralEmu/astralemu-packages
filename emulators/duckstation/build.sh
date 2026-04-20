@@ -23,7 +23,7 @@ fi
 
 # Link prebuilt deps where cmake expects them (dep/prebuilt/linux-{arch})
 # DuckStationDependencies.cmake sets CMAKE_PREFIX_PATH to dep/prebuilt/{platform}
-case "$DEVICE_ARCH" in
+case "$TARGET_ARCH" in
   amd64) DEPS_DIR="linux-x64" ;;
   arm64) DEPS_DIR="linux-arm64" ;;
 esac
@@ -43,8 +43,8 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_SHARED_LINKER_FLAGS_INIT="-fuse-ld=lld -ljemalloc" \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto=thin" \
-    -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
+    -DCMAKE_C_FLAGS="$TARGET_CFLAGS -flto=thin" \
+    -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto=thin" \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
     -DENABLE_WAYLAND=ON \
     -DENABLE_X11=ON
@@ -77,10 +77,11 @@ DESK
 
 PKG_VERSION="0.0.0+git.${SHORT}"
 mkdir -p /tmp/pkg/meta
-echo "duckstation-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "duckstation-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh duckstation /tmp/pkg/meta
 echo "${PKG_VERSION}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "DuckStation PS1 Emulator (${DEVICE_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "DuckStation PS1 Emulator (${TARGET_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -94,6 +95,6 @@ libcurl4t64
 libwayland-client0
 libudev1
 DEPS
-tar cf /workspace/duckstation-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/duckstation-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

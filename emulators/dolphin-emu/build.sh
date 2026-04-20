@@ -21,8 +21,8 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto" \
-    -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto" \
+    -DCMAKE_C_FLAGS="$TARGET_CFLAGS -flto" \
+    -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto" \
     -DCMAKE_EXE_LINKER_FLAGS="-ljemalloc" \
     -DCMAKE_SHARED_LINKER_FLAGS="-ljemalloc" \
     -DENABLE_VULKAN=ON \
@@ -45,10 +45,11 @@ timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
 DESTDIR=/tmp/pkg/root ninja install
 PKG_VERSION="0.0.0+git.${SHORT}"
 mkdir -p /tmp/pkg/meta
-echo "dolphin-emu-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "dolphin-emu-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh dolphin-emu /tmp/pkg/meta
 echo "${PKG_VERSION}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "Dolphin GameCube/Wii Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "Dolphin GameCube/Wii Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -84,7 +85,7 @@ libsfml-network2.6
 libxxhash0
 libspng0
 DEPS
-tar cf /workspace/dolphin-emu-${DEVICE_ID}_${PKG_VERSION}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/dolphin-emu-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

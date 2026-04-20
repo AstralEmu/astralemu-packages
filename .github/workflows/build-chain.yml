@@ -20,7 +20,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.entry.device_runner }}
+    runs-on: ${{ matrix.entry.target_runner }}
     strategy:
       matrix:
         entry: ${{ fromJSON(inputs.chain_matrix) }}
@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/emu-deps.tar
-          key: ${{ inputs.cache_key }}-${{ matrix.entry.device_arch }}
+          key: ${{ inputs.cache_key }}-${{ matrix.entry.target_arch }}
 
       - name: Load image
         run: docker load -i /tmp/emu-deps.tar
@@ -44,10 +44,10 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
-          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}
+          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
+          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-${{ matrix.entry.version_short }}
           restore-keys: |
-            ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-
+            ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-
 
       - name: Restore extra cache
         if: matrix.entry.extra_cache_key != ''
@@ -60,7 +60,7 @@ jobs:
         if: matrix.entry.is_aggregator == 'true'
         uses: actions/download-artifact@v4
         with:
-          pattern: "libretro-cores-*-${{ matrix.entry.device_id }}"
+          pattern: "libretro-cores-*-${{ matrix.entry.target_id }}"
           path: cores/
           merge-multiple: true
         continue-on-error: true
@@ -68,7 +68,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          mkdir -p /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          mkdir -p /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
 
           EXTRA_MOUNT=""
           if [[ -n "${{ matrix.entry.extra_cache_mount }}" ]]; then
@@ -76,21 +76,22 @@ jobs:
             EXTRA_MOUNT="-v ${{ matrix.entry.extra_cache_path }}:${{ matrix.entry.extra_cache_mount }}"
           fi
 
-          docker run --rm --platform ${{ matrix.entry.device_platform }} \
+          docker run --rm --platform ${{ matrix.entry.target_platform }} \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            -v /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}:/ccache \
+            -v /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}:/ccache \
             $EXTRA_MOUNT \
             -e VERSION=${{ matrix.entry.version }} \
             -e COMMIT=${{ matrix.entry.version }} \
             -e SHORT=${{ matrix.entry.version_short }} \
             -e CCACHE_DIR=/ccache \
             -e BUILD_TIMEOUT=${{ inputs.build_timeout }} \
-            -e DEVICE_ID=${{ matrix.entry.device_id }} \
-            -e DEVICE_ARCH=${{ matrix.entry.device_arch }} \
-            -e DEVICE_CFLAGS="${{ matrix.entry.device_cflags }}" \
-            -e DEVICE_CXXFLAGS="${{ matrix.entry.device_cxxflags }}" \
-            -e SOURCE_DISTRO=${{ matrix.entry.device_source_distro }} \
+            -e TARGET_ID=${{ matrix.entry.target_id }} \
+            -e TARGET_ARCH=${{ matrix.entry.target_arch }} \
+            -e TARGET_CFLAGS="${{ matrix.entry.target_cflags }}" \
+            -e TARGET_CXXFLAGS="${{ matrix.entry.target_cxxflags }}" \
+            -e TARGET_DEVICES="${{ matrix.entry.target_devices }}" \
+            -e SOURCE_DISTRO=${{ matrix.entry.target_source_distro }} \
             emu-deps-image bash /workspace/${{ matrix.entry.base_dir }}/${{ matrix.entry.emulator_id }}/build.sh
 
           # Check build-status files (emulator scripts write "completed" on success)
@@ -111,8 +112,8 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
-          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}-${{ matrix.entry.version_short }}
+          path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
+          key: ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-${{ matrix.entry.version_short }}
 
       - name: Save extra cache
         if: always() && matrix.entry.extra_cache_save == 'true' && matrix.entry.extra_cache_key != ''
@@ -125,7 +126,7 @@ jobs:
         if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'pkg'
         uses: actions/upload-artifact@v4
         with:
-          name: pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          name: pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
           path: "*.pkg.tar"
           retention-days: 1
           overwrite: true
@@ -134,7 +135,7 @@ jobs:
         if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'cores'
         uses: actions/upload-artifact@v4
         with:
-          name: libretro-cores-${{ matrix.entry.emulator_id }}-${{ matrix.entry.device_id }}
+          name: libretro-cores-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
           path: "cores-*/*.so"
           retention-days: 1
           overwrite: true

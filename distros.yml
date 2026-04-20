@@ -1,16 +1,23 @@
 # AstralEmu - Target distribution definitions
 #
 # Locked versions for stability. Update manually when targeting new releases.
+#
+# The `enabled` flag controls which distros the CI publishes to. Disabled
+# distros stay defined here (the dep-map entries remain valid) but are
+# skipped by compute-chains.sh and update-repos.yml. Flip to true to
+# re-enable publication.
 
 distros:
   apt:
     - id: noble
+      enabled: false
       name: "Ubuntu 24.04 LTS"
       type: ubuntu
       version: "24.04"
       mirror: http://ports.ubuntu.com/ubuntu-ports
       components: "main universe"
     - id: trixie
+      enabled: false
       name: "Debian 13"
       type: debian
       version: "13"
@@ -19,11 +26,13 @@ distros:
 
   dnf:
     - id: fedora41
+      enabled: true
       name: "Fedora 41"
       version: "41"
       baseurl: https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
 
   pacman:
     - id: arch
+      enabled: false
       name: "Arch Linux"
       mirror: https://geo.mirror.pkgbuild.com

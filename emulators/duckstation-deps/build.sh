@@ -3,7 +3,7 @@ set -e
 
 mkdir -p /deps
 
-case "$DEVICE_ARCH" in
+case "$TARGET_ARCH" in
   amd64)
     # Prebuilt x86_64 deps — check if latest upstream release changed
     LATEST_RELEASE=$(git ls-remote --tags --sort=-v:refname https://github.com/duckstation/dependencies.git 'refs/tags/release-*' 2>/dev/null | head -1 | sed 's|.*refs/tags/||')
@@ -53,7 +53,7 @@ case "$DEVICE_ARCH" in
     echo "$LATEST_COMMIT" > /deps/.deps-commit
     ;;
   *)
-    echo "Unsupported architecture: $DEVICE_ARCH"; exit 1
+    echo "Unsupported architecture: $TARGET_ARCH"; exit 1
     ;;
 esac
 

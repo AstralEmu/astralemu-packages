@@ -4,8 +4,8 @@ export PATH="/usr/lib/ccache:$PATH"
 export CCACHE_MAXSIZE=5G
 ccache -z
 
-export CFLAGS="$DEVICE_CFLAGS -flto=auto"
-export CXXFLAGS="$DEVICE_CXXFLAGS -flto=auto"
+export CFLAGS="$TARGET_CFLAGS -flto=auto"
+export CXXFLAGS="$TARGET_CXXFLAGS -flto=auto"
 export LDFLAGS="-flto=auto -shared -ljemalloc"
 
 CORES_DIR=/workspace/libretro-cores
@@ -61,7 +61,7 @@ P=$3/${5:-$(echo $1 | sed "s|.*/||")}
 [ -f "$P/libco/amd64.c" ] && sed -i "/#define CO_USE_INLINE_ASM/d" "$P/libco/amd64.c"
 echo "$OUT"'
 build_core scummvm scummvm "backends/platform/libretro" "" \
-  '[[ "$DEVICE_ARCH" == "amd64" ]] && { S=backends/platform/libretro/scripts/configure_submodules.sh; [[ ! -f "${S}.orig" ]] && cp "$S" "${S}.orig"; echo "$_SCUMMVM_WRAP" > "$S"; chmod +x "$S"; } || true'
+  '[[ "$TARGET_ARCH" == "amd64" ]] && { S=backends/platform/libretro/scripts/configure_submodules.sh; [[ ! -f "${S}.orig" ]] && cp "$S" "${S}.orig"; echo "$_SCUMMVM_WRAP" > "$S"; chmod +x "$S"; } || true'
 
 ccache -s
 echo "completed" > /workspace/build-status-heavy-2

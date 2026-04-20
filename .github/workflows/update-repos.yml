@@ -3,10 +3,14 @@ name: Update Package Repositories
 on:
   workflow_call:
     inputs:
-      artifact_pattern:
+      shared_artifact_pattern:
         type: string
-        default: 'pkg-*'
-        description: 'Pattern to download build artifacts'
+        required: true
+        description: 'Pattern for artifacts shared across devices on the same build_target (e.g. pkg-*-arm64-legacy)'
+      device_artifact_pattern:
+        type: string
+        required: true
+        description: 'Pattern for hardware-specific artifacts (e.g. pkg-*-l4t) — setperf and similar'
       source_distro:
         type: string
         default: 'noble'
@@ -14,7 +18,11 @@ on:
       device:
         type: string
         required: true
-        description: 'Device ID from devices.yml (e.g. l4t). Used for repo paths and dependency prefix'
+        description: 'Device ID from devices.yml (e.g. l4t). Used for repo paths'
+      build_target:
+        type: string
+        required: true
+        description: 'Build target id (e.g. arm64-legacy). Used for dependency prefix so all devices sharing a target share the same deps repo'
       force_rebuild:
         type: boolean
         default: false
@@ -44,11 +52,18 @@ jobs:
         with:
           ref: main
 
-      - name: Download artifacts
+      - name: Download shared (build_target) artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: ${{ inputs.artifact_pattern }}
+          pattern: ${{ inputs.shared_artifact_pattern }}
           merge-multiple: true
+
+      - name: Download device-specific artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.device_artifact_pattern }}
+          merge-multiple: true
+        continue-on-error: true
 
       - name: Check for packages
         id: check
@@ -149,20 +164,26 @@ jobs:
           fi
           echo "Existing repo: $(wc -l < existing-repo.txt) package files"
 
-          # Generate matrix from distros.yml
+          # Generate matrix from distros.yml — only entries with enabled: true
           MATRIX="["
-          for id in $(yq -r '.distros.apt[].id' distros.yml); do
+          for id in $(yq -r '.distros.apt[] | select(.enabled == true) | .id' distros.yml); do
             is_source=$([[ "$id" == "$SOURCE_DISTRO" ]] && echo true || echo false)
             MATRIX+="{\"distro\":\"$id\",\"format\":\"deb\",\"is_source\":$is_source},"
           done
-          for id in $(yq -r '.distros.dnf[].id' distros.yml); do
+          for id in $(yq -r '.distros.dnf[] | select(.enabled == true) | .id' distros.yml); do
             version=$(yq -r ".distros.dnf[] | select(.id == \"$id\") | .version" distros.yml)
             MATRIX+="{\"distro\":\"$id\",\"format\":\"rpm\",\"is_source\":false,\"version\":\"$version\"},"
           done
-          for id in $(yq -r '.distros.pacman[].id' distros.yml); do
+          for id in $(yq -r '.distros.pacman[] | select(.enabled == true) | .id' distros.yml); do
             MATRIX+="{\"distro\":\"$id\",\"format\":\"pacman\",\"is_source\":false},"
           done
           MATRIX="${MATRIX%,}]"
+
+          # Bail out early if no distros are enabled — nothing to publish
+          if [[ "$MATRIX" == "[]" ]]; then
+            echo "ERROR: No enabled distros in distros.yml — nothing to publish" >&2
+            exit 1
+          fi
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Matrix: $MATRIX"
 
@@ -184,6 +205,11 @@ jobs:
             pacman)  SEED_FORMAT="deb" ;;
           esac
           SEED_ENTRY=$(echo "$MATRIX" | jq -c "[.[] | select(.format == \"$SEED_FORMAT\")][0]")
+          # Fallback when the "most distant" format is disabled in distros.yml:
+          # pick the first non-source entry, else the only enabled entry.
+          if [[ "$SEED_ENTRY" == "null" ]]; then
+            SEED_ENTRY=$(echo "$MATRIX" | jq -c '[.[] | select(.is_source == false)][0] // .[0]')
+          fi
           MATRIX_REST=$(echo "$MATRIX" | jq -c "[.[] | select(. != $SEED_ENTRY)]")
           echo "seed_entry=$SEED_ENTRY" >> $GITHUB_OUTPUT
           echo "matrix_rest=$MATRIX_REST" >> $GITHUB_OUTPUT

@@ -37,6 +37,9 @@ jobs:
       devices: ${{ steps.load-devices.outputs.devices }}
       seed_device: ${{ steps.load-devices.outputs.seed_device }}
       devices_rest: ${{ steps.load-devices.outputs.devices_rest }}
+      seed_target: ${{ steps.load-devices.outputs.seed_target }}
+      targets_by_id: ${{ steps.load-devices.outputs.targets_by_id }}
+      build_archs: ${{ steps.load-devices.outputs.build_archs }}
       chain_1_ind: ${{ steps.chains.outputs.chain_1_ind }}
       chain_1_dep: ${{ steps.chains.outputs.chain_1_dep }}
       chain_2_ind: ${{ steps.chains.outputs.chain_2_ind }}
@@ -58,11 +61,27 @@ jobs:
         id: load-devices
         run: |
           DEVICES=$(yq -o=json -I=0 '.devices' devices.yml)
+          TARGETS=$(yq -o=json -I=0 '.build_targets' devices.yml)
           echo "devices=$DEVICES" >> $GITHUB_OUTPUT
+
           SEED=$(echo "$DEVICES" | jq -c '.[0]')
           REST=$(echo "$DEVICES" | jq -c 'if length > 1 then .[1:] else [] end')
           echo "seed_device=$SEED" >> $GITHUB_OUTPUT
           echo "devices_rest=$REST" >> $GITHUB_OUTPUT
+
+          # Build a { "<target_id>": { ... }, ... } map for easy lookup from
+          # update-repo matrix entries (they only carry build_target by name).
+          TARGETS_BY_ID=$(echo "$TARGETS" | jq -c 'map({(.id): .}) | add')
+          echo "targets_by_id=$TARGETS_BY_ID" >> $GITHUB_OUTPUT
+
+          # Resolve the seed device's build_target for the seed update-repo job.
+          SEED_TARGET_ID=$(echo "$SEED" | jq -r '.build_target')
+          SEED_TARGET=$(echo "$TARGETS_BY_ID" | jq -c ".\"$SEED_TARGET_ID\"")
+          echo "seed_target=$SEED_TARGET" >> $GITHUB_OUTPUT
+
+          # Unique arches across all build_targets (drives base image builds).
+          BUILD_ARCHS=$(echo "$TARGETS" | jq -c '[.[].arch] | unique')
+          echo "build_archs=$BUILD_ARCHS" >> $GITHUB_OUTPUT
 
       - name: Fetch latest versions
         id: versions
@@ -402,9 +421,11 @@ jobs:
        needs.aggregators.result == 'success')
     uses: ./.github/workflows/update-repos.yml
     with:
-      artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
-      source_distro: ${{ fromJson(needs.prepare.outputs.seed_device).source_distro }}
+      shared_artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).build_target }}'
+      device_artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
+      source_distro: ${{ fromJson(needs.prepare.outputs.seed_target).source_distro }}
       device: ${{ fromJson(needs.prepare.outputs.seed_device).id }}
+      build_target: ${{ fromJson(needs.prepare.outputs.seed_device).build_target }}
       force_rebuild: false
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -426,9 +447,11 @@ jobs:
         device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
     uses: ./.github/workflows/update-repos.yml
     with:
-      artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
-      source_distro: ${{ matrix.device.source_distro }}
+      shared_artifact_pattern: 'pkg-*-${{ matrix.device.build_target }}'
+      device_artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
+      source_distro: ${{ fromJson(needs.prepare.outputs.targets_by_id)[matrix.device.build_target].source_distro }}
       device: ${{ matrix.device.id }}
+      build_target: ${{ matrix.device.build_target }}
       force_rebuild: false
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

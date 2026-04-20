@@ -39,7 +39,9 @@ jobs:
           DEVICE_IDS=$(yq -r '.devices[] | select(.sources != null) | select(.sources | length > 0) | .id' devices.yml)
 
           for device_id in $DEVICE_IDS; do
-            source_distro=$(yq -r ".devices[] | select(.id == \"$device_id\") | .source_distro" devices.yml)
+            # source_distro now lives on build_targets — resolve via the device's build_target ref
+            build_target=$(yq -r ".devices[] | select(.id == \"$device_id\") | .build_target" devices.yml)
+            source_distro=$(yq -r ".build_targets[] | select(.id == \"$build_target\") | .source_distro" devices.yml)
             SOURCE_COUNT=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources | length" devices.yml)
             DEVICE_HAS_NEW=false
 

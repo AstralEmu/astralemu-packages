@@ -1,50 +1,98 @@
-# AstralEmu - Target device definitions
+# AstralEmu - Build targets and hardware devices
 #
-# Each device defines the hardware target for cross-compilation.
-# The build matrix iterates over all devices listed here.
+# Two-level structure:
+#   build_targets — unique compilation configurations (arch + flags + runner)
+#   devices       — actual hardware units, each mapping to a build_target
+#
+# Emulators/libs are compiled once per build_target (deduplicated across
+# devices sharing the same target), then the same binary is published in
+# each device-specific repo. Each package carries Provides: aliases for every
+# device name mapped to its build_target, so legacy names keep working.
 #
 # To add a new device:
-#   1. Add an entry below with a unique id
-#   2. Commit and push — the CI will automatically build all emulators for it
+#   1. Add an entry under devices: with an existing build_target
+#   2. If no existing build_target fits, add a new one under build_targets:
+#   3. Commit and push — the CI will build and publish automatically
 #
-# Fields:
-#   id         — Short identifier used in package names (e.g. azahar-emu-<id>)
-#                Also used as prefix for mirrored dependency packages (e.g. l4t-libfoo)
-#   name       — Human-readable device name
-#   arch       — Debian architecture (arm64, amd64)
-#   platform   — Docker platform string
-#   base_image — Docker base image for the build container
-#   source_distro — Distro codename matching the base_image (for dep resolution)
-#   runner     — GitHub Actions runner type (ubuntu-24.04-arm for arm64, ubuntu-24.04 for amd64)
-#   cflags     — C compiler flags (arch targeting + optimizations, WITHOUT LTO)
-#   cxxflags   — C++ compiler flags (usually same as cflags, WITHOUT LTO)
-#   power      — Device power score (1-5), used to filter emulators too heavy for this device
-#                Scores account for AstralEmu's 40-60% performance boost over stock distro packages
-#   sources    — List of package sources to mirror for this device (optional)
-#
-# Source fields:
-#   id         — Unique source identifier
-#   name       — Human-readable description
-#   type       — Source type: git-repo, url
-#   url        — URL to clone or fetch from
-#   format     — Package format at source: deb, rpm, pacman
-#
-# Note: LTO and jemalloc are added by the workflow, not here.
-#   clang builds → -flto=thin    (azahar, duckstation)
-#   gcc builds   → -flto         (dolphin, melonds, ppsspp, esde, xemu, libretro)
-#   All builds   → -ljemalloc    (hardcoded in workflow)
+# Notes:
+#   LTO and jemalloc are added by each build.sh, not here.
+#     clang builds → -flto=thin    (azahar, duckstation)
+#     gcc builds   → -flto         (dolphin, melonds, ppsspp, esde, xemu, libretro)
+#     All builds   → -ljemalloc    (linker flag)
 
-devices:
-  - id: l4t
-    name: "Nintendo Switch (Tegra X1)"
+# ============================================================================
+# Build targets — one compilation per unique (arch + flags) combination
+# ============================================================================
+# Fields:
+#   id            — Unique target identifier, used in package name (azahar-emu-<id>)
+#   arch          — Debian architecture (arm64, amd64)
+#   platform      — Docker platform string
+#   runner        — GitHub Actions runner type
+#   base_image    — Docker base image for the build container
+#   source_distro — Distro codename matching the base_image (for dep resolution)
+#   cflags        — C compiler flags (arch baseline + optimizations, WITHOUT LTO)
+#   cxxflags      — C++ compiler flags (usually same as cflags, WITHOUT LTO)
+#
+# Baseline choice rationale:
+#   amd64        → x86-64-v3 covers Haswell 2013+/Ryzen/Steam Deck
+#   arm64-legacy → armv8-a+crc+simd covers Cortex-A57/A72 (Switch, RPi4)
+#   arm64-modern → armv8.2-a+dotprod covers Cortex-A76/X2/X3 (RPi5, RK3588,
+#                  Snapdragon 845+ including 8 Gen 1/2/3)
+
+build_targets:
+  - id: amd64
+    arch: amd64
+    platform: linux/amd64
+    runner: ubuntu-24.04
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=x86-64-v3"
+    cxxflags: "-O3 -march=x86-64-v3"
+
+  - id: arm64-legacy
     arch: arm64
-    power: 4
     platform: linux/arm64
     runner: ubuntu-24.04-arm
     base_image: ubuntu:24.04
     source_distro: noble
-    cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
-    cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a57"
+    cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
+    cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
+
+  - id: arm64-modern
+    arch: arm64
+    platform: linux/arm64
+    runner: ubuntu-24.04-arm
+    base_image: ubuntu:24.04
+    source_distro: noble
+    cflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
+    cxxflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
+
+# ============================================================================
+# Devices — one hardware unit per entry
+# ============================================================================
+# Fields:
+#   id            — Short identifier used for the device repo path and setperf subdir
+#                   Also used as Provides: alias in emulator packages (azahar-emu-<id>)
+#   name          — Human-readable device name
+#   build_target  — Reference to a build_targets[].id (determines compilation)
+#   power         — Device power score (1-5), filters emulators too heavy for this device
+#                   Scores account for AstralEmu's 40-60% perf boost over stock packages
+#                   ARM: 1=trivial, 2=light, 3=medium, 4=heavy, 5=extreme
+#                   AMD: 1=light, 2=medium, 3=heavy
+#   sources       — List of external package sources to mirror (optional)
+#
+# Source fields:
+#   id            — Unique source identifier
+#   name          — Human-readable description
+#   type          — Source type: git-repo, url
+#   url           — URL to clone or fetch from
+#   format        — Package format at source: deb, rpm, pacman
+
+devices:
+  - id: l4t
+    name: "Nintendo Switch (Tegra X1)"
+    build_target: arm64-legacy
+    power: 4
     sources:
       - id: l4t-debs
         name: "L4T kernel and driver packages"
@@ -54,66 +102,30 @@ devices:
 
   - id: rpi4
     name: "Raspberry Pi 4 (Cortex-A72)"
-    arch: arm64
+    build_target: arm64-legacy
     power: 3
-    platform: linux/arm64
-    runner: ubuntu-24.04-arm
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
-    cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
 
   - id: armv8-2
     name: "ARMv8.2-A (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
-    arch: arm64
+    build_target: arm64-modern
     power: 5
-    platform: linux/arm64
-    runner: ubuntu-24.04-arm
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
-    cxxflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
 
   - id: armv9
     name: "ARMv9.0-A (Snapdragon 8 Gen 1/2/3, Cortex-X2+)"
-    arch: arm64
+    build_target: arm64-modern
     power: 5
-    platform: linux/arm64
-    runner: ubuntu-24.04-arm
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=armv9-a+crypto -mtune=cortex-x2"
-    cxxflags: "-O3 -march=armv9-a+crypto -mtune=cortex-x2"
 
   - id: x86-v2
     name: "x86-64-v2 (Intel Sandy Bridge+ / AMD Bulldozer+)"
-    arch: amd64
+    build_target: amd64
     power: 4
-    platform: linux/amd64
-    runner: ubuntu-24.04
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=x86-64-v2"
-    cxxflags: "-O3 -march=x86-64-v2"
 
   - id: x86-v3
     name: "x86-64-v3 (Intel Haswell+ / AMD Ryzen / Steam Deck)"
-    arch: amd64
+    build_target: amd64
     power: 5
-    platform: linux/amd64
-    runner: ubuntu-24.04
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=x86-64-v3"
-    cxxflags: "-O3 -march=x86-64-v3"
 
   - id: x86-v4
     name: "x86-64-v4 (Intel Ice Lake-SP+ / AMD Zen 4+)"
-    arch: amd64
+    build_target: amd64
     power: 5
-    platform: linux/amd64
-    runner: ubuntu-24.04
-    base_image: ubuntu:24.04
-    source_distro: noble
-    cflags: "-O3 -march=x86-64-v4"
-    cxxflags: "-O3 -march=x86-64-v4"

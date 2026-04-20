@@ -24,9 +24,9 @@ git checkout "$LATEST"
   --disable-doc \
   --disable-debug \
   --enable-lto=thin \
-  --extra-cflags="$DEVICE_CFLAGS" \
-  --extra-cxxflags="$DEVICE_CXXFLAGS" \
-  --extra-ldflags="$DEVICE_LDFLAGS" \
+  --extra-cflags="$TARGET_CFLAGS" \
+  --extra-cxxflags="$TARGET_CXXFLAGS" \
+  --extra-ldflags="$TARGET_LDFLAGS" \
   --cc="ccache clang" \
   --cxx="ccache clang++"
 

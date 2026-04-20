@@ -13,9 +13,9 @@ git checkout "$LATEST"
 
 ./autogen.sh
 ./configure --prefix=/usr \
-  CFLAGS="$DEVICE_CFLAGS -flto=thin" \
-  CXXFLAGS="$DEVICE_CXXFLAGS -flto=thin" \
-  LDFLAGS="$DEVICE_LDFLAGS"
+  CFLAGS="$TARGET_CFLAGS -flto=thin" \
+  CXXFLAGS="$TARGET_CXXFLAGS -flto=thin" \
+  LDFLAGS="$TARGET_LDFLAGS"
 
 make -j"$NPROC"
 make DESTDIR="$PREFIX" install

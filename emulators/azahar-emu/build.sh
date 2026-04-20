@@ -28,8 +28,8 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto=thin" \
-    -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto=thin" \
+    -DCMAKE_C_FLAGS="$TARGET_CFLAGS -flto=thin" \
+    -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto=thin" \
     -DCMAKE_EXE_LINKER_FLAGS="-ljemalloc" \
     -DCMAKE_SHARED_LINKER_FLAGS="-ljemalloc" \
     -DENABLE_VULKAN=ON \
@@ -54,10 +54,11 @@ timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
 DESTDIR=/tmp/pkg/root ninja install
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
-echo "azahar-emu-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "azahar-emu-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh azahar-emu /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "Azahar 3DS Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "Azahar 3DS Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -87,7 +88,7 @@ libboost-serialization1.83.0
 libenet7
 liblz4-1
 DEPS
-tar cf /workspace/azahar-emu-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/azahar-emu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

@@ -18,8 +18,8 @@ fi
 
 meson setup build --prefix=/usr --buildtype=release \
   -Db_lto=true -Db_lto_mode=thin \
-  -Dc_args="$DEVICE_CFLAGS" \
-  -Dcpp_args="$DEVICE_CXXFLAGS" \
+  -Dc_args="$TARGET_CFLAGS" \
+  -Dcpp_args="$TARGET_CXXFLAGS" \
   -Dintel=enabled \
   -Damdgpu=enabled \
   -Dnouveau=enabled \

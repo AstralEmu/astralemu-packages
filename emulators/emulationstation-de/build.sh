@@ -20,8 +20,8 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto" \
-    -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto" \
+    -DCMAKE_C_FLAGS="$TARGET_CFLAGS -flto" \
+    -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto" \
     -DCMAKE_EXE_LINKER_FLAGS="-ljemalloc" \
     -DCMAKE_SHARED_LINKER_FLAGS="-ljemalloc"
 fi
@@ -39,10 +39,11 @@ timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
 DESTDIR=/tmp/pkg/root ninja install
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
-echo "emulationstation-de-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "emulationstation-de-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh emulationstation-de /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "EmulationStation Desktop Edition (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "EmulationStation Desktop Edition (${TARGET_ID} build)" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -63,7 +64,7 @@ libpugixml1v5
 libvlc5
 libpoppler-cpp0t64
 DEPS
-tar cf /workspace/emulationstation-de-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/emulationstation-de-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

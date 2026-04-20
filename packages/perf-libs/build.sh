@@ -26,13 +26,13 @@ export CXX=clang++
 export CC_LD=lld
 export CXX_LD=lld
 export LDFLAGS="-fuse-ld=lld"
-export DEVICE_LDFLAGS="-fuse-ld=lld"
+export TARGET_LDFLAGS="-fuse-ld=lld"
 
 export NPROC=$(nproc)
 
 # Arch detection
 export IS_X86=false IS_ARM=false
-case "$DEVICE_ARCH" in
+case "$TARGET_ARCH" in
   amd64|x86_64) IS_X86=true ;;
   arm64|aarch64) IS_ARM=true ;;
 esac
@@ -151,10 +151,10 @@ rm -rf "$PKG_ROOT/usr/lib/cmake" "$PKG_ROOT/usr/lib64/cmake" "$PKG_ROOT/usr/shar
 
 # Metadata
 VERSION="1.0.0"
-echo "perf-libs-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "perf-libs-${TARGET_ID}" > /tmp/pkg/meta/name
 echo "$VERSION" > /tmp/pkg/meta/version
-echo "$DEVICE_ARCH" > /tmp/pkg/meta/arch
-echo "Performance-optimized system libraries for ${DEVICE_ID}" > /tmp/pkg/meta/description
+echo "$TARGET_ARCH" > /tmp/pkg/meta/arch
+echo "Performance-optimized system libraries for ${TARGET_ID}" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "${SOURCE_DISTRO:-noble}" > /tmp/pkg/meta/source_distro
@@ -202,8 +202,11 @@ for distro in $DISTROS; do
   cp "/tmp/pkg/meta/provides.${distro}" "/tmp/pkg/meta/replaces.${distro}"
 done
 
+# Append device-alias Provides/Replaces into each provides.<distro>/replaces.<distro>
+bash /workspace/scripts/emit-aliases.sh perf-libs /tmp/pkg/meta
+
 # Build intermediate tar
-tar cf "/workspace/perf-libs-${DEVICE_ID}_${VERSION}_${DEVICE_ARCH}.pkg.tar" -C /tmp/pkg meta root
+tar cf "/workspace/perf-libs-${TARGET_ID}_${VERSION}_${TARGET_ARCH}.pkg.tar" -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

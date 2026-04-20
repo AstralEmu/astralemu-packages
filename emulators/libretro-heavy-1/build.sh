@@ -4,8 +4,8 @@ export PATH="/usr/lib/ccache:$PATH"
 export CCACHE_MAXSIZE=5G
 ccache -z
 
-export CFLAGS="$DEVICE_CFLAGS -flto=auto"
-export CXXFLAGS="$DEVICE_CXXFLAGS -flto=auto"
+export CFLAGS="$TARGET_CFLAGS -flto=auto"
+export CXXFLAGS="$TARGET_CXXFLAGS -flto=auto"
 export LDFLAGS="-flto=auto -shared -ljemalloc"
 
 CORES_DIR=/workspace/libretro-cores

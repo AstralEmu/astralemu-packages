@@ -6,8 +6,8 @@ export CCACHE_MAXSIZE=5G
 ccache -z
 
 # -Wno-error prevents warnings from failing the build
-export CFLAGS="$DEVICE_CFLAGS -flto -Wno-error"
-export CXXFLAGS="$DEVICE_CXXFLAGS -flto -Wno-error"
+export CFLAGS="$TARGET_CFLAGS -flto -Wno-error"
+export CXXFLAGS="$TARGET_CXXFLAGS -flto -Wno-error"
 export LDFLAGS="-flto -ljemalloc"
 
 CORES_DIR=/workspace/libretro-cores

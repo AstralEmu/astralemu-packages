@@ -21,8 +21,8 @@ if [[ ! -f build.ninja ]]; then
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_C_FLAGS="$DEVICE_CFLAGS -flto" \
-    -DCMAKE_CXX_FLAGS="$DEVICE_CXXFLAGS -flto" \
+    -DCMAKE_C_FLAGS="$TARGET_CFLAGS -flto" \
+    -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto" \
     -DCMAKE_EXE_LINKER_FLAGS="-ljemalloc" \
     -DCMAKE_SHARED_LINKER_FLAGS="-ljemalloc" \
     -DUSING_QT_UI=OFF \
@@ -58,10 +58,11 @@ DESK
 
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
-echo "ppsspp-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "ppsspp-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh ppsspp /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "PPSSPP PlayStation Portable Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "PPSSPP PlayStation Portable Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -82,7 +83,7 @@ libswscale7
 libzip4t64
 libpng16-16t64
 DEPS
-tar cf /workspace/ppsspp-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/ppsspp-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

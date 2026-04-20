@@ -14,8 +14,8 @@ git fetch origin --tags
 git checkout "$VERSION"
 git submodule update --init --recursive
 
-export CFLAGS="$DEVICE_CFLAGS -flto"
-export CXXFLAGS="$DEVICE_CXXFLAGS -flto"
+export CFLAGS="$TARGET_CFLAGS -flto"
+export CXXFLAGS="$TARGET_CXXFLAGS -flto"
 export LDFLAGS="-ljemalloc"
 
 # Build with X11 (XWayland)
@@ -45,10 +45,11 @@ DESK
 
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
-echo "xemu-${DEVICE_ID}" > /tmp/pkg/meta/name
+echo "xemu-${TARGET_ID}" > /tmp/pkg/meta/name
+bash /workspace/scripts/emit-aliases.sh xemu /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
-echo "${DEVICE_ARCH}" > /tmp/pkg/meta/arch
-echo "xemu Original Xbox Emulator (${DEVICE_ID} build)" > /tmp/pkg/meta/description
+echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
+echo "xemu Original Xbox Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
 echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
 echo "deb" > /tmp/pkg/meta/source_format
 echo "noble" > /tmp/pkg/meta/source_distro
@@ -66,7 +67,7 @@ libsamplerate0
 libpcap0.8t64
 libslirp0
 DEPS
-tar cf /workspace/xemu-${DEVICE_ID}_${VERSION_CLEAN}_${DEVICE_ARCH}.pkg.tar -C /tmp/pkg meta root
+tar cf /workspace/xemu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
 echo "completed" > /workspace/build-status

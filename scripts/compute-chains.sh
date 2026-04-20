@@ -31,9 +31,25 @@ EMUS_JSON=$(echo "$EMUS_ONLY" "$PKGS_ONLY" | jq -s '
   ([.[0][] | . + {_base_dir: "emulators"}]) +
   ([.[1][] | . + {_base_dir: "packages"}])')
 DEVS_JSON=$(yq -o=json '.devices' "$ROOT_DIR/devices.yml")
+TARGETS_JSON=$(yq -o=json '.build_targets' "$ROOT_DIR/devices.yml")
+
+# For each build_target, collect its devices (aliases) and the max power score
+# across all devices mapping to it. Emulators are filtered on the max power —
+# if any device on the target can run the emulator, we build for the target.
+TARGETS_JSON=$(echo "$TARGETS_JSON" "$DEVS_JSON" | jq -s '
+  .[0] as $targets |
+  .[1] as $devs |
+  $targets | map(
+    . as $t |
+    ($devs | map(select(.build_target == $t.id))) as $members |
+    . + {
+      devices: ($members | map(.id)),
+      max_power: ($members | map(.power // 1) | max // 1)
+    }
+  )')
 
 emu_count=$(echo "$EMUS_JSON" | jq 'length')
-dev_count=$(echo "$DEVS_JSON" | jq 'length')
+target_count=$(echo "$TARGETS_JSON" | jq 'length')
 
 # --- Step 1: Compute hashes (build script + emulator config entry) ---
 HASHES="{}"
@@ -225,6 +241,7 @@ for (( i=0; i<emu_count; i++ )); do
   base_dir=$(echo "$emu_data" | jq -r '._base_dir // "emulators"')
   artifact_type=$(echo "$emu_data" | jq -r '.artifact_type // "pkg"')
   is_aggregator=$(echo "$emu_data" | jq -r '.is_aggregator // false')
+  per_device=$(echo "$emu_data" | jq -r '.per_device // false')
   extra_cache_key=$(echo "$emu_data" | jq -r '.extra_caches[0].key // empty')
   extra_cache_path=$(echo "$emu_data" | jq -r '.extra_caches[0].path // empty')
   extra_cache_mount=$(echo "$emu_data" | jq -r '.extra_caches[0].mount // empty')
@@ -243,23 +260,45 @@ for (( i=0; i<emu_count; i++ )); do
   fi
   version_short="${short:-$version}"
 
-  for (( j=0; j<dev_count; j++ )); do
-    dev_data=$(echo "$DEVS_JSON" | jq -c ".[$j]")
-    dev_arch=$(echo "$dev_data" | jq -r '.arch')
-    dev_power=$(echo "$dev_data" | jq -r '.power // 1')
-    dev_id=$(echo "$dev_data" | jq -r '.id')
+  # per_device=true emulators (e.g. setperf) iterate over devices directly;
+  # each device gets its own build with TARGET_ID=<device_id> and no alias.
+  # All other emulators iterate over build_targets (compilation deduplication).
+  if [[ "$per_device" == "true" ]]; then
+    ITER_JSON=$(echo "$DEVS_JSON" | jq -c '[.[] | {
+      id: .id,
+      arch: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].arch),
+      runner: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].runner),
+      platform: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].platform),
+      cflags: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].cflags),
+      cxxflags: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].cxxflags),
+      source_distro: (.build_target as $bt | '"$TARGETS_JSON"' | map(select(.id == $bt))[0].source_distro),
+      max_power: (.power // 1),
+      devices: [.id]
+    }]')
+  else
+    ITER_JSON="$TARGETS_JSON"
+  fi
+  iter_count=$(echo "$ITER_JSON" | jq 'length')
 
-    # Power score + arch filter
-    if [[ "$dev_arch" == "arm64" ]]; then
+  for (( j=0; j<iter_count; j++ )); do
+    tgt_data=$(echo "$ITER_JSON" | jq -c ".[$j]")
+    tgt_arch=$(echo "$tgt_data" | jq -r '.arch')
+    tgt_power=$(echo "$tgt_data" | jq -r '.max_power // 1')
+    tgt_id=$(echo "$tgt_data" | jq -r '.id')
+    tgt_devices=$(echo "$tgt_data" | jq -r '.devices | join(" ")')
+
+    # Power score + arch filter — we build for the target if any device on it
+    # meets the emulator's power requirement.
+    if [[ "$tgt_arch" == "arm64" ]]; then
       if [[ "$true_arm" != "true" ]]; then continue; fi
-      if (( dev_power < power_arm )); then
-        echo "  Skipping $emu_id on $dev_id (power $dev_power < $power_arm for arm)"
+      if (( tgt_power < power_arm )); then
+        echo "  Skipping $emu_id on $tgt_id (max power $tgt_power < $power_arm for arm)"
         continue
       fi
-    elif [[ "$dev_arch" == "amd64" ]]; then
+    elif [[ "$tgt_arch" == "amd64" ]]; then
       if [[ "$true_amd" != "true" ]]; then continue; fi
-      if (( dev_power < power_amd )); then
-        echo "  Skipping $emu_id on $dev_id (power $dev_power < $power_amd for amd)"
+      if (( tgt_power < power_amd )); then
+        echo "  Skipping $emu_id on $tgt_id (max power $tgt_power < $power_amd for amd)"
         continue
       fi
     fi
@@ -267,11 +306,11 @@ for (( i=0; i<emu_count; i++ )); do
     # Resolve {arch} placeholder
     resolved_cache_key=""
     if [[ -n "$extra_cache_key" ]]; then
-      resolved_cache_key="${extra_cache_key//\{arch\}/$dev_arch}"
+      resolved_cache_key="${extra_cache_key//\{arch\}/$tgt_arch}"
     fi
 
     # Build JSON entry
-    entry=$(echo "$dev_data" | jq -c \
+    entry=$(echo "$tgt_data" | jq -c \
       --arg emu_id "$emu_id" \
       --arg base_dir "$base_dir" \
       --arg version "$version" \
@@ -288,14 +327,14 @@ for (( i=0; i<emu_count; i++ )); do
       '{
         emulator_id: $emu_id,
         base_dir: $base_dir,
-        device_id: .id,
-        device_arch: .arch,
-        device_runner: .runner,
-        device_platform: .platform,
-        device_cflags: .cflags,
-        device_cxxflags: .cxxflags,
-        device_source_distro: .source_distro,
-        device_name: .name,
+        target_id: .id,
+        target_arch: .arch,
+        target_runner: .runner,
+        target_platform: .platform,
+        target_cflags: .cflags,
+        target_cxxflags: .cxxflags,
+        target_source_distro: .source_distro,
+        target_devices: (.devices | join(",")),
         version: $version,
         version_short: $version_short,
         hash: $hash,

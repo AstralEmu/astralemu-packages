@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-DEVICE_ID="${DEVICE_ID}"
-DEVICE_ARCH="${DEVICE_ARCH}"
+TARGET_ID="${TARGET_ID}"
+TARGET_ARCH="${TARGET_ARCH}"
 
 cd /workspace
 
@@ -10,10 +10,11 @@ if find cores/ -name '*.so' 2>/dev/null | grep -q .; then
   mkdir -p pkg/root/usr/lib/libretro pkg/meta
   find cores/ -name '*.so' -exec cp {} pkg/root/usr/lib/libretro/ \;
 
-  echo "libretro-cores-${DEVICE_ID}" > pkg/meta/name
+  echo "libretro-cores-${TARGET_ID}" > pkg/meta/name
+  bash /workspace/scripts/emit-aliases.sh libretro-cores pkg/meta
   echo "1.0.0" > pkg/meta/version
-  echo "${DEVICE_ARCH}" > pkg/meta/arch
-  echo "Libretro cores for RetroArch (${DEVICE_ID} build) - All standard libretro cores compiled for ${DEVICE_ID}." > pkg/meta/description
+  echo "${TARGET_ARCH}" > pkg/meta/arch
+  echo "Libretro cores for RetroArch (${TARGET_ID} build) - All standard libretro cores compiled for ${TARGET_ID}." > pkg/meta/description
   echo "AstralEmu <noreply@astralemu.github.io>" > pkg/meta/maintainer
   echo "deb" > pkg/meta/source_format
   echo "noble" > pkg/meta/source_distro
@@ -25,7 +26,7 @@ zlib1g
 libjemalloc2
 DEPS
 
-  tar cf "/workspace/libretro-cores-${DEVICE_ID}_1.0.0_${DEVICE_ARCH}.pkg.tar" -C pkg meta root
+  tar cf "/workspace/libretro-cores-${TARGET_ID}_1.0.0_${TARGET_ARCH}.pkg.tar" -C pkg meta root
   echo "completed" > /workspace/build-status
 else
   echo "No cores found"
