@@ -29,8 +29,10 @@ fi
 
 [[ -z "${TARGET_DEVICES:-}" ]] && exit 0
 
-mapfile -t provides_distro < <(shopt -s nullglob; printf '%s\n' "$meta_dir"/provides.*)
-mapfile -t replaces_distro < <(shopt -s nullglob; printf '%s\n' "$meta_dir"/replaces.*)
+provides_distro=()
+replaces_distro=()
+for f in "$meta_dir"/provides.*; do [[ -f "$f" ]] && provides_distro+=("$f"); done
+for f in "$meta_dir"/replaces.*; do [[ -f "$f" ]] && replaces_distro+=("$f"); done
 
 IFS=',' read -ra aliases <<< "$TARGET_DEVICES"
 for alias in "${aliases[@]}"; do
