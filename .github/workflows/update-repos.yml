@@ -34,6 +34,14 @@ on:
 permissions:
   contents: write
 
+# Serialize every invocation that pushes to gh-pages. Prevents add/add
+# conflicts on binary packages and metadata when multiple devices (or a
+# mirror-devices run overlapping a build-emulators run) land pushes in
+# quick succession. cancel-in-progress:false queues instead of dropping.
+concurrency:
+  group: gh-pages-push
+  cancel-in-progress: false
+
 jobs:
   # ==================================================================
   # NORMALIZE: Extract all packages to intermediate format (parallel)
@@ -1171,26 +1179,35 @@ jobs:
           cd gh-pages-dir
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          push_with_retry() {
-            for attempt in 1 2 3 4 5; do
-              git push origin gh-pages && return 0
-              echo "Push attempt $attempt failed, rebasing..."
-              git fetch --depth=1 origin gh-pages
-              git stash
-              git rebase origin/gh-pages
-              git stash pop
-            done
-            return 1
-          }
+
+          # Build up commits locally first, then push once at the end.
+          # Fewer pushes -> smaller conflict window if concurrency briefly fails.
           for fmt in apt dnf pacman; do
             git add "${fmt}/" || true
             if ! git diff --cached --quiet; then
               git commit -m "Update ${{ inputs.device }} ${fmt} repository"
-              push_with_retry
             fi
           done
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "Update ${{ inputs.device }} index"
-            push_with_retry
           fi
+
+          # Single push with retry. In rebase, "-X theirs" means "prefer the
+          # commits being replayed" (our just-generated packages and metadata)
+          # over the base (origin/gh-pages). Safe because every binary we
+          # regenerate is more recent than the conflicting remote version,
+          # and the next run on any device will rewrite repomd/index to
+          # reflect the full on-disk state.
+          for attempt in 1 2 3 4 5; do
+            git push origin gh-pages && exit 0
+            echo "Push attempt $attempt failed, rebasing -X theirs..."
+            git fetch --depth=1 origin gh-pages
+            if ! git rebase -X theirs origin/gh-pages; then
+              echo "Rebase still conflicted — taking remote version of unresolved paths"
+              git checkout --theirs -- . 2>/dev/null || true
+              git add -A
+              git rebase --continue || git rebase --skip || { git rebase --abort; exit 1; }
+            fi
+          done
+          exit 1

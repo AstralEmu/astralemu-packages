@@ -52,7 +52,8 @@ if $IS_ARM; then
   VULKAN="broadcom,freedreno,panfrost,swrast,nouveau"
 fi
 
-meson setup build --prefix=/usr --buildtype=release \
+meson setup build --prefix=/usr --buildtype=release --reconfigure \
+  -Db_lto=false \
   -Dc_args="$TARGET_CFLAGS" \
   -Dcpp_args="$TARGET_CXXFLAGS" \
   -Dgallium-drivers="$GALLIUM" \
