@@ -31,9 +31,17 @@ fi
 # Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
 pip3 install --break-system-packages meson mako --upgrade
 
-# Mesa 26+ requires Rust >= 1.82, bindgen >= 0.71.1, and libclc
+# Mesa 26+ extra system deps not in the base image:
+#   libclc-18                — OpenCL C headers for compute shaders
+#   libllvmspirvlib-18-dev   — SPIR-V <-> LLVM translator
+#   libclang-cpp18-dev       — gates the CLC path pulled in by llvmspirvlib;
+#                              Mesa tries clang-cpp first, then falls back to
+#                              per-module clangBasic/clangAST/etc.
+apt-get update && apt-get install -y --no-install-recommends \
+  libclc-18 libllvmspirvlib-18-dev libclang-cpp18-dev
+
+# Mesa 26+ also requires Rust >= 1.82 and bindgen >= 0.71.1 for rusticl/NAK.
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
-  apt-get update && apt-get install -y --no-install-recommends libclc-18 libllvmspirvlib-18-dev
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
   source "$HOME/.cargo/env"
   cargo install bindgen-cli
