@@ -40,9 +40,11 @@ pip3 install --break-system-packages meson mako --upgrade
 #   bison flex               — required whenever gallium/GL/vulkan is enabled
 #                              (needs_flex_bison = with_any_opengl or ...)
 #   libelf-dev               — used by freedreno ir3 dbg and some gallium bits
+#   libwayland-egl-backend-dev — provides wayland-egl-backend.pc, required by
+#                              Mesa's EGL Wayland platform (-Dplatforms=wayland)
 apt-get update && apt-get install -y --no-install-recommends \
   libclc-18 libllvmspirvlib-18-dev libclang-cpp18-dev \
-  bison flex libelf-dev
+  bison flex libelf-dev libwayland-egl-backend-dev
 
 # Mesa 26+ also requires Rust >= 1.82 and bindgen >= 0.71.1 for rusticl/NAK.
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
