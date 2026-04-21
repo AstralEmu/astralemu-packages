@@ -10,6 +10,23 @@ git fetch --tags
 LATEST=$(git tag -l 'mesa-[0-9]*' | sort -V | tail -1)
 echo "Using Mesa: $LATEST"
 git checkout "$LATEST"
+# Reset any previously applied patches from a prior run in the same workspace
+git reset --hard "$LATEST" >/dev/null
+git clean -fd >/dev/null
+
+# Apply Turnip tweaks on Snapdragon-capable targets only. These modify
+# src/freedreno/ which is only loaded at runtime on Adreno GPUs, so the
+# same binary stays inert on RPi5 (v3d) and RK3588 (panfrost).
+PATCH_DIR="$(dirname "${BASH_SOURCE[0]}")/patches"
+if [[ "${TARGET_ID:-}" == "arm64-modern" && -d "$PATCH_DIR" ]]; then
+  echo "Applying Turnip patches for $TARGET_ID:"
+  for p in "$PATCH_DIR"/*.patch; do
+    [[ -f "$p" ]] || continue
+    echo "  -> $(basename "$p")"
+    git apply --check "$p" || { echo "ERROR: patch $(basename "$p") does not apply to Mesa $LATEST" >&2; exit 1; }
+    git apply "$p"
+  done
+fi
 
 # Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
 pip3 install --break-system-packages meson mako --upgrade
