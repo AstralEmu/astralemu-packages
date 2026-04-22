@@ -626,12 +626,16 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
     done
   fi
 
-  # Filter oversized packages (GitHub rejects files > 100 MB)
+  # Filter oversized packages (GitHub rejects files > 100 MB).
+  # Also append every drop to $OUTPUT_DIR/oversized.txt so the CI report
+  # step can surface them in the run summary.
   for pkg_file in "$FETCH_DIR"/*; do
     [[ -f "$pkg_file" ]] || continue
     pkg_size=$(stat -c%s "$pkg_file" 2>/dev/null || stat -f%z "$pkg_file")
     if (( pkg_size > MAX_PKG_SIZE )); then
-      echo "  [SKIP] $(basename "$pkg_file") — too large ($(( pkg_size / 1024 / 1024 )) MB > $(( MAX_PKG_SIZE / 1024 / 1024 )) MB)" >&2
+      size_mb=$(( pkg_size / 1024 / 1024 ))
+      echo "  [SKIP] $(basename "$pkg_file") — too large (${size_mb} MB > $(( MAX_PKG_SIZE / 1024 / 1024 )) MB)" >&2
+      printf '%s\t%d\n' "$(basename "$pkg_file")" "$size_mb" >> "$OUTPUT_DIR/oversized.txt"
       rm -f "$pkg_file"
     fi
   done

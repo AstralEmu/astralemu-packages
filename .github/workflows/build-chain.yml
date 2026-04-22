@@ -45,6 +45,7 @@ jobs:
         run: docker load -i /tmp/emu-deps.tar
 
       - name: Restore ccache
+        id: cache_ccache
         uses: actions/cache/restore@v4
         with:
           path: /tmp/ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
@@ -53,6 +54,7 @@ jobs:
             ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-
 
       - name: Restore extra cache
+        id: cache_extra
         if: matrix.entry.extra_cache_key != ''
         uses: actions/cache/restore@v4
         with:
@@ -191,6 +193,27 @@ jobs:
               fi
               ;;
           esac
+          report_table_end
+
+          # Cache status — GitHub Actions doesn't expose whether actions/cache
+          # /save succeeded from within the workflow, but we can at least
+          # surface the restore hit/miss and the exact keys used, so any
+          # "Cache save failed" warning visible in the run annotations can be
+          # correlated to the right entry.
+          report_note "**Caches**"
+          report_table "Cache" "Key" "Restore"
+          ccache_hit="${{ steps.cache_ccache.outputs.cache-hit }}"
+          report_row "$([[ "$ccache_hit" == "true" ]] && echo CACHED || echo BUILT)" \
+            "ccache" \
+            "ccache-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-${{ matrix.entry.version_short }}" \
+            "${ccache_hit:-miss}"
+          if [[ -n "${{ matrix.entry.extra_cache_key }}" ]]; then
+            extra_hit="${{ steps.cache_extra.outputs.cache-hit }}"
+            report_row "$([[ "$extra_hit" == "true" ]] && echo CACHED || echo BUILT)" \
+              "extra (${{ matrix.entry.emulator_id }})" \
+              "${{ matrix.entry.extra_cache_key }}" \
+              "${extra_hit:-miss}"
+          fi
           report_table_end
 
       - name: Save success marker

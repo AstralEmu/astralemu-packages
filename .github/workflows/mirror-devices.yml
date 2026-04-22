@@ -224,7 +224,7 @@ jobs:
         run: |
           source scripts/report.sh
           report_section "Mirror sources"
-          report_table "Device" "Source" "New packages"
+          report_table "Status" "Device" "Source" "New packages"
           shopt -s nullglob
           for dir in new-pkgs-*; do
             device_id="${dir#new-pkgs-}"
