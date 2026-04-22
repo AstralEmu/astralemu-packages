@@ -28,8 +28,9 @@ if [[ "${TARGET_ID:-}" == "arm64-modern" && -d "$PATCH_DIR" ]]; then
   done
 fi
 
-# Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2)
-pip3 install --break-system-packages meson mako --upgrade
+# Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2),
+# pycparser >= 2.20 for etnaviv hwdb code generation.
+pip3 install --break-system-packages meson mako pycparser --upgrade
 
 # Mesa 26+ extra system deps not in the base image:
 #   libclc-18                — OpenCL C headers for compute shaders
