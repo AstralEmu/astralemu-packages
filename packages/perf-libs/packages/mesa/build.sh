@@ -64,9 +64,10 @@ apt-get install -y --no-install-recommends \
   libxshmfence-dev
 
 # Python deps: Mesa 26+ needs meson >= 1.4.0 (noble ships 1.3.2), pycparser
-# >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+
+# >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+.
+# python3-yaml comes from apt (Debian-installed, don't let pip touch it).
 pip3 install --break-system-packages --upgrade \
-  meson mako pycparser packaging pyyaml
+  meson mako pycparser packaging
 
 # Rust + bindgen + cbindgen — Mesa 26+ requires Rust >= 1.82 (noble ships 1.75)
 # for rusticl, NAK (NVK compiler), and nouveau NIL
