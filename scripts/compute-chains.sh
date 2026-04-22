@@ -93,7 +93,7 @@ for (( i=0; i<emu_count; i++ )); do
     fi
   fi
 
-  # Check if version changed
+  # Check if version changed (applies to all targets equally)
   ver_changed="false"
   if [[ -n "$tracker_file" ]] && [[ -n "$version" ]]; then
     current=$(cat "$ROOT_DIR/.trackers/$tracker_file" 2>/dev/null || echo "")
@@ -102,21 +102,14 @@ for (( i=0; i<emu_count; i++ )); do
     fi
   fi
 
-  # Check marker
-  marker_key="success-${emu_id}-${hash}"
-  has_marker="false"
-  if echo "${MARKERS_LIST:-}" | grep -qF "$marker_key"; then
-    has_marker="true"
-  fi
-
-  # Decide
-  if [[ "${FORCE:-false}" == "true" ]] || [[ "$ver_changed" == "true" ]] || [[ "$has_marker" != "true" ]]; then
-    BUILDS=$(echo "$BUILDS" | jq --arg id "$emu_id" '. + {($id): true}')
-    echo "  $emu_id: BUILD (force=${FORCE:-false} ver_changed=$ver_changed marker=$has_marker)"
-  else
-    BUILDS=$(echo "$BUILDS" | jq --arg id "$emu_id" '. + {($id): false}')
-    echo "  $emu_id: SKIP (unchanged + succeeded)"
-  fi
+  # Emu-level flag: always true at this stage. The real per-target skip
+  # decision happens in step 4, which checks the exact marker
+  # success-<emu>-<target>-<hash> for each (emu, target) pair. Keeping
+  # BUILDS[emu]=true here lets step 2b propagate deps correctly; any
+  # emu with no surviving targets after step 4 simply contributes zero
+  # entries to the matrix.
+  BUILDS=$(echo "$BUILDS" | jq --arg id "$emu_id" '. + {($id): true}')
+  echo "  $emu_id: CONSIDER (force=${FORCE:-false} ver_changed=$ver_changed)"
 done
 
 # --- Step 2b: If an aggregator/dependent needs building, force its deps too ---
@@ -303,10 +296,23 @@ for (( i=0; i<emu_count; i++ )); do
       fi
     fi
 
-    # Resolve {arch} placeholder
+    # Skip this target if it already has a success marker for the exact
+    # (emu, target, hash) triple — unless we were forced / version changed.
+    if [[ "${FORCE:-false}" != "true" ]] && [[ "$ver_changed" != "true" ]]; then
+      per_target_marker="success-${emu_id}-${tgt_id}-${hash}"
+      if echo "${MARKERS_LIST:-}" | grep -qF "$per_target_marker"; then
+        echo "  SKIP $emu_id on $tgt_id (marker exists: $per_target_marker)"
+        continue
+      fi
+    fi
+
+    # Resolve placeholders in extra_caches key. {arch} is kept for backwards
+    # compat but {target_id} is preferred — multiple targets can share an
+    # arch (arm64-legacy + arm64-modern) and must not collide on cache keys.
     resolved_cache_key=""
     if [[ -n "$extra_cache_key" ]]; then
       resolved_cache_key="${extra_cache_key//\{arch\}/$tgt_arch}"
+      resolved_cache_key="${resolved_cache_key//\{target_id\}/$tgt_id}"
     fi
 
     # Build JSON entry

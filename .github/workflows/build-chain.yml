@@ -18,6 +18,9 @@ on:
         type: string
         default: '19800'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build:
     runs-on: ${{ matrix.entry.target_runner }}
@@ -130,6 +133,9 @@ jobs:
           path: "*.pkg.tar"
           retention-days: 1
           overwrite: true
+          # Some entries (e.g. duckstation-deps) are helper steps that prep
+          # a cache without emitting a .pkg.tar. Don't warn in that case.
+          if-no-files-found: ignore
 
       - name: Upload cores artifact
         if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'cores'
@@ -139,6 +145,7 @@ jobs:
           path: "cores-*/*.so"
           retention-days: 1
           overwrite: true
+          if-no-files-found: ignore
 
       - name: Save success marker
         if: steps.build.outputs.completed == 'true'
@@ -149,4 +156,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /tmp/marker
-          key: success-${{ matrix.entry.emulator_id }}-${{ matrix.entry.hash }}
+          # target_id in the key so each build_target has its own marker —
+          # otherwise 3 jobs (one per target) collide on the same cache
+          # entry during save.
+          key: success-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}-${{ matrix.entry.hash }}

@@ -20,6 +20,9 @@ concurrency:
   group: mirror-sources
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   # ===========================================================================
   # MIRROR: Check all sources from devices.yml, detect new/changed packages

@@ -80,7 +80,7 @@ emulators:
     true_arm: true
     true_amd: true
     extra_caches:
-      - key: "duck-deps-v2-{arch}"
+      - key: "duck-deps-v2-{target_id}"
         path: /tmp/duck-deps
         mount: /deps
         save: true
@@ -98,7 +98,7 @@ emulators:
     true_amd: true
     depends_on: [duckstation-deps]
     extra_caches:
-      - key: "duck-deps-v2-{arch}"
+      - key: "duck-deps-v2-{target_id}"
         path: /tmp/duck-deps
         mount: /deps
         save: false

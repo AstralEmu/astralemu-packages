@@ -32,6 +32,9 @@ concurrency:
 env:
   CACHE_KEY: emu-deps-base-v5
   BUILD_TIMEOUT: 19800  # 5h30 in seconds (leave 30min for cache save)
+  # Silence the Node.js 20 deprecation warnings that every v4 action spams.
+  # GitHub will flip to Node 24 on 2026-06-02 anyway — opt in early.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # ===========================================================================

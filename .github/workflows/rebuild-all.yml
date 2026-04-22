@@ -9,6 +9,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   # Both child workflows skip their own deploy-pages step; we deploy once
   # here at the end. Otherwise we get two "github-pages" artifacts in the
