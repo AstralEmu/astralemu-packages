@@ -14,6 +14,10 @@ on:
       force:
         type: boolean
         default: false
+      skip_deploy:
+        description: 'Skip the final Pages deploy (set by rebuild-all.yml to avoid duplicate uploads)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -505,5 +509,5 @@ jobs:
   # ===========================================================================
   deploy-pages:
     needs: [update-repo-seed, update-repo]
-    if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
+    if: "!cancelled() && !inputs.skip_deploy && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
     uses: ./.github/workflows/deploy-pages.yml

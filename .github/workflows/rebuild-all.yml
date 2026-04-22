@@ -10,12 +10,25 @@ permissions:
   id-token: write
 
 jobs:
+  # Both child workflows skip their own deploy-pages step; we deploy once
+  # here at the end. Otherwise we get two "github-pages" artifacts in the
+  # same run and actions/deploy-pages@v4 errors out.
   mirror:
     uses: ./.github/workflows/mirror-devices.yml
+    with:
+      skip_deploy: true
     secrets: inherit
 
   build:
+    needs: mirror
+    if: "!cancelled()"
     uses: ./.github/workflows/build-emulators.yml
     with:
       force: true
+      skip_deploy: true
     secrets: inherit
+
+  deploy-pages:
+    needs: [mirror, build]
+    if: "!cancelled() && (needs.mirror.result == 'success' || needs.build.result == 'success')"
+    uses: ./.github/workflows/deploy-pages.yml
