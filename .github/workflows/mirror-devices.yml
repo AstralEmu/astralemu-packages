@@ -219,6 +219,26 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
+      - name: Report mirror outcome
+        if: always()
+        run: |
+          source scripts/report.sh
+          report_section "Mirror sources"
+          report_table "Device" "Source" "New packages"
+          shopt -s nullglob
+          for dir in new-pkgs-*; do
+            device_id="${dir#new-pkgs-}"
+            count=$(find "$dir" -type f 2>/dev/null | wc -l)
+            status="ADDED"; (( count == 0 )) && status="SKIP"
+            report_row "$status" "$device_id" "(all sources)" "$count"
+          done
+          # Devices with no new-pkgs-<id> dir had no changes at all
+          for dev in $(yq -r '.devices[] | select(.sources != null) | select(.sources | length > 0) | .id' devices.yml); do
+            [[ -d "new-pkgs-$dev" ]] && continue
+            report_row "IGNORED" "$dev" "(all sources)" "0 (unchanged)"
+          done
+          report_table_end
+
   # ===========================================================================
   # UPDATE REPO: Convert and publish (only for devices with new packages)
   # ===========================================================================

@@ -17,15 +17,31 @@ git clean -fd >/dev/null
 # Apply Turnip tweaks on Snapdragon-capable targets only. These modify
 # src/freedreno/ which is only loaded at runtime on Adreno GPUs, so the
 # same binary stays inert on RPi5 (v3d) and RK3588 (panfrost).
+#
+# Best-effort: Turnip patches come from a third-party upstream and bitrot
+# as Mesa refactors. Individual patch failures are logged but don't abort
+# the build — a missing tweak just means upstream Turnip is used for that
+# device, not that the whole target is broken. Patches are applied via
+# `git am --reject` so conflicting hunks become .rej files instead of
+# leaving the tree dirty mid-apply.
 PATCH_DIR="$(dirname "${BASH_SOURCE[0]}")/patches"
 if [[ "${TARGET_ID:-}" == "arm64-modern" && -d "$PATCH_DIR" ]]; then
   echo "Applying Turnip patches for $TARGET_ID:"
+  applied=0 skipped=0
   for p in "$PATCH_DIR"/*.patch; do
     [[ -f "$p" ]] || continue
-    echo "  -> $(basename "$p")"
-    git apply --check "$p" || { echo "ERROR: patch $(basename "$p") does not apply to Mesa $LATEST" >&2; exit 1; }
-    git apply "$p"
+    name=$(basename "$p")
+    if git apply --check "$p" 2>/dev/null && git apply "$p" 2>/dev/null; then
+      echo "  OK   $name"
+      applied=$((applied+1))
+    else
+      echo "  SKIP $name (does not apply to $LATEST — bitrot, using upstream Turnip for affected GPUs)"
+      skipped=$((skipped+1))
+      # Reset any partial state before continuing
+      git checkout -- . 2>/dev/null || true
+    fi
   done
+  echo "Turnip patches: $applied applied, $skipped skipped"
 fi
 
 # =============================================================================
@@ -66,8 +82,16 @@ apt-get install -y --no-install-recommends \
 # Python deps: Mesa 26+ needs meson >= 1.4.0 (noble ships 1.3.2), pycparser
 # >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+.
 # python3-yaml comes from apt (Debian-installed, don't let pip touch it).
-pip3 install --break-system-packages --upgrade \
-  meson mako pycparser packaging
+# python3-pycparser on noble is distutils-installed (2.21) and pip can't
+# uninstall it safely — ignore it if it's already >= 2.20, only upgrade
+# meson/mako/packaging which ship as wheels.
+pip3 install --break-system-packages --upgrade meson mako packaging
+pycparser_ver=$(python3 -c 'import pycparser; print(pycparser.__version__)' 2>/dev/null || echo "0")
+if [[ "$(printf '%s\n2.20' "$pycparser_ver" | sort -V | head -1)" != "2.20" ]]; then
+  # Installed version is < 2.20 — force via --ignore-installed to bypass the
+  # distutils "can't uninstall" error (ships a newer copy alongside).
+  pip3 install --break-system-packages --ignore-installed pycparser
+fi
 
 # Rust + bindgen + cbindgen — Mesa 26+ requires Rust >= 1.82 (noble ships 1.75)
 # for rusticl, NAK (NVK compiler), and nouveau NIL

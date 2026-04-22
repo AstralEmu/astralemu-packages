@@ -508,6 +508,41 @@ jobs:
           fi
           echo "=== Done building $FORMAT repo for $DISTRO ==="
 
+      - name: Report publish outcome (seed)
+        if: always()
+        run: |
+          source scripts/report.sh
+          DEVICE="${{ inputs.device }}"
+          DISTRO="${{ fromJson(needs.normalize.outputs.seed_entry).distro }}"
+          FORMAT="${{ fromJson(needs.normalize.outputs.seed_entry).format }}"
+          report_section "Publish · $DEVICE / $DISTRO ($FORMAT) [seed]"
+          # Packages published per arch
+          shopt -s nullglob
+          report_table "Arch" "Packages" "Deps translated" "Failures"
+          for arch in ${{ needs.normalize.outputs.arches }}; do
+            case "$FORMAT" in
+              deb)    out_count=$(find "repo-output/apt/device/${DEVICE}/pool/${DISTRO}"    -name "*.deb"         2>/dev/null | wc -l) ;;
+              rpm)    out_count=$(find "repo-output/dnf/device/${DEVICE}"                  -name "*.rpm"         2>/dev/null | wc -l) ;;
+              pacman) out_count=$(find "repo-output/pacman/device/${DEVICE}"               -name "*.pkg.tar.zst" 2>/dev/null | wc -l) ;;
+            esac
+            map_file="fetched-deps-${DISTRO}-${arch}/dep-mapping.txt"
+            dep_count=0; [[ -f "$map_file" ]] && dep_count=$(wc -l < "$map_file")
+            fail_count=0; [[ -f build-failures.log ]] && fail_count=$(grep -c '^FAIL:' build-failures.log || true)
+            status="BUILT"; (( fail_count > 0 )) && status="WARN"
+            report_row "$status" "$arch" "$out_count" "$dep_count" "$fail_count"
+          done
+          report_table_end
+          # Translated deps listing (per arch)
+          for f in fetched-deps-*/dep-mapping.txt; do
+            [[ -s "$f" ]] || continue
+            arch=$(basename "$(dirname "$f")" | sed 's/^fetched-deps-[^-]*-//')
+            report_details "Translated dependencies ($arch, $(wc -l < "$f") entries)" "$(cat "$f")"
+          done
+          # Failure listing
+          if [[ -s build-failures.log ]]; then
+            report_details "Failures ($(grep -c '^FAIL:' build-failures.log) entries)" "$(cat build-failures.log)"
+          fi
+
       - name: Upload repo artifact
         uses: actions/upload-artifact@v4
         with:
@@ -795,6 +830,38 @@ jobs:
             echo "========================================="
           fi
           echo "=== Done building $FORMAT repo for $DISTRO ==="
+
+      - name: Report publish outcome
+        if: always()
+        run: |
+          source scripts/report.sh
+          DEVICE="${{ inputs.device }}"
+          DISTRO="${{ matrix.distro }}"
+          FORMAT="${{ matrix.format }}"
+          report_section "Publish · $DEVICE / $DISTRO ($FORMAT)"
+          shopt -s nullglob
+          report_table "Arch" "Packages" "Deps translated" "Failures"
+          for arch in ${{ needs.normalize.outputs.arches }}; do
+            case "$FORMAT" in
+              deb)    out_count=$(find "repo-output/apt/device/${DEVICE}/pool/${DISTRO}"    -name "*.deb"         2>/dev/null | wc -l) ;;
+              rpm)    out_count=$(find "repo-output/dnf/device/${DEVICE}"                  -name "*.rpm"         2>/dev/null | wc -l) ;;
+              pacman) out_count=$(find "repo-output/pacman/device/${DEVICE}"               -name "*.pkg.tar.zst" 2>/dev/null | wc -l) ;;
+            esac
+            map_file="fetched-deps-${DISTRO}-${arch}/dep-mapping.txt"
+            dep_count=0; [[ -f "$map_file" ]] && dep_count=$(wc -l < "$map_file")
+            fail_count=0; [[ -f build-failures.log ]] && fail_count=$(grep -c '^FAIL:' build-failures.log || true)
+            status="BUILT"; (( fail_count > 0 )) && status="WARN"
+            report_row "$status" "$arch" "$out_count" "$dep_count" "$fail_count"
+          done
+          report_table_end
+          for f in fetched-deps-*/dep-mapping.txt; do
+            [[ -s "$f" ]] || continue
+            arch=$(basename "$(dirname "$f")" | sed 's/^fetched-deps-[^-]*-//')
+            report_details "Translated dependencies ($arch, $(wc -l < "$f") entries)" "$(cat "$f")"
+          done
+          if [[ -s build-failures.log ]]; then
+            report_details "Failures ($(grep -c '^FAIL:' build-failures.log) entries)" "$(cat build-failures.log)"
+          fi
 
       - name: Upload repo artifact
         uses: actions/upload-artifact@v4

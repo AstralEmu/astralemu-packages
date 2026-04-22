@@ -79,6 +79,11 @@ jobs:
             EXTRA_MOUNT="-v ${{ matrix.entry.extra_cache_path }}:${{ matrix.entry.extra_cache_mount }}"
           fi
 
+          # Capture stdout+stderr so the summary step can tail it on failure.
+          BUILD_LOG="$RUNNER_TEMP/build.log"
+          START_TS=$(date +%s)
+
+          set +e
           docker run --rm --platform ${{ matrix.entry.target_platform }} \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
@@ -95,7 +100,16 @@ jobs:
             -e TARGET_CXXFLAGS="${{ matrix.entry.target_cxxflags }}" \
             -e TARGET_DEVICES="${{ matrix.entry.target_devices }}" \
             -e SOURCE_DISTRO=${{ matrix.entry.target_source_distro }} \
-            emu-deps-image bash /workspace/${{ matrix.entry.base_dir }}/${{ matrix.entry.emulator_id }}/build.sh
+            emu-deps-image bash /workspace/${{ matrix.entry.base_dir }}/${{ matrix.entry.emulator_id }}/build.sh \
+            2>&1 | tee "$BUILD_LOG"
+          RC=${PIPESTATUS[0]}
+          set -e
+
+          END_TS=$(date +%s)
+          DURATION=$((END_TS - START_TS))
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+          echo "rc=$RC" >> $GITHUB_OUTPUT
+          echo "log_path=$BUILD_LOG" >> $GITHUB_OUTPUT
 
           # Check build-status files (emulator scripts write "completed" on success)
           EMU_ID="${{ matrix.entry.emulator_id }}"
@@ -146,6 +160,38 @@ jobs:
           retention-days: 1
           overwrite: true
           if-no-files-found: ignore
+
+      - name: Report build outcome
+        if: always()
+        run: |
+          # Each chain job writes one row. The run's summary page shows all
+          # rows concatenated, preceded by the "Build matrix" emitted by the
+          # prepare job. Collapsible log block is attached on non-success.
+          source scripts/report.sh
+          report_section "Build · ${{ matrix.entry.emulator_id }} / ${{ matrix.entry.target_id }}"
+          report_table "Status" "Duration" "Version" "Artifact"
+          dur_s="${{ steps.build.outputs.duration }}"
+          dur="${dur_s:-0}s"
+          if (( dur_s > 60 )); then dur="$((dur_s/60))m$((dur_s%60))s"; fi
+          case "${{ steps.build.outputs.completed }}" in
+            true)
+              report_row "SUCCESS" "$dur" \
+                "${{ matrix.entry.version_short }}" \
+                "pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}"
+              ;;
+            false)
+              report_row "FAIL" "$dur" \
+                "${{ matrix.entry.version_short }}" \
+                "rc=${{ steps.build.outputs.rc }}, no artifact"
+              # Attach log tail so failures are diagnosable from the summary
+              if [[ -s "${{ steps.build.outputs.log_path }}" ]]; then
+                report_details \
+                  "Build log tail (last 300 lines)" \
+                  "$(tail -300 "${{ steps.build.outputs.log_path }}")"
+              fi
+              ;;
+          esac
+          report_table_end
 
       - name: Save success marker
         if: steps.build.outputs.completed == 'true'

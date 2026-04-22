@@ -216,6 +216,17 @@ done
 # --- Step 4: Build matrix entries, accumulate into ALL_ENTRIES with chain/level fields ---
 ALL_ENTRIES="[]"
 
+# Start the build-matrix report in $GITHUB_STEP_SUMMARY. We tally counts
+# as rows are emitted and print a summary footer at the end.
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/report.sh"
+report_section "Build matrix"
+report_table "Emulator" "Target" "Status" "Reason" "Version"
+report_build_count=0
+report_skip_marker=0
+report_skip_power=0
+report_skip_arch=0
+
 for (( i=0; i<emu_count; i++ )); do
   emu_id=$(echo "$EMUS_JSON" | jq -r ".[$i].id")
 
@@ -283,15 +294,27 @@ for (( i=0; i<emu_count; i++ )); do
     # Power score + arch filter — we build for the target if any device on it
     # meets the emulator's power requirement.
     if [[ "$tgt_arch" == "arm64" ]]; then
-      if [[ "$true_arm" != "true" ]]; then continue; fi
+      if [[ "$true_arm" != "true" ]]; then
+        report_row "SKIP" "$emu_id" "$tgt_id" "arch: true_arm=false" "-"
+        report_skip_arch=$((report_skip_arch+1))
+        continue
+      fi
       if (( tgt_power < power_arm )); then
         echo "  Skipping $emu_id on $tgt_id (max power $tgt_power < $power_arm for arm)"
+        report_row "SKIP" "$emu_id" "$tgt_id" "power $tgt_power < required $power_arm" "-"
+        report_skip_power=$((report_skip_power+1))
         continue
       fi
     elif [[ "$tgt_arch" == "amd64" ]]; then
-      if [[ "$true_amd" != "true" ]]; then continue; fi
+      if [[ "$true_amd" != "true" ]]; then
+        report_row "SKIP" "$emu_id" "$tgt_id" "arch: true_amd=false" "-"
+        report_skip_arch=$((report_skip_arch+1))
+        continue
+      fi
       if (( tgt_power < power_amd )); then
         echo "  Skipping $emu_id on $tgt_id (max power $tgt_power < $power_amd for amd)"
+        report_row "SKIP" "$emu_id" "$tgt_id" "power $tgt_power < required $power_amd" "-"
+        report_skip_power=$((report_skip_power+1))
         continue
       fi
     fi
@@ -302,6 +325,8 @@ for (( i=0; i<emu_count; i++ )); do
       per_target_marker="success-${emu_id}-${tgt_id}-${hash}"
       if echo "${MARKERS_LIST:-}" | grep -qF "$per_target_marker"; then
         echo "  SKIP $emu_id on $tgt_id (marker exists: $per_target_marker)"
+        report_row "CACHED" "$emu_id" "$tgt_id" "marker already present" "${version:-${hash:0:7}}"
+        report_skip_marker=$((report_skip_marker+1))
         continue
       fi
     fi
@@ -355,8 +380,16 @@ for (( i=0; i<emu_count; i++ )); do
       }')
 
     ALL_ENTRIES=$(echo "$ALL_ENTRIES" | jq --argjson e "$entry" '. + [$e]')
+    report_row "BUILT" "$emu_id" "$tgt_id" "queued for build" "${version:-${hash:0:7}}"
+    report_build_count=$((report_build_count+1))
   done
 done
+
+# Footer: counts tallied across all (emu × target) rows. "BUILT" here means
+# "queued for a build job"; actual success/failure is reported per-job in
+# the chain-*-ind / chain-*-dep summaries.
+report_table_end
+report_counts "Queued: $report_build_count · Cached (marker): $report_skip_marker · Skipped (power): $report_skip_power · Skipped (arch): $report_skip_arch"
 
 # --- Step 5: Split by chain+level and output ---
 any_build="false"
