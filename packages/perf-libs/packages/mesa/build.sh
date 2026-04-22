@@ -28,39 +28,55 @@ if [[ "${TARGET_ID:-}" == "arm64-modern" && -d "$PATCH_DIR" ]]; then
   done
 fi
 
-# Mesa 26+ requires meson >= 1.4.0 (Ubuntu 24.04 ships 1.3.2),
-# pycparser >= 2.20 for etnaviv hwdb code generation.
-pip3 install --break-system-packages meson mako pycparser --upgrade
+# =============================================================================
+# Dependencies
+# =============================================================================
+# Strategy: let Debian do the work for us. "apt-get build-dep mesa" installs
+# the full dependency set that the Debian/Ubuntu Mesa maintainers curate
+# (libdrm-dev, libexpat1-dev, x11/xcb/xkb/wayland protocols, llvm-dev, valgrind,
+# python3-mako, etc.). Upstream Mesa recommends this approach in docs/install.rst.
+#
+# Then we add the deltas Mesa 26+ needs that are newer than the version shipped
+# by the base (24.04 ships Mesa 24.0.x):
+#   - Newer LLVM/Clang headers + libs for CLC/OpenCL/NVK paths
+#   - libxshmfence-dev, libwayland-egl-backend-dev (sometimes split out)
+#
+# Python and Rust toolchain extras go via pip/cargo since Ubuntu 24.04 ships
+# older versions than Mesa 26 requires.
 
-# Mesa 26+ extra system deps not in the base image:
-#   libclc-18                — OpenCL C headers for compute shaders
-#   libllvmspirvlib-18-dev   — SPIR-V <-> LLVM translator
-#   libclang-cpp18-dev       — gates the CLC path pulled in by llvmspirvlib;
-#                              Mesa tries clang-cpp first, then falls back to
-#                              per-module clangBasic/clangAST/etc.
-#   bison flex               — required whenever gallium/GL/vulkan is enabled
-#                              (needs_flex_bison = with_any_opengl or ...)
-#   libelf-dev               — used by freedreno ir3 dbg and some gallium bits
-#   libwayland-egl-backend-dev — provides wayland-egl-backend.pc, required by
-#                              Mesa's EGL Wayland platform (-Dplatforms=wayland)
-#   libxshmfence-dev         — X sync fence lib, used by DRI3
-apt-get update && apt-get install -y --no-install-recommends \
-  libclc-18 libllvmspirvlib-18-dev libclang-cpp18-dev \
-  bison flex libelf-dev libwayland-egl-backend-dev libxshmfence-dev
+# Enable deb-src on Ubuntu 24.04's deb822-format sources so build-dep works
+if ! grep -q '^Types: deb deb-src' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null; then
+  sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+fi
+apt-get update
 
-# Mesa 26+ also requires Rust >= 1.82 and bindgen + cbindgen for rusticl,
-# NAK (NVK shader compiler), and the nouveau NIL image library.
+# Full Debian build-deps for Mesa (self-healing: follows upstream Debian recipe)
+apt-get build-dep -y --no-install-recommends mesa || \
+  echo "WARN: apt build-dep mesa failed, falling back to explicit packages"
+
+# Mesa 26+ deltas not yet in Ubuntu 24.04's Mesa build-deps
+apt-get install -y --no-install-recommends \
+  libclc-18 \
+  libllvmspirvlib-18-dev \
+  libclang-cpp18-dev \
+  libclang-18-dev \
+  libwayland-egl-backend-dev \
+  libxshmfence-dev
+
+# Python deps: Mesa 26+ needs meson >= 1.4.0 (noble ships 1.3.2), pycparser
+# >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+
+pip3 install --break-system-packages --upgrade \
+  meson mako pycparser packaging pyyaml
+
+# Rust + bindgen + cbindgen — Mesa 26+ requires Rust >= 1.82 (noble ships 1.75)
+# for rusticl, NAK (NVK compiler), and nouveau NIL
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
   source "$HOME/.cargo/env"
-  cargo install bindgen-cli cbindgen
 fi
-
-# Ensure cargo bin is on PATH even when rust was already up-to-date
 [[ -d "$HOME/.cargo/bin" ]] && export PATH="$HOME/.cargo/bin:$PATH"
-if ! command -v cbindgen >/dev/null; then
-  cargo install cbindgen
-fi
+command -v bindgen  >/dev/null || cargo install bindgen-cli
+command -v cbindgen >/dev/null || cargo install cbindgen
 
 GALLIUM="llvmpipe,softpipe,virgl"
 VULKAN=""
