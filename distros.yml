@@ -10,7 +10,7 @@
 distros:
   apt:
     - id: noble
-      enabled: false
+      enabled: true
       name: "Ubuntu 24.04 LTS"
       type: ubuntu
       version: "24.04"
@@ -26,7 +26,7 @@ distros:
 
   dnf:
     - id: fedora41
-      enabled: true
+      enabled: false
       name: "Fedora 41"
       version: "41"
       baseurl: https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
