@@ -40,7 +40,6 @@ DESTDIR=/tmp/pkg/root ninja install
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
 echo "emulationstation-de-${TARGET_ID}" > /tmp/pkg/meta/name
-bash /workspace/scripts/emit-aliases.sh emulationstation-de /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "EmulationStation Desktop Edition (${TARGET_ID} build)" > /tmp/pkg/meta/description
@@ -51,6 +50,10 @@ echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 echo "emulationstation" > /tmp/pkg/meta/provides
 echo "emulationstation" > /tmp/pkg/meta/conflicts
+# Append device-name aliases AFTER the hardcoded provides so they coexist
+# with the upstream virtual name ("emulationstation"). emit-aliases.sh uses
+# >> so existing entries are preserved.
+bash /workspace/scripts/emit-aliases.sh emulationstation-de /tmp/pkg/meta
 cat > /tmp/pkg/meta/depends << DEPS
 libc6
 libsdl2-2.0-0

@@ -62,7 +62,6 @@ DESTDIR=/tmp/pkg/root ninja install
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
 echo "azahar-emu-${TARGET_ID}" > /tmp/pkg/meta/name
-bash /workspace/scripts/emit-aliases.sh azahar-emu /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "Azahar 3DS Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
@@ -73,6 +72,10 @@ echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 echo "citra" > /tmp/pkg/meta/provides
 echo "citra" > /tmp/pkg/meta/replaces
+# Append device-name aliases AFTER the hardcoded "citra" entries so both
+# coexist ("citra" for the upstream compat + "<basename>-<device>" for our
+# legacy per-device names).
+bash /workspace/scripts/emit-aliases.sh azahar-emu /tmp/pkg/meta
 cat > /tmp/pkg/meta/depends << DEPS
 libc6
 libjemalloc2

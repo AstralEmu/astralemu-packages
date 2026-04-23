@@ -59,7 +59,6 @@ DESK
 VERSION_CLEAN=$(echo "$VERSION" | sed "s/^v//")
 mkdir -p /tmp/pkg/meta
 echo "ppsspp-${TARGET_ID}" > /tmp/pkg/meta/name
-bash /workspace/scripts/emit-aliases.sh ppsspp /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "PPSSPP PlayStation Portable Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
@@ -70,6 +69,8 @@ echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 echo "ppsspp" > /tmp/pkg/meta/provides
 echo "ppsspp" > /tmp/pkg/meta/conflicts
+# Append device-name aliases AFTER the hardcoded virtual name.
+bash /workspace/scripts/emit-aliases.sh ppsspp /tmp/pkg/meta
 cat > /tmp/pkg/meta/depends << DEPS
 libc6
 libjemalloc2
