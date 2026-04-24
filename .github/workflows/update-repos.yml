@@ -933,14 +933,25 @@ jobs:
           }
           DEVICE="${{ inputs.device }}"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
-          # Force rebuild: wipe gh-pages content for this device to start clean
-          if [[ "${{ inputs.force_rebuild }}" == "true" ]]; then
-            echo "FORCE REBUILD: wiping existing gh-pages content for device ${DEVICE}"
-            for fmt in apt dnf pacman; do
-              rm -rf "gh-pages-dir/${fmt}/device/${DEVICE}"
-              rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
-            done
-            # Also wipe deps for this source_distro (will be rebuilt)
+          # Force rebuild: wipe ONLY the packages this invocation is about to
+          # publish (those listed in own-packages.txt). The previous logic
+          # wiped the whole device repo, which clobbered packages published
+          # by other workflows — typical case: build-emulators ran with force
+          # and erased the nvidia-l4t-* RPMs that mirror-devices had pushed
+          # earlier, since build-emulators doesn't see those mirror packages.
+          if [[ "${{ inputs.force_rebuild }}" == "true" ]] && [[ -s intermediates-data/own-packages.txt ]]; then
+            echo "FORCE REBUILD: wiping only packages listed in own-packages.txt"
+            while IFS= read -r pkg; do
+              [[ -z "$pkg" ]] && continue
+              # apt: <name>_<version>_<arch>.deb
+              find "gh-pages-dir/apt/device/${DEVICE}" -type f -name "${pkg}_*.deb" -delete 2>/dev/null || true
+              # rpm: <name>-<version>-<release>.<arch>.rpm
+              find "gh-pages-dir/dnf/device/${DEVICE}" -type f -name "${pkg}-*.rpm" -delete 2>/dev/null || true
+              # pacman: <name>-<version>-<release>-<arch>.pkg.tar.zst
+              find "gh-pages-dir/pacman/device/${DEVICE}" -type f -name "${pkg}-*.pkg.tar.zst" -delete 2>/dev/null || true
+            done < intermediates-data/own-packages.txt
+            # Also wipe shared deps for this source_distro — they're regenerated
+            # too on force, and they're scoped per source_distro so this is safe.
             for fmt in apt dnf pacman; do
               rm -rf "gh-pages-dir/${fmt}/deps/${SOURCE_DISTRO}"
             done
