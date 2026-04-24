@@ -435,7 +435,7 @@ jobs:
       source_distro: ${{ fromJson(needs.prepare.outputs.seed_target).source_distro }}
       device: ${{ fromJson(needs.prepare.outputs.seed_device).id }}
       build_target: ${{ fromJson(needs.prepare.outputs.seed_device).build_target }}
-      force_rebuild: false
+      force_rebuild: ${{ inputs.force == true }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
@@ -461,7 +461,7 @@ jobs:
       source_distro: ${{ fromJson(needs.prepare.outputs.targets_by_id)[matrix.device.build_target].source_distro }}
       device: ${{ matrix.device.id }}
       build_target: ${{ matrix.device.build_target }}
-      force_rebuild: false
+      force_rebuild: ${{ inputs.force == true }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
