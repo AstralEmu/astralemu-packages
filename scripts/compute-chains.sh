@@ -328,7 +328,18 @@ for (( i=0; i<emu_count; i++ )); do
       short="${version:0:7}"
     fi
   fi
-  version_short="${short:-$version}"
+  # For hash-only packages (libretro-package, perf-libs, setperf, ...) there's
+  # no upstream version to track, so the build.sh hard-codes "1.0.0". Without
+  # any uniqueness in version_short, pkg_exists_in_repo skips republishing
+  # forever once 1.0.0 has been pushed once — even after the build.sh changes
+  # (e.g. our emit-aliases additions). Use the first 7 chars of the build
+  # hash so versions become "1.0.0+abcd123" and bump every time the inputs
+  # change. Other version_source modes keep their upstream short string.
+  if [[ "$version_source" == "hash-only" ]]; then
+    version_short="${hash:0:7}"
+  else
+    version_short="${short:-$version}"
+  fi
 
   # per_device=true emulators (e.g. setperf) iterate over devices directly;
   # each device gets its own build with TARGET_ID=<device_id> and no alias.

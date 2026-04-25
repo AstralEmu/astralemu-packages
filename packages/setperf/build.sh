@@ -14,7 +14,9 @@ if [[ ! -f "$TARGET_DIR/setperf" ]]; then
   exit 0
 fi
 
-VERSION="1.0.0"
+# Suffix the build hash so the deb version bumps when the script changes
+# (otherwise pkg_exists_in_repo skips republishing).
+VERSION="1.0.0+${SHORT:-0000000}"
 PKG_NAME="setperf"
 PKG_DIR="/tmp/${PKG_NAME}_${VERSION}_${TARGET_ARCH}"
 

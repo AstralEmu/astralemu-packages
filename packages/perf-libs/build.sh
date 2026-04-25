@@ -149,8 +149,10 @@ find "$PKG_ROOT" -name '*.la' -delete 2>/dev/null || true
 rm -rf "$PKG_ROOT/usr/lib/pkgconfig" "$PKG_ROOT/usr/lib64/pkgconfig" "$PKG_ROOT/usr/share/pkgconfig"
 rm -rf "$PKG_ROOT/usr/lib/cmake" "$PKG_ROOT/usr/lib64/cmake" "$PKG_ROOT/usr/share/cmake"
 
-# Metadata
-VERSION="1.0.0"
+# Metadata — version suffix is the build hash short so the deb version
+# bumps whenever build.sh / sub-builds / config change, otherwise
+# pkg_exists_in_repo keeps the old deb on gh-pages.
+VERSION="1.0.0+${SHORT:-0000000}"
 echo "perf-libs-${TARGET_ID}" > /tmp/pkg/meta/name
 echo "$VERSION" > /tmp/pkg/meta/version
 echo "$TARGET_ARCH" > /tmp/pkg/meta/arch

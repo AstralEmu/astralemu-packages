@@ -17,7 +17,9 @@ if find cores/ -name '*.so' 2>/dev/null | grep -q .; then
   # basename). Emit a second set of aliases so apt install libretro-package-l4t
   # works even though the actual package is libretro-cores-arm64-legacy.
   bash /workspace/scripts/emit-aliases.sh libretro-package pkg/meta
-  echo "1.0.0" > pkg/meta/version
+  # Suffix the build hash so the deb version bumps whenever build.sh or its
+  # config entry changes — otherwise pkg_exists_in_repo keeps the old deb.
+  echo "1.0.0+${SHORT:-0000000}" > pkg/meta/version
   echo "${TARGET_ARCH}" > pkg/meta/arch
   echo "Libretro cores for RetroArch (${TARGET_ID} build) - All standard libretro cores compiled for ${TARGET_ID}." > pkg/meta/description
   echo "AstralEmu <noreply@astralemu.github.io>" > pkg/meta/maintainer
