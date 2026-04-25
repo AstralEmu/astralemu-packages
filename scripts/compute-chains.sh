@@ -345,6 +345,27 @@ for (( i=0; i<emu_count; i++ )); do
       max_power: (.power // 1),
       devices: [.id]
     }]')
+    # Drop devices that have no per-device payload directory under
+    # packages/<emu>/<device>/ — running them would just exit 0 from the
+    # build script ("No setperf script for device X, skipping") and waste
+    # a Docker container per device per run since no marker is uploaded.
+    base_dir_path="$ROOT_DIR/$base_dir/$emu_id"
+    if [[ -d "$base_dir_path" ]]; then
+      available_devs=()
+      for d in "$base_dir_path"/*/; do
+        [[ -d "$d" ]] && available_devs+=("$(basename "$d")")
+      done
+      if (( ${#available_devs[@]} > 0 )); then
+        avail_json=$(printf '%s\n' "${available_devs[@]}" | jq -R . | jq -s .)
+        BEFORE=$(echo "$ITER_JSON" | jq 'length')
+        ITER_JSON=$(echo "$ITER_JSON" | jq --argjson avail "$avail_json" -c \
+          '[.[] | select(.id as $id | $avail | index($id))]')
+        AFTER=$(echo "$ITER_JSON" | jq 'length')
+        if (( AFTER < BEFORE )); then
+          echo "  $emu_id: filtered $((BEFORE - AFTER)) device(s) without payload (kept $AFTER: ${available_devs[*]})"
+        fi
+      fi
+    fi
   else
     ITER_JSON="$TARGETS_JSON"
   fi
