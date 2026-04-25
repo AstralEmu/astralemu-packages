@@ -123,7 +123,11 @@ for field in provides conflicts replaces; do
   [[ -n "$TARGET_DISTRO" && -s "$INTDIR/meta/${field}.${TARGET_DISTRO}" ]] && field_file="$INTDIR/meta/${field}.${TARGET_DISTRO}"
   if [[ -s "$field_file" ]]; then
     FIELD_UPPER=$(echo "$field" | sed 's/^./\U&/')
-    VALUE=$(paste -sd', ' "$field_file")
+    # Join lines with ", ". Avoid `paste -sd', '` because POSIX paste rotates
+    # through each delimiter char (so it alternates ',' and ' ' between items
+    # — fine for 2 entries, wrong for 3+, dpkg-deb then complains about
+    # "syntax error after reference to package <X>").
+    VALUE=$(awk 'BEGIN{ORS=""} NR>1{print ", "} {print $0}' "$field_file")
     echo "$FIELD_UPPER: $VALUE" >> "$BUILDDIR/DEBIAN/control"
   fi
 done
