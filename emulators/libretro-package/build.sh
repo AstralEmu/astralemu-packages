@@ -12,6 +12,11 @@ if find cores/ -name '*.so' 2>/dev/null | grep -q .; then
 
   echo "libretro-cores-${TARGET_ID}" > pkg/meta/name
   bash /workspace/scripts/emit-aliases.sh libretro-cores pkg/meta
+  # The OS builder reads emulators.yml and resolves package names by emu_id,
+  # which is "libretro-package" here (not the published "libretro-cores"
+  # basename). Emit a second set of aliases so apt install libretro-package-l4t
+  # works even though the actual package is libretro-cores-arm64-legacy.
+  bash /workspace/scripts/emit-aliases.sh libretro-package pkg/meta
   echo "1.0.0" > pkg/meta/version
   echo "${TARGET_ARCH}" > pkg/meta/arch
   echo "Libretro cores for RetroArch (${TARGET_ID} build) - All standard libretro cores compiled for ${TARGET_ID}." > pkg/meta/description
