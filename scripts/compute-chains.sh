@@ -229,16 +229,23 @@ declare -A AGG_FALLBACK_RUN
 declare -A FORCE_DEP_REBUILD
 
 # Probe the latest successful build-emulators run (other than ours).
+# `set -o pipefail` is on, so any pipeline where the reader closes the pipe
+# early (e.g. `... | head -1`) makes the producer exit on SIGPIPE (141) and
+# fails the whole script. Capture the full output into a variable first,
+# then trim with a here-string — no inter-process pipe involved.
 LATEST_RUN_ID=""
 LATEST_RUN_ARTIFACTS=""
 if command -v gh >/dev/null && [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
-  LATEST_RUN_ID=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/workflows/build-emulators.yml/runs?status=success&per_page=10" \
-    --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID:-0}) | .id" 2>/dev/null | head -1)
+  runs_out=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/workflows/build-emulators.yml/runs?status=success&per_page=10" \
+    --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID:-0}) | .id" 2>/dev/null) || runs_out=""
+  LATEST_RUN_ID=$(head -n1 <<< "$runs_out")
   if [[ -n "$LATEST_RUN_ID" ]]; then
     LATEST_RUN_ARTIFACTS=$(gh api --paginate \
       "/repos/${GITHUB_REPOSITORY}/actions/runs/${LATEST_RUN_ID}/artifacts" \
-      --jq '.artifacts[] | select(.expired == false) | .name' 2>/dev/null)
-    echo "Probing fallback artifacts from run ${LATEST_RUN_ID}: $(echo "$LATEST_RUN_ARTIFACTS" | wc -l) entries"
+      --jq '.artifacts[] | select(.expired == false) | .name' 2>/dev/null) || LATEST_RUN_ARTIFACTS=""
+    art_count=0
+    [[ -n "$LATEST_RUN_ARTIFACTS" ]] && art_count=$(wc -l <<< "$LATEST_RUN_ARTIFACTS")
+    echo "Probing fallback artifacts from run ${LATEST_RUN_ID}: $art_count entries"
   fi
 fi
 
