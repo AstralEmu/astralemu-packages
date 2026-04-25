@@ -213,6 +213,72 @@ for (( c=0; c<NUM_CHAINS; c++ )); do
   echo "  Chain $(( c + 1 )): ${CHAIN_LOADS[$c]} minutes"
 done
 
+# --- Step 3b: Aggregator artifact reuse / forced dep rebuild --------------
+# When an aggregator (e.g. libretro-package) needs to rebuild but its deps
+# (libretro-heavy-*, libretro-light) are still marker-cached, the current
+# run won't produce the libretro-cores-* artifacts the aggregator consumes.
+# Two ways out:
+#   1. Pull the cores from the latest successful build-emulators run (fast,
+#      free — fits inside GitHub's 1-day artifact retention).
+#   2. Force the deps to rebuild this run (slow, but always correct).
+# We prefer (1) and fall back to (2) when artifacts are missing/expired.
+#
+# AGG_FALLBACK_RUN[$emu_id:$tgt_id] = run_id  → pull from that run
+# FORCE_DEP_REBUILD[$dep_id:$tgt_id] = 1      → ignore marker, rebuild
+declare -A AGG_FALLBACK_RUN
+declare -A FORCE_DEP_REBUILD
+
+# Probe the latest successful build-emulators run (other than ours).
+LATEST_RUN_ID=""
+LATEST_RUN_ARTIFACTS=""
+if command -v gh >/dev/null && [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+  LATEST_RUN_ID=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/workflows/build-emulators.yml/runs?status=success&per_page=10" \
+    --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID:-0}) | .id" 2>/dev/null | head -1)
+  if [[ -n "$LATEST_RUN_ID" ]]; then
+    LATEST_RUN_ARTIFACTS=$(gh api --paginate \
+      "/repos/${GITHUB_REPOSITORY}/actions/runs/${LATEST_RUN_ID}/artifacts" \
+      --jq '.artifacts[] | select(.expired == false) | .name' 2>/dev/null)
+    echo "Probing fallback artifacts from run ${LATEST_RUN_ID}: $(echo "$LATEST_RUN_ARTIFACTS" | wc -l) entries"
+  fi
+fi
+
+# For each (aggregator × target) that needs a build, decide between
+# fallback-run download and forcing dep rebuild.
+for (( i=0; i<emu_count; i++ )); do
+  is_agg=$(echo "$EMUS_JSON" | jq -r ".[$i].is_aggregator // false")
+  [[ "$is_agg" != "true" ]] && continue
+
+  emu_id=$(echo "$EMUS_JSON" | jq -r ".[$i].id")
+  hash=$(echo "$HASHES" | jq -r ".\"$emu_id\"")
+  deps=$(echo "$EMUS_JSON" | jq -r ".[$i].depends_on // [] | .[]")
+  # Aggregators are not per_device, so iterate build_targets.
+  for tgt_id in $(echo "$TARGETS_JSON" | jq -r '.[].id'); do
+    marker="success-${emu_id}-${tgt_id}-${hash}"
+    if [[ "${FORCE:-false}" != "true" ]] && [[ "${ver_changed:-false}" != "true" ]] \
+       && echo "${MARKERS_LIST:-}" | grep -qF "$marker"; then
+      continue  # Aggregator marker present, nothing to do for this target
+    fi
+    # Check if all dep artifacts are available in the fallback run
+    all_dep_arts=true
+    for dep_id in $deps; do
+      art_name="libretro-cores-${dep_id}-${tgt_id}"
+      if ! echo "$LATEST_RUN_ARTIFACTS" | grep -qF -x "$art_name"; then
+        all_dep_arts=false
+        break
+      fi
+    done
+    if [[ "$all_dep_arts" == "true" ]]; then
+      AGG_FALLBACK_RUN["${emu_id}:${tgt_id}"]="$LATEST_RUN_ID"
+      echo "  $emu_id/$tgt_id: will reuse cores artifacts from run $LATEST_RUN_ID"
+    else
+      for dep_id in $deps; do
+        FORCE_DEP_REBUILD["${dep_id}:${tgt_id}"]=1
+      done
+      echo "  $emu_id/$tgt_id: deps must rebuild (no fallback artifacts)"
+    fi
+  done
+done
+
 # --- Step 4: Build matrix entries, accumulate into ALL_ENTRIES with chain/level fields ---
 ALL_ENTRIES="[]"
 
@@ -320,8 +386,12 @@ for (( i=0; i<emu_count; i++ )); do
     fi
 
     # Skip this target if it already has a success marker for the exact
-    # (emu, target, hash) triple — unless we were forced / version changed.
-    if [[ "${FORCE:-false}" != "true" ]] && [[ "$ver_changed" != "true" ]]; then
+    # (emu, target, hash) triple — unless we were forced / version changed
+    # OR an aggregator pinned this dep to rebuild (FORCE_DEP_REBUILD).
+    forced_for_agg="false"
+    [[ -n "${FORCE_DEP_REBUILD[${emu_id}:${tgt_id}]:-}" ]] && forced_for_agg="true"
+    if [[ "${FORCE:-false}" != "true" ]] && [[ "$ver_changed" != "true" ]] \
+       && [[ "$forced_for_agg" != "true" ]]; then
       per_target_marker="success-${emu_id}-${tgt_id}-${hash}"
       if echo "${MARKERS_LIST:-}" | grep -qF "$per_target_marker"; then
         echo "  SKIP $emu_id on $tgt_id (marker exists: $per_target_marker)"
@@ -329,6 +399,9 @@ for (( i=0; i<emu_count; i++ )); do
         report_skip_marker=$((report_skip_marker+1))
         continue
       fi
+    fi
+    if [[ "$forced_for_agg" == "true" ]]; then
+      echo "  $emu_id on $tgt_id: marker bypass (required by an aggregator with no fallback artifacts)"
     fi
 
     # Resolve placeholders in extra_caches key. {arch} is kept for backwards
@@ -339,6 +412,11 @@ for (( i=0; i<emu_count; i++ )); do
       resolved_cache_key="${extra_cache_key//\{arch\}/$tgt_arch}"
       resolved_cache_key="${resolved_cache_key//\{target_id\}/$tgt_id}"
     fi
+
+    # Aggregator: pass the fallback run id (if any) so build-chain.yml can
+    # download libretro-cores-* from a previous successful run instead of
+    # the current one (whose dep jobs may have been skipped).
+    fallback_run_id="${AGG_FALLBACK_RUN[${emu_id}:${tgt_id}]:-}"
 
     # Build JSON entry
     entry=$(echo "$tgt_data" | jq -c \
@@ -355,6 +433,7 @@ for (( i=0; i<emu_count; i++ )); do
       --arg extra_cache_path "$extra_cache_path" \
       --arg extra_cache_mount "$extra_cache_mount" \
       --arg extra_cache_save "$extra_cache_save" \
+      --arg fallback_run_id "$fallback_run_id" \
       '{
         emulator_id: $emu_id,
         base_dir: $base_dir,
@@ -376,7 +455,8 @@ for (( i=0; i<emu_count; i++ )); do
         extra_cache_key: $extra_cache_key,
         extra_cache_path: $extra_cache_path,
         extra_cache_mount: $extra_cache_mount,
-        extra_cache_save: $extra_cache_save
+        extra_cache_save: $extra_cache_save,
+        fallback_run_id: $fallback_run_id
       }')
 
     ALL_ENTRIES=$(echo "$ALL_ENTRIES" | jq --argjson e "$entry" '. + [$e]')

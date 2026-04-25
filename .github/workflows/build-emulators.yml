@@ -161,6 +161,10 @@ jobs:
 
       - name: Compute build chains
         id: chains
+        env:
+          # Required so compute-chains.sh can probe the previous successful
+          # run for fallback aggregator artifacts via gh api.
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSIONS_JSON='${{ steps.versions.outputs.versions_json }}'
           MARKERS_LIST='${{ steps.markers.outputs.markers_list }}'

@@ -61,13 +61,29 @@ jobs:
           path: ${{ matrix.entry.extra_cache_path }}
           key: ${{ matrix.entry.extra_cache_key }}
 
-      - name: Download aggregated artifacts
-        if: matrix.entry.is_aggregator == 'true'
+      # Aggregators consume libretro-cores-* artifacts from libretro-heavy/
+      # libretro-light. compute-chains.sh decides at prepare time whether to
+      # pull them from this run's siblings (no fallback_run_id) or from a
+      # previous successful run (fallback_run_id set when the deps are
+      # marker-cached and the artifacts are still within retention).
+      - name: Download aggregated artifacts (this run)
+        if: matrix.entry.is_aggregator == 'true' && matrix.entry.fallback_run_id == ''
         uses: actions/download-artifact@v4
         with:
           pattern: "libretro-cores-*-${{ matrix.entry.target_id }}"
           path: cores/
           merge-multiple: true
+        continue-on-error: true
+
+      - name: Download aggregated artifacts (fallback run)
+        if: matrix.entry.is_aggregator == 'true' && matrix.entry.fallback_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "libretro-cores-*-${{ matrix.entry.target_id }}"
+          path: cores/
+          merge-multiple: true
+          run-id: ${{ matrix.entry.fallback_run_id }}
+          github-token: ${{ github.token }}
         continue-on-error: true
 
       - name: Build
