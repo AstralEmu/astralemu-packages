@@ -81,17 +81,23 @@ apt-get install -y --no-install-recommends \
 
 # Python deps: Mesa 26+ needs meson >= 1.4.0 (noble ships 1.3.2), pycparser
 # >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+.
-# python3-yaml comes from apt (Debian-installed, don't let pip touch it).
-# python3-pycparser on noble is distutils-installed (2.21) and pip can't
-# uninstall it safely — ignore it if it's already >= 2.20, only upgrade
-# meson/mako/packaging which ship as wheels.
-pip3 install --break-system-packages --upgrade meson mako packaging
-pycparser_ver=$(python3 -c 'import pycparser; print(pycparser.__version__)' 2>/dev/null || echo "0")
-if [[ "$(printf '%s\n2.20' "$pycparser_ver" | sort -V | head -1)" != "2.20" ]]; then
-  # Installed version is < 2.20 — force via --ignore-installed to bypass the
-  # distutils "can't uninstall" error (ships a newer copy alongside).
-  pip3 install --break-system-packages --ignore-installed pycparser
-fi
+# Several of these ship in noble as distutils-installed packages (no RECORD
+# file) which pip refuses to uninstall — same trap as python3-yaml,
+# python3-pycparser, python3-packaging. Install the wheel-only ones
+# normally; for the distutils-clashing ones, only upgrade if the system
+# version is below Mesa's minimum, using --ignore-installed.
+pip3 install --break-system-packages --upgrade meson mako
+
+ensure_min() {
+  # ensure_min <module> <min_version>
+  local mod="$1" min="$2" cur
+  cur=$(python3 -c "import $mod; print($mod.__version__)" 2>/dev/null || echo "0")
+  if [[ "$(printf '%s\n%s' "$cur" "$min" | sort -V | head -n1)" != "$min" ]]; then
+    pip3 install --break-system-packages --ignore-installed "$mod"
+  fi
+}
+ensure_min pycparser 2.20
+ensure_min packaging  21.0
 
 # Rust + bindgen + cbindgen — Mesa 26+ requires Rust >= 1.82 (noble ships 1.75)
 # for rusticl, NAK (NVK compiler), and nouveau NIL
