@@ -27,13 +27,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROCKNIX_REPO="https://github.com/ROCKNIX/distribution.git"
-ROCKNIX_BRANCH="main"
-
-# target -> space-separated list of ROCKNIX recipe names under packages/linux/
+ROCKNIX_BRANCH="next"   # ROCKNIX active development branch
+# Real ROCKNIX layout (verified 2026-04-26): per-SoC patches/dts live under
+# projects/ROCKNIX/devices/<SoC>/. Names are case-sensitive uppercase as in
+# the repo. Tegra X1 and pc-amd-handheld are NOT in ROCKNIX — handled by
+# kernel-tegra-x1 (NaGaa95 source) and kernel-amd64 (Valve linux-jupiter +
+# CachyOS) respectively. See docs/tegra-x1-research.md and
+# docs/kernel-integration-plan.md.
 declare -A TARGET_RECIPES=(
-  [amd64]="pc-amd-handheld"
-  [arm64-modern]="rk3588 sm8550 sm8250 sm6115 rk3576"
-  [arm64-legacy]="tegra_x1 s922x h700 rk3326 rk3566"
+  [arm64-modern]="RK3588 SM8550 SM8250 SM6115 RK3576 SM8650"
+  [arm64-legacy]="H700 RK3326 RK3566 RK3399 S922X"
 )
 
 ONLY_TARGET=""
@@ -73,17 +76,32 @@ sync_target() {
 
   local recipe
   for recipe in $recipes; do
-    local src="$ROCKNIX_DIR/packages/linux/$recipe/patches"
+    # ROCKNIX puts each SoC's patches at projects/ROCKNIX/devices/<SoC>/patches/
+    # and DTBs at projects/ROCKNIX/devices/<SoC>/linux/dts/<vendor>/
+    local src="$ROCKNIX_DIR/projects/ROCKNIX/devices/$recipe/patches"
     local dst="$pkg_dir/$recipe"
     if [[ ! -d "$src" ]]; then
       echo "  $recipe: no patches/ dir in ROCKNIX, skipping"
       continue
     fi
-    echo "  $recipe: $(find "$src" -name '*.patch' | wc -l) patches"
+    local patch_count
+    patch_count=$(find "$src" -name '*.patch' 2>/dev/null | wc -l)
+    echo "  $recipe: $patch_count patches"
     rm -rf "$dst"
     mkdir -p "$dst"
     # Only copy actual patches (recipes sometimes include README, etc.)
     find "$src" -name '*.patch' -exec cp {} "$dst/" \;
+    # Also pull the SoC-specific DTS/DTSI files. Each kernel-<target>/build.sh
+    # decides whether to copy them into arch/arm64/boot/dts/<vendor>/ before
+    # build, depending on which DTBs are needed for that target's devices.
+    local dts_dir="$ROCKNIX_DIR/projects/ROCKNIX/devices/$recipe/linux/dts"
+    if [[ -d "$dts_dir" ]]; then
+      local dts_count
+      dts_count=$(find "$dts_dir" -type f | wc -l)
+      echo "    + $dts_count dts files"
+      mkdir -p "$dst/dts"
+      cp -a "$dts_dir"/. "$dst/dts/"
+    fi
   done
 }
 
