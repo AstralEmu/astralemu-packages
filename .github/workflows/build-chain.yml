@@ -81,6 +81,50 @@ jobs:
           github-token: ${{ github.token }}
         continue-on-error: true
 
+      # Kernel aggregator (kernel-<target>) consumes the kernel-prep,
+      # kernel-image, kernel-modules-* artifacts produced by its sub-jobs.
+      # Single download with a wide kernel-*-<target> pattern + merge-multiple
+      # lands them all into kernel-deps/ for the aggregator's build.sh.
+      - name: Download kernel sub-job artifacts (this run)
+        if: matrix.entry.is_aggregator == 'true' && startsWith(matrix.entry.emulator_id, 'kernel-') && matrix.entry.fallback_run_id == ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "kernel-*-${{ matrix.entry.target_id }}"
+          path: kernel-deps/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Download kernel sub-job artifacts (fallback run)
+        if: matrix.entry.is_aggregator == 'true' && startsWith(matrix.entry.emulator_id, 'kernel-') && matrix.entry.fallback_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "kernel-*-${{ matrix.entry.target_id }}"
+          path: kernel-deps/
+          merge-multiple: true
+          run-id: ${{ matrix.entry.fallback_run_id }}
+          github-token: ${{ github.token }}
+        continue-on-error: true
+
+      # Kernel image and module sub-jobs (kernel-<target>-image,
+      # kernel-<target>-modules-soc, kernel-<target>-modules-generic) need
+      # the patched source produced by kernel-<target>-prep. The aggregator
+      # depends_on chain guarantees prep ran first; we just pull the tarball
+      # and let the sub-job's build.sh extract it.
+      - name: Download kernel-prep tarball
+        if: matrix.entry.is_aggregator != 'true' && contains(matrix.entry.emulator_id, '-image') == false && contains(matrix.entry.emulator_id, '-modules-') == false
+        run: echo "Not a kernel sub-job that needs prep"
+      - name: Pull kernel-prep into the workspace
+        if: matrix.entry.is_aggregator != 'true' && (contains(matrix.entry.emulator_id, '-image') || contains(matrix.entry.emulator_id, '-modules-'))
+        uses: actions/download-artifact@v4
+        with:
+          # Strip the trailing -image / -modules-soc / -modules-generic to get
+          # the matching prep artifact name (kernel-prep-kernel-<target>-prep-<target_id>).
+          # The convention is documented in docs/kernel-integration-plan.md.
+          pattern: "kernel-prep-*-${{ matrix.entry.target_id }}"
+          path: kernel-prep-in/
+          merge-multiple: true
+        continue-on-error: true
+
       - name: Build
         id: build
         run: |
@@ -178,6 +222,46 @@ jobs:
         with:
           name: libretro-cores-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
           path: "cores-*/*.so"
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: ignore
+
+      # Kernel sub-job artifacts. Each artifact_type lands in a distinct
+      # named slot so the aggregator (kernel-<target>) can download them
+      # independently and merge:
+      #   kernel-prep    : patched source tree + .config (shared by image
+      #                    and module sub-jobs to avoid re-fetching/patching
+      #                    the kernel source three times per target)
+      #   kernel-image   : boot/{vmlinuz,bzImage} + DTBs (ARM)
+      #   kernel-modules : lib/modules/<ver>/<subset>/  — uploaded by both
+      #                    modules-soc and modules-generic sub-jobs; the
+      #                    aggregator merges them by recursive copy.
+      - name: Upload kernel-prep artifact
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'kernel-prep'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-prep-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
+          path: kernel-prep.tar.zst
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: ignore
+
+      - name: Upload kernel-image artifact
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'kernel-image'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-image-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
+          path: kernel-image-out/
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: ignore
+
+      - name: Upload kernel-modules artifact
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'kernel-modules'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-modules-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
+          path: kernel-modules-out/
           retention-days: 1
           overwrite: true
           if-no-files-found: ignore
