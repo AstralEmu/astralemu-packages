@@ -31,15 +31,8 @@ if [[ ! -f build.ninja ]]; then
     -DVULKAN=ON
 fi
 
-timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
-  EXIT_CODE=$?
-  ccache -s
-  if [[ $EXIT_CODE -eq 124 ]]; then
-    echo "timeout" > /workspace/build-status
-    exit 0
-  fi
-  exit $EXIT_CODE
-}
+ninja -j$(nproc)
+ccache -s
 
 mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/share/applications /tmp/pkg/root/usr/share/ppsspp
 cp PPSSPPSDL /tmp/pkg/root/usr/bin/ppsspp

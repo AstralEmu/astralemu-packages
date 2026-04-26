@@ -32,15 +32,8 @@ if [[ ! -f build.ninja ]]; then
     -DENABLE_ANALYTICS=OFF
 fi
 
-timeout ${BUILD_TIMEOUT}s ninja -j$(nproc) || {
-  EXIT_CODE=$?
-  ccache -s
-  if [[ $EXIT_CODE -eq 124 ]]; then
-    echo "timeout" > /workspace/build-status
-    exit 0
-  fi
-  exit $EXIT_CODE
-}
+ninja -j$(nproc)
+ccache -s
 
 DESTDIR=/tmp/pkg/root ninja install
 PKG_VERSION="0.0.0+git.${SHORT}"

@@ -11,12 +11,7 @@ on:
         description: 'Base cache key for Docker images'
         required: false
         type: string
-        default: 'emu-deps-base-v5'
-      build_timeout:
-        description: 'Build timeout in seconds'
-        required: false
-        type: string
-        default: '19800'
+        default: 'emu-deps-base-v6'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -111,7 +106,6 @@ jobs:
             -e COMMIT=${{ matrix.entry.version }} \
             -e SHORT=${{ matrix.entry.version_short }} \
             -e CCACHE_DIR=/ccache \
-            -e BUILD_TIMEOUT=${{ inputs.build_timeout }} \
             -e TARGET_ID=${{ matrix.entry.target_id }} \
             -e TARGET_ARCH=${{ matrix.entry.target_arch }} \
             -e TARGET_CFLAGS="${{ matrix.entry.target_cflags }}" \
@@ -132,7 +126,6 @@ jobs:
           # Check build-status files (emulator scripts write "completed" on success)
           EMU_ID="${{ matrix.entry.emulator_id }}"
           COMPLETED=false
-          TIMEOUT=false
           if [[ -f "build-status" ]] && [[ "$(cat build-status)" == "completed" ]]; then
             COMPLETED=true
           elif [[ -f "build-status-${EMU_ID##libretro-}" ]] && [[ "$(cat "build-status-${EMU_ID##libretro-}")" == "completed" ]]; then
@@ -142,14 +135,13 @@ jobs:
           elif ls *.pkg.tar 1>/dev/null 2>&1; then
             COMPLETED=true
           fi
-          # Timeouts are intentional (BUILD_TIMEOUT) — keep the job green so
-          # ccache saves and the next run resumes. Real failures (rc!=0 and
-          # no completion marker / artifact / timeout) must fail this step
-          # so the job is marked failure on the run summary, otherwise the
-          # success marker logic skips a still-broken build forever.
-          [[ -f build-status && "$(cat build-status)" == "timeout" ]] && TIMEOUT=true
+          # No timeout escape hatch anymore — every long build is split into
+          # multi-job sub-steps via the aggregator pattern, so reaching the
+          # GH Actions 6h hard limit means the build_time estimate was wrong
+          # and the splitting needs revisiting. Fail explicitly so the run
+          # surface shows it instead of being silently kept green.
           echo "completed=$COMPLETED" >> $GITHUB_OUTPUT
-          if [[ "$COMPLETED" != "true" ]] && [[ "$TIMEOUT" != "true" ]]; then
+          if [[ "$COMPLETED" != "true" ]]; then
             echo "::error::Build failed for ${{ matrix.entry.emulator_id }}/${{ matrix.entry.target_id }} (rc=$RC, no artifact)"
             exit 1
           fi

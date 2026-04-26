@@ -19,15 +19,8 @@ export CXXFLAGS="$TARGET_CXXFLAGS -flto"
 export LDFLAGS="-ljemalloc"
 
 # Build with X11 (XWayland)
-timeout ${BUILD_TIMEOUT}s ./build.sh --enable-sdl --disable-werror || {
-  EXIT_CODE=$?
-  ccache -s
-  if [[ $EXIT_CODE -eq 124 ]]; then
-    echo "timeout" > /workspace/build-status
-    exit 0
-  fi
-  exit $EXIT_CODE
-}
+./build.sh --enable-sdl --disable-werror
+ccache -s
 
 mkdir -p /tmp/pkg/root/usr/bin /tmp/pkg/root/usr/share/applications
 cp dist/xemu /tmp/pkg/root/usr/bin/

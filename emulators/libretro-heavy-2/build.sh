@@ -36,13 +36,9 @@ build_core() {
   [[ -n "$subdir" ]] && cd "$subdir"
   make clean 2>/dev/null || true
   [[ -n "$post_clean" ]] && eval "$post_clean"
-  timeout ${BUILD_TIMEOUT}s make -j$(nproc) platform=unix $make_args \
+  make -j$(nproc) platform=unix $make_args \
     CC="ccache gcc" CXX="ccache g++" \
-    LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0 || {
-    EXIT_CODE=$?
-    [[ $EXIT_CODE -eq 124 ]] && echo "TIMEOUT on $name" && exit 124
-    exit $EXIT_CODE
-  }
+    LDFLAGS="$LDFLAGS" SKIPDEPEND=1 WERROR=0
   find . -name "*.so" -exec cp {} "$PKG_DIR/" \;
   cd "$CORES_DIR"
 }
