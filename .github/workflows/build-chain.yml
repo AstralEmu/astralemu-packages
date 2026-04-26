@@ -11,7 +11,7 @@ on:
         description: 'Base cache key for Docker images'
         required: false
         type: string
-        default: 'emu-deps-base-v6'
+        default: 'emu-deps-base-v7'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'

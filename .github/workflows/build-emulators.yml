@@ -30,7 +30,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CACHE_KEY: emu-deps-base-v6
+  # v7 adds the kernel build toolchain (bc bison flex libelf-dev cpio kmod
+  # rsync device-tree-compiler libncurses-dev) on top of the emulator one.
+  CACHE_KEY: emu-deps-base-v7
   # Silence the Node.js 20 deprecation warnings that every v4 action spams.
   # GitHub will flip to Node 24 on 2026-06-02 anyway — opt in early.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -247,7 +249,8 @@ jobs:
                 libpipewire-0.3-dev libinput-dev libgudev-1.0-dev \
                 libva-dev libopus-dev \
                 autoconf automake libtool curl wget xz-utils \
-                nasm zlib1g-dev
+                nasm zlib1g-dev \
+                bc bison flex libelf-dev cpio kmod rsync device-tree-compiler libncurses-dev
 
               # Install yq (mikefarah) — needed by perf-libs build
               YQ_ARCH=$(dpkg --print-architecture)
@@ -330,7 +333,8 @@ jobs:
               libpipewire-0.3-dev libinput-dev libgudev-1.0-dev \
               libva-dev libopus-dev \
               autoconf automake libtool curl wget xz-utils \
-              nasm zlib1g-dev
+              nasm zlib1g-dev \
+              bc bison flex libelf-dev cpio kmod rsync device-tree-compiler libncurses-dev
 
             # Install yq (mikefarah) — needed by perf-libs build
             YQ_ARCH=$(dpkg --print-architecture)
