@@ -65,9 +65,6 @@ echo "azahar-emu-${TARGET_ID}" > /tmp/pkg/meta/name
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "Azahar 3DS Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
-echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
 echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 echo "citra" > /tmp/pkg/meta/provides
@@ -98,6 +95,7 @@ libboost-serialization1.83.0
 libenet7
 liblz4-1
 DEPS
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
 tar cf /workspace/azahar-emu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CACHE_KEY: emu-deps-base-v5
+  CACHE_KEY: emu-deps-base-v6
   BUILD_TIMEOUT: 19800  # 5h30 in seconds (leave 30min for cache save)
   # Silence the Node.js 20 deprecation warnings that every v4 action spams.
   # GitHub will flip to Node 24 on 2026-06-02 anyway — opt in early.
@@ -41,7 +41,7 @@ jobs:
   # PREPARE: Create and cache base image with all dependencies
   # ===========================================================================
   prepare:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       devices: ${{ steps.load-devices.outputs.devices }}
       seed_device: ${{ steps.load-devices.outputs.seed_device }}
@@ -187,7 +187,8 @@ jobs:
       - name: Create base image if not cached
         if: steps.cache-arm64.outputs.cache-hit != 'true'
         run: |
-          docker run --name emu-deps --platform linux/arm64 ubuntu:24.04 bash -c 'echo "base image"'
+          BASE=$(yq -r '[.build_targets[] | select(.arch == "arm64") | .base_image] | unique | .[0]' devices.yml)
+          docker run --name emu-deps --platform linux/arm64 "$BASE" bash -c 'echo "base image"'
           docker commit emu-deps emu-deps-image
           docker save emu-deps-image -o /tmp/emu-deps.tar
           docker rm emu-deps
@@ -281,7 +282,8 @@ jobs:
       - name: Build amd64 base image if not cached
         if: steps.cache-amd64.outputs.cache-hit != 'true'
         run: |
-          docker run --name emu-deps-amd64 --platform linux/amd64 ubuntu:24.04 bash -c '
+          BASE=$(yq -r '[.build_targets[] | select(.arch == "amd64") | .base_image] | unique | .[0]' devices.yml)
+          docker run --name emu-deps-amd64 --platform linux/amd64 "$BASE" bash -c '
             set -e
             export DEBIAN_FRONTEND=noninteractive
 
@@ -475,7 +477,7 @@ jobs:
   save-trackers:
     needs: [prepare, update-repo-seed, update-repo]
     if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout main
         uses: actions/checkout@v4

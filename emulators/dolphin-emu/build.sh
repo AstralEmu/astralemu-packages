@@ -50,9 +50,6 @@ bash /workspace/scripts/emit-aliases.sh dolphin-emu /tmp/pkg/meta
 echo "${PKG_VERSION}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "Dolphin GameCube/Wii Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
-echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
 echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 cat > /tmp/pkg/meta/depends << DEPS
@@ -85,6 +82,7 @@ libsfml-network2.6
 libxxhash0
 libspng0
 DEPS
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
 tar cf /workspace/dolphin-emu-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

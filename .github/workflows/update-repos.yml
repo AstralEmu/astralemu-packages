@@ -13,7 +13,7 @@ on:
         description: 'Pattern for hardware-specific artifacts (e.g. pkg-*-l4t) — setperf and similar'
       source_distro:
         type: string
-        default: 'noble'
+        default: 'resolute'
         description: 'Codename of the source distro the packages were built on'
       device:
         type: string
@@ -50,7 +50,7 @@ jobs:
   # NORMALIZE: Extract all packages to intermediate format (parallel)
   # ==================================================================
   normalize:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       arches: ${{ steps.normalize.outputs.arches }}
       count: ${{ steps.normalize.outputs.count }}
@@ -253,7 +253,7 @@ jobs:
   build-repo-seed:
     needs: normalize
     if: needs.normalize.outputs.count > 0
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -575,7 +575,7 @@ jobs:
   build-repo:
     needs: [normalize, build-repo-seed]
     if: needs.normalize.outputs.count > 0 && fromJson(needs.normalize.outputs.matrix_rest)[0] != null
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -896,7 +896,7 @@ jobs:
   deploy:
     needs: [normalize, build-repo-seed, build-repo]
     if: "!cancelled() && needs.normalize.outputs.count > 0"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -82,9 +82,6 @@ bash /workspace/scripts/emit-aliases.sh duckstation /tmp/pkg/meta
 echo "${PKG_VERSION}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "DuckStation PS1 Emulator (${TARGET_ID} build) - Includes bundled Qt6, SDL3 and other libraries." > /tmp/pkg/meta/description
-echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
 echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 cat > /tmp/pkg/meta/depends << DEPS
@@ -95,6 +92,7 @@ libcurl4t64
 libwayland-client0
 libudev1
 DEPS
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
 tar cf /workspace/duckstation-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

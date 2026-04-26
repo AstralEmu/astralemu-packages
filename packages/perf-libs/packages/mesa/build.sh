@@ -52,15 +52,14 @@ fi
 # (libdrm-dev, libexpat1-dev, x11/xcb/xkb/wayland protocols, llvm-dev, valgrind,
 # python3-mako, etc.). Upstream Mesa recommends this approach in docs/install.rst.
 #
-# Then we add the deltas Mesa 26+ needs that are newer than the version shipped
-# by the base (24.04 ships Mesa 24.0.x):
-#   - Newer LLVM/Clang headers + libs for CLC/OpenCL/NVK paths
-#   - libxshmfence-dev, libwayland-egl-backend-dev (sometimes split out)
+# Then we add the deltas Mesa upstream may need that the base distro hasn't
+# yet caught up on (varies by Ubuntu LTS — fewer deltas as base modernizes).
 #
-# Python and Rust toolchain extras go via pip/cargo since Ubuntu 24.04 ships
-# older versions than Mesa 26 requires.
+# Python and Rust extras go via pip/cargo when the distro version is below
+# the minimum Mesa needs; ensure_min skips no-op when the system already
+# has a recent enough copy (= cheap, idempotent).
 
-# Enable deb-src on Ubuntu 24.04's deb822-format sources so build-dep works
+# Enable deb-src on Ubuntu's deb822-format sources so build-dep works
 if ! grep -q '^Types: deb deb-src' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null; then
   sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
 fi
@@ -70,22 +69,28 @@ apt-get update
 apt-get build-dep -y --no-install-recommends mesa || \
   echo "WARN: apt build-dep mesa failed, falling back to explicit packages"
 
-# Mesa 26+ deltas not yet in Ubuntu 24.04's Mesa build-deps
+# Pick the system LLVM version and install the matching headers/libs that
+# Mesa needs but apt build-dep doesn't pull (CLC path, libclang-cpp, etc.).
+# Probing the version makes this work across noble/resolute/future LTS
+# without hardcoding -18 / -19 / -20 in every place.
+LLVM_VER=$(apt-cache search '^libllvm[0-9]+$' 2>/dev/null \
+  | awk -F'libllvm' '{print $2}' | awk '{print $1}' \
+  | sort -V | tail -n1)
+if [[ -n "$LLVM_VER" ]]; then
+  echo "Detected system LLVM major version: $LLVM_VER"
+  apt-get install -y --no-install-recommends \
+    "libclc-${LLVM_VER}" \
+    "libllvmspirvlib-${LLVM_VER}-dev" \
+    "libclang-cpp${LLVM_VER}-dev" \
+    "libclang-${LLVM_VER}-dev"
+fi
 apt-get install -y --no-install-recommends \
-  libclc-18 \
-  libllvmspirvlib-18-dev \
-  libclang-cpp18-dev \
-  libclang-18-dev \
   libwayland-egl-backend-dev \
   libxshmfence-dev
 
-# Python deps: Mesa 26+ needs meson >= 1.4.0 (noble ships 1.3.2), pycparser
-# >= 2.20 for etnaviv hwdb, and packaging module on Python 3.12+.
-# Several of these ship in noble as distutils-installed packages (no RECORD
-# file) which pip refuses to uninstall — same trap as python3-yaml,
-# python3-pycparser, python3-packaging. Install the wheel-only ones
-# normally; for the distutils-clashing ones, only upgrade if the system
-# version is below Mesa's minimum, using --ignore-installed.
+# Python deps: Mesa needs meson >= 1.4.0, pycparser >= 2.20 for etnaviv
+# hwdb, packaging on Python 3.12+. Some of these ship as distutils-installed
+# on older Ubuntu (no RECORD file); ensure_min upgrades only when needed.
 pip3 install --break-system-packages --upgrade meson mako
 
 ensure_min() {
@@ -99,8 +104,8 @@ ensure_min() {
 ensure_min pycparser 2.20
 ensure_min packaging  21.0
 
-# Rust + bindgen + cbindgen — Mesa 26+ requires Rust >= 1.82 (noble ships 1.75)
-# for rusticl, NAK (NVK compiler), and nouveau NIL
+# Rust + bindgen + cbindgen — Mesa needs Rust >= 1.82 for rusticl, NAK, and
+# nouveau NIL. Skip the rustup install if the system already has it.
 if ! rustc --version 2>/dev/null | grep -qE '1\.(8[2-9]|9[0-9]|[0-9]{3})'; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
   source "$HOME/.cargo/env"

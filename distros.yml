@@ -9,11 +9,11 @@
 
 distros:
   apt:
-    - id: noble
+    - id: resolute
       enabled: true
-      name: "Ubuntu 24.04 LTS"
+      name: "Ubuntu 26.04 LTS"
       type: ubuntu
-      version: "24.04"
+      version: "26.04"
       mirror: http://ports.ubuntu.com/ubuntu-ports
       components: "main universe"
     - id: trixie
@@ -25,10 +25,10 @@ distros:
       components: "main contrib"
 
   dnf:
-    - id: fedora41
-      enabled: false
-      name: "Fedora 41"
-      version: "41"
+    - id: ublue
+      enabled: true
+      name: "Universal Blue (Fedora 43 base)"
+      version: "43"
       baseurl: https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
 
   pacman:

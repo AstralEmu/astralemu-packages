@@ -34,13 +34,11 @@ echo "$PKG_NAME" > "$PKG_DIR/meta/name"
 echo "$VERSION" > "$PKG_DIR/meta/version"
 echo "$TARGET_ARCH" > "$PKG_DIR/meta/arch"
 echo "Performance tuning wrapper for ${TARGET_ID}" > "$PKG_DIR/meta/description"
-echo "AstralEmu <noreply@astralemu.github.io>" > "$PKG_DIR/meta/maintainer"
-echo "deb" > "$PKG_DIR/meta/source_format"
-echo "${SOURCE_DISTRO:-noble}" > "$PKG_DIR/meta/source_distro"
 echo "utils" > "$PKG_DIR/meta/section"
 echo "optional" > "$PKG_DIR/meta/priority"
 echo "bash" > "$PKG_DIR/meta/depends"
 
 # Build intermediate tar
+bash /workspace/scripts/finalize-meta.sh "$PKG_DIR/meta"
 tar cf "/workspace/${PKG_NAME}-${TARGET_ID}_${VERSION}_${TARGET_ARCH}.pkg.tar" -C "$PKG_DIR" meta root
 echo "completed" > /workspace/build-status

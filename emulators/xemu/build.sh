@@ -50,9 +50,6 @@ bash /workspace/scripts/emit-aliases.sh xemu /tmp/pkg/meta
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "xemu Original Xbox Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
-echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
 echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 cat > /tmp/pkg/meta/depends << DEPS
@@ -67,6 +64,7 @@ libsamplerate0
 libpcap0.8t64
 libslirp0
 DEPS
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
 tar cf /workspace/xemu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

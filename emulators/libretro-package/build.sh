@@ -22,9 +22,6 @@ if find cores/ -name '*.so' 2>/dev/null | grep -q .; then
   echo "1.0.0+${SHORT:-0000000}" > pkg/meta/version
   echo "${TARGET_ARCH}" > pkg/meta/arch
   echo "Libretro cores for RetroArch (${TARGET_ID} build) - All standard libretro cores compiled for ${TARGET_ID}." > pkg/meta/description
-  echo "AstralEmu <noreply@astralemu.github.io>" > pkg/meta/maintainer
-  echo "deb" > pkg/meta/source_format
-  echo "noble" > pkg/meta/source_distro
   echo "games" > pkg/meta/section
   echo "optional" > pkg/meta/priority
   cat > pkg/meta/depends << DEPS
@@ -33,6 +30,7 @@ zlib1g
 libjemalloc2
 DEPS
 
+  bash /workspace/scripts/finalize-meta.sh pkg/meta
   tar cf "/workspace/libretro-cores-${TARGET_ID}_1.0.0_${TARGET_ARCH}.pkg.tar" -C pkg meta root
   echo "completed" > /workspace/build-status
 else

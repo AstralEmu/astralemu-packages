@@ -62,9 +62,6 @@ echo "ppsspp-${TARGET_ID}" > /tmp/pkg/meta/name
 echo "${VERSION_CLEAN}" > /tmp/pkg/meta/version
 echo "${TARGET_ARCH}" > /tmp/pkg/meta/arch
 echo "PPSSPP PlayStation Portable Emulator (${TARGET_ID} build)" > /tmp/pkg/meta/description
-echo "AstralEmu <noreply@astralemu.github.io>" > /tmp/pkg/meta/maintainer
-echo "deb" > /tmp/pkg/meta/source_format
-echo "noble" > /tmp/pkg/meta/source_distro
 echo "games" > /tmp/pkg/meta/section
 echo "optional" > /tmp/pkg/meta/priority
 echo "ppsspp" > /tmp/pkg/meta/provides
@@ -84,6 +81,7 @@ libswscale7
 libzip4t64
 libpng16-16t64
 DEPS
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
 tar cf /workspace/ppsspp-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
