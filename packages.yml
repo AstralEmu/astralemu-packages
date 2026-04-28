@@ -159,3 +159,64 @@ packages:
       - kernel-arm64-modern-image
       - kernel-arm64-modern-modules-soc
       - kernel-arm64-modern-modules-generic
+
+  # --- kernel-arm64-legacy ---------------------------------------------------
+  # Targets armv8-a A53/A55/A57/A72/A73 handhelds (H700, RK3326, RK3399,
+  # RK3566, S922X). Same 5-step split as arm64-modern; SoC whitelist
+  # differs (Allwinner sunxi, Amlogic meson, Rockchip RK3xxx-classic).
+  - id: kernel-arm64-legacy-prep
+    version_source: hash-only
+    build_time: 30
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-legacy]
+    artifact_type: kernel-prep
+
+  - id: kernel-arm64-legacy-image
+    version_source: hash-only
+    build_time: 50
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-legacy]
+    artifact_type: kernel-image
+    depends_on: [kernel-arm64-legacy-prep]
+
+  - id: kernel-arm64-legacy-modules-soc
+    version_source: hash-only
+    build_time: 90
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-legacy]
+    artifact_type: kernel-modules
+    depends_on: [kernel-arm64-legacy-prep]
+
+  - id: kernel-arm64-legacy-modules-generic
+    version_source: hash-only
+    build_time: 80
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-legacy]
+    artifact_type: kernel-modules
+    depends_on: [kernel-arm64-legacy-prep]
+
+  - id: kernel-arm64-legacy
+    version_source: hash-only
+    build_time: 15
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-legacy]
+    is_aggregator: true
+    depends_on:
+      - kernel-arm64-legacy-image
+      - kernel-arm64-legacy-modules-soc
+      - kernel-arm64-legacy-modules-generic
