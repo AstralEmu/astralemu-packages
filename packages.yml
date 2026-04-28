@@ -30,3 +30,70 @@ packages:
     power_amd: 2
     true_arm: true
     true_amd: true
+
+  # ============================================================================
+  # Kernels (multi-job split, see docs/kernel-integration-plan.md)
+  # ============================================================================
+  # Each target kernel is split into 5 sub-jobs orchestrated by the aggregator
+  # pattern (cf. libretro-package). Sub-jobs share the patched source tree via
+  # a kernel-prep tarball artifact. Splitting keeps every sub-job below 3h
+  # comfortably under the 6h GitHub Actions hard limit.
+  #
+  #   <target>-prep             clone + apply patches + savedefconfig
+  #   <target>-image            make bzImage / Image + dtbs
+  #   <target>-modules-platform AMD/Intel platform/GPU/firmware modules (x86)
+  #                             OR per-SoC modules (arm64)
+  #   <target>-modules-generic  net/usb/hid/sound/fs/crypto/...
+  #   <target>                  aggregator → final .pkg.tar + sub-packages
+
+  - id: kernel-amd64-prep
+    version_source: hash-only
+    build_time: 25
+    power_arm: 99   # arm-only filter via true_arm=false
+    power_amd: 1
+    true_arm: false
+    true_amd: true
+    artifact_type: kernel-prep
+
+  - id: kernel-amd64-image
+    version_source: hash-only
+    build_time: 40
+    power_arm: 99
+    power_amd: 1
+    true_arm: false
+    true_amd: true
+    artifact_type: kernel-image
+    depends_on: [kernel-amd64-prep]
+
+  - id: kernel-amd64-modules-platform
+    version_source: hash-only
+    build_time: 60
+    power_arm: 99
+    power_amd: 1
+    true_arm: false
+    true_amd: true
+    artifact_type: kernel-modules
+    depends_on: [kernel-amd64-prep]
+
+  - id: kernel-amd64-modules-generic
+    version_source: hash-only
+    build_time: 60
+    power_arm: 99
+    power_amd: 1
+    true_arm: false
+    true_amd: true
+    artifact_type: kernel-modules
+    depends_on: [kernel-amd64-prep]
+
+  - id: kernel-amd64
+    version_source: hash-only
+    build_time: 15
+    power_arm: 99
+    power_amd: 1
+    true_arm: false
+    true_amd: true
+    is_aggregator: true
+    depends_on:
+      - kernel-amd64-image
+      - kernel-amd64-modules-platform
+      - kernel-amd64-modules-generic
