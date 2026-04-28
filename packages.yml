@@ -237,3 +237,16 @@ packages:
     true_amd: false
     per_device: true
     target_filter: [l4t]
+
+  # --- kernel-astralemu (meta) -----------------------------------------------
+  # Per-device meta-package: a single 'apt install kernel-astralemu-<device>'
+  # pulls in kernel + modules + dtbs + firmware + setperf + deps-repo for
+  # the target device. Empty root/, only meta/depends. arch = all.
+  - id: kernel-astralemu
+    version_source: hash-only
+    build_time: 2
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true
+    per_device: true

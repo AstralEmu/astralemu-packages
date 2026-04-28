@@ -62,8 +62,19 @@ kernel-modules-arm64-legacy-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
 astralemu-dtbs-arm64-legacy-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
 linux-base
 DEPS
+# l4t (Switch) gets kernel-tegra-x1 instead — drop it from the canonical
+# 'kernel'/'kernel-modules'/'astralemu-dtbs' aliases to avoid colliding
+# with kernel-tegra-x1's Provides on the Switch's device repo.
+NO_L4T=""
+IFS=',' read -ra _devs <<< "${TARGET_DEVICES:-}"
+for d in "${_devs[@]}"; do
+  [[ -z "$d" || "$d" == "l4t" ]] && continue
+  NO_L4T+="${NO_L4T:+,}$d"
+done
+
 bash /workspace/scripts/emit-aliases.sh kernel-arm64-legacy "$PKG/meta"
-bash /workspace/scripts/emit-aliases.sh kernel              "$PKG/meta"
+TARGET_DEVICES="$NO_L4T" \
+  bash /workspace/scripts/emit-aliases.sh kernel "$PKG/meta"
 
 cat > "$PKG/meta/scripts/postinst" <<'POST'
 #!/bin/bash
@@ -99,7 +110,8 @@ echo "Modules for kernel-arm64-legacy-${TARGET_ID} (kernel ${KVER})" \
 echo "games" > "$SUB/meta/section"
 echo "optional" > "$SUB/meta/priority"
 bash /workspace/scripts/emit-aliases.sh kernel-modules-arm64-legacy "$SUB/meta"
-bash /workspace/scripts/emit-aliases.sh kernel-modules              "$SUB/meta"
+TARGET_DEVICES="$NO_L4T" \
+  bash /workspace/scripts/emit-aliases.sh kernel-modules "$SUB/meta"
 bash /workspace/scripts/finalize-meta.sh "$SUB/meta"
 tar cf "/workspace/kernel-modules-arm64-legacy-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$SUB" meta root
@@ -113,7 +125,8 @@ echo "Device-tree blobs for kernel-arm64-legacy-${TARGET_ID} (kernel ${KVER})" \
 echo "kernel" > "$DTB_PKG/meta/section"
 echo "optional" > "$DTB_PKG/meta/priority"
 bash /workspace/scripts/emit-aliases.sh astralemu-dtbs-arm64-legacy "$DTB_PKG/meta"
-bash /workspace/scripts/emit-aliases.sh astralemu-dtbs              "$DTB_PKG/meta"
+TARGET_DEVICES="$NO_L4T" \
+  bash /workspace/scripts/emit-aliases.sh astralemu-dtbs "$DTB_PKG/meta"
 bash /workspace/scripts/finalize-meta.sh "$DTB_PKG/meta"
 tar cf "/workspace/astralemu-dtbs-arm64-legacy-${TARGET_ID}_${PKG_VERSION}_all.pkg.tar" \
   -C "$DTB_PKG" meta root
