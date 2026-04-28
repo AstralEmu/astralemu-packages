@@ -97,3 +97,65 @@ packages:
       - kernel-amd64-image
       - kernel-amd64-modules-platform
       - kernel-amd64-modules-generic
+
+  # --- kernel-arm64-modern ---------------------------------------------------
+  # target_filter restricts these entries to the arm64-modern build_target
+  # only — both arm64 targets share true_arm=true but their patches and
+  # SoCs differ. compute-chains.sh skips entries whose target_filter
+  # doesn't match the iterated build_target.
+  - id: kernel-arm64-modern-prep
+    version_source: hash-only
+    build_time: 30
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-modern]
+    artifact_type: kernel-prep
+
+  - id: kernel-arm64-modern-image
+    version_source: hash-only
+    build_time: 50
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-modern]
+    artifact_type: kernel-image
+    depends_on: [kernel-arm64-modern-prep]
+
+  - id: kernel-arm64-modern-modules-soc
+    version_source: hash-only
+    build_time: 90
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-modern]
+    artifact_type: kernel-modules
+    depends_on: [kernel-arm64-modern-prep]
+
+  - id: kernel-arm64-modern-modules-generic
+    version_source: hash-only
+    build_time: 80
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-modern]
+    artifact_type: kernel-modules
+    depends_on: [kernel-arm64-modern-prep]
+
+  - id: kernel-arm64-modern
+    version_source: hash-only
+    build_time: 15
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    target_filter: [arm64-modern]
+    is_aggregator: true
+    depends_on:
+      - kernel-arm64-modern-image
+      - kernel-arm64-modern-modules-soc
+      - kernel-arm64-modern-modules-generic

@@ -396,6 +396,23 @@ for (( i=0; i<emu_count; i++ )); do
     tgt_id=$(echo "$tgt_data" | jq -r '.id')
     tgt_devices=$(echo "$tgt_data" | jq -r '.devices | join(" ")')
 
+    # Optional explicit target_filter (whitelist of build_target ids the
+    # entry applies to). Used by kernel-* packages whose recipes are
+    # target-specific even though the arch is shared (kernel-arm64-modern
+    # only fits arm64-modern, not arm64-legacy). Empty/absent = no filter.
+    target_filter=$(echo "$emu_data" | jq -r '.target_filter // "" | if type=="array" then join(" ") else . end')
+    if [[ -n "$target_filter" ]]; then
+      tf_match=false
+      for tf in $target_filter; do
+        if [[ "$tf" == "$tgt_id" ]]; then tf_match=true; break; fi
+      done
+      if [[ "$tf_match" != "true" ]]; then
+        report_row "SKIP" "$emu_id" "$tgt_id" "target_filter excludes $tgt_id" "-"
+        report_skip_arch=$((report_skip_arch+1))
+        continue
+      fi
+    fi
+
     # Power score + arch filter — we build for the target if any device on it
     # meets the emulator's power requirement.
     if [[ "$tgt_arch" == "arm64" ]]; then
