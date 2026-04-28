@@ -99,6 +99,49 @@ devices:
         type: git-repo
         url: https://github.com/theofficialgman/l4t-debs.git
         format: deb
+        # The l4t-debs repo bundles a lot of unrelated handheld bric-a-brac
+        # (chromium, flatpak helpers, yt-dlp, widevine, plymouth themes,
+        # OSK extensions) on top of the actual NVIDIA L4T 32.7 stack we
+        # want. Keep only what's needed for an emulator runtime: nvgpu /
+        # CUDA / multimedia / Switch hardware userland / Xorg input.
+        # The R32.7 BSP lives under pool/main-32-7/ which is now picked
+        # up automatically by mirror-devices.yml.
+        include:
+          - 'nvidia-l4t-*'
+          - 'nvidia-bsp-*'
+          - 'cuda-cudart-*'
+          - 'cuda-license-*'
+          - 'switch-*'
+          - 'joycond*'
+          - 'xserver-xorg-*'
+          - 'nintendo-switch-meta*'
+        exclude:
+          # We ship our own emulator binaries, no flatpak path needed.
+          - 'switch-flatpak*'
+          - 'flatpak*'
+          - 'libflatpak*'
+          # Browsers / streaming / DRM — irrelevant for an emulator stack.
+          - 'chromium*'
+          - 'libwidevinecdm0*'
+          - 'yt-dlp*'
+          - 'smplayer*'
+          - 'smtube*'
+          # Desktop polish / OSK / theming bundled by upstream.
+          - 'onboard*'
+          - 'gnome-shell-extension-*'
+          - 'plymouth*'
+          - 'libplymouth*'
+          - 'kscreen*'
+          - 'qt6-gtk2-platformtheme*'
+          - 'appstream*'
+          - 'libappstream*'
+          - 'apt-config-icons*'
+          # Rebuilt -dev/-doc/-dbg/-tests payloads we don't need at runtime.
+          - '*-dev'
+          - '*-doc'
+          - '*-dbg'
+          - '*-tests'
+          - 'glibc-source*'
 
   - id: rpi4
     name: "Raspberry Pi 4 (Cortex-A72)"

@@ -108,22 +108,83 @@ jobs:
               > "${HASH_TRACKER}.new"
               NEW_COUNT=0
 
-              # Build search path list:
-              #   pool/<source_distro>/ — distro-specific packages
-              #   pool/main/            — distro-agnostic packages (kernel, drivers, etc.)
-              # If neither exists, search the whole clone (flat repo structure).
+              # Build search path list. Conventional layout has codename-
+              # specific pools plus codename-agnostic 'main' subtrees:
+              #   pool/<source_distro>/   — distro-specific binaries
+              #   pool/main/              — codename-agnostic core
+              #   pool/main-<variant>/    — codename-agnostic vendor variants
+              #                              (e.g. l4t-debs ships pool/main-32-7/
+              #                               for the R32.7 NVIDIA BSP)
+              # If none of those exist, search the whole clone (flat repo).
               SEARCH_DIRS=()
               [ -d "$CLONE_DIR/pool/$source_distro" ] && SEARCH_DIRS+=("$CLONE_DIR/pool/$source_distro")
-              [ -d "$CLONE_DIR/pool/main" ]            && SEARCH_DIRS+=("$CLONE_DIR/pool/main")
+              shopt -s nullglob
+              for d in "$CLONE_DIR/pool/main" "$CLONE_DIR/pool/main-"*/; do
+                d="${d%/}"
+                [ -d "$d" ] && SEARCH_DIRS+=("$d")
+              done
+              shopt -u nullglob
               if [ ${#SEARCH_DIRS[@]} -eq 0 ]; then
                 SEARCH_DIRS+=("$CLONE_DIR")
               else
                 echo "  Searching: ${SEARCH_DIRS[*]#$CLONE_DIR/}"
               fi
 
+              # Optional include/exclude filters on the source (devices.yml).
+              # include: if non-empty, only filenames matching at least one
+              #          glob pattern survive (whitelist).
+              # exclude: filenames matching any pattern are dropped after
+              #          the include check (overrides). Use this to drop
+              #          packages that match the include but aren't wanted
+              #          (e.g. switch-flatpak inside a switch-* allowlist).
+              INCLUDE_PATTERNS=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].include // [] | .[]" devices.yml)
+              EXCLUDE_PATTERNS=$(yq -r ".devices[] | select(.id == \"$device_id\") | .sources[$idx].exclude // [] | .[]" devices.yml)
+              if [[ -n "$INCLUDE_PATTERNS" ]]; then
+                echo "  include: $(echo "$INCLUDE_PATTERNS" | tr '\n' ' ')"
+              fi
+              if [[ -n "$EXCLUDE_PATTERNS" ]]; then
+                echo "  exclude: $(echo "$EXCLUDE_PATTERNS" | tr '\n' ' ')"
+              fi
+
+              FILTERED_OUT=0
               for f in $(find "${SEARCH_DIRS[@]}" -name "$PATTERN"); do
                 filename=$(basename "$f")
                 safename="${filename//:/_}"
+
+                # Package name is everything before the first underscore for
+                # deb (e.g. "nvidia-l4t-core_32.7.5-foo_arm64.deb"), before
+                # the first '-' followed by a digit for rpm/pacman.
+                case "$source_format" in
+                  deb)    pkgname="${safename%%_*}" ;;
+                  pacman) pkgname=$(echo "$safename" | sed -E 's/-[0-9].*$//') ;;
+                  rpm)    pkgname=$(echo "$safename" | sed -E 's/-[0-9].*$//') ;;
+                  *)      pkgname="$safename" ;;
+                esac
+
+                if [[ -n "$INCLUDE_PATTERNS" ]]; then
+                  matched=false
+                  while IFS= read -r p; do
+                    [[ -z "$p" ]] && continue
+                    if [[ "$pkgname" == $p ]]; then matched=true; break; fi
+                  done <<< "$INCLUDE_PATTERNS"
+                  if [[ "$matched" != "true" ]]; then
+                    FILTERED_OUT=$((FILTERED_OUT + 1))
+                    continue
+                  fi
+                fi
+
+                if [[ -n "$EXCLUDE_PATTERNS" ]]; then
+                  excluded=false
+                  while IFS= read -r p; do
+                    [[ -z "$p" ]] && continue
+                    if [[ "$pkgname" == $p ]]; then excluded=true; break; fi
+                  done <<< "$EXCLUDE_PATTERNS"
+                  if [[ "$excluded" == "true" ]]; then
+                    FILTERED_OUT=$((FILTERED_OUT + 1))
+                    continue
+                  fi
+                fi
+
                 hash=$(sha256sum "$f" | cut -d' ' -f1)
 
                 echo "${safename}=${hash}" >> "${HASH_TRACKER}.new"
@@ -134,6 +195,9 @@ jobs:
                   NEW_COUNT=$((NEW_COUNT + 1))
                 fi
               done
+              if (( FILTERED_OUT > 0 )); then
+                echo "  filtered out $FILTERED_OUT package(s) by include/exclude"
+              fi
 
               mv "${HASH_TRACKER}.new" "$HASH_TRACKER"
               rm -rf "$CLONE_DIR"
