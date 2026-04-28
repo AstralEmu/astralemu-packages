@@ -220,3 +220,20 @@ packages:
       - kernel-arm64-legacy-image
       - kernel-arm64-legacy-modules-soc
       - kernel-arm64-legacy-modules-generic
+
+  # --- kernel-tegra-x1 -------------------------------------------------------
+  # Nintendo Switch (T210/T210B01) — sourced from NaGaa95/switch-l4t-kernel-4.9
+  # (the only actively maintained 4.9 fork). 4.9 cannot use BORE/CachyOS
+  # (different scheduler/mm internals), so this stays a mono-job: 4.9 + a
+  # small in-tree module set fits in ~1h on a native arm64 runner. Restricted
+  # to the Switch only via per_device + target_filter: [l4t] (l4t is the
+  # device id of the Nintendo Switch entry in devices.yml).
+  - id: kernel-tegra-x1
+    version_source: hash-only
+    build_time: 90
+    power_arm: 1
+    power_amd: 99
+    true_arm: true
+    true_amd: false
+    per_device: true
+    target_filter: [l4t]
