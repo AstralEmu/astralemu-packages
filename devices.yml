@@ -75,10 +75,35 @@ build_targets:
 #                   Also used as Provides: alias in emulator packages (azahar-emu-<id>)
 #   name          — Human-readable device name
 #   build_target  — Reference to a build_targets[].id (determines compilation)
-#   power         — Device power score (1-5), filters emulators too heavy for this device
-#                   Scores account for AstralEmu's 40-60% perf boost over stock packages
-#                   ARM: 1=trivial, 2=light, 3=medium, 4=heavy, 5=extreme
-#                   AMD: 1=light, 2=medium, 3=heavy
+#   power         — Device power score (1-9), filters emulators too heavy for this device.
+#                   Scores account for AstralEmu's 40-60% perf boost over stock packages.
+#                   The score reflects each device's *real-world* power within its OWN
+#                   architecture — never compare an ARM score to an AMD/Intel score, the
+#                   two scales are independent (this is exactly why every emulator and
+#                   package carries separate power_arm + power_amd thresholds).
+#
+#                   ARM scale (1-9):
+#                     1 = trivial            (Cortex-A35, e.g. RK3326)
+#                     2 = light              (A53/A55, e.g. H700, RK3566)
+#                     3 = light-medium
+#                     4 = medium             (A72, e.g. RPi4, RK3576, Tegra X1 A57+A53)
+#                     5 = medium-heavy       (A73 big.LITTLE, e.g. S922X)
+#                     6 = heavy              (A76 baseline, A77 e.g. SM8250)
+#                     7 = very heavy         (RK3588, X2+ generic baseline)
+#                     8 = apex mobile        (Cortex-X3 + A715, e.g. SM8550 flagships)
+#                     9 = future apex        (reserved for Cortex-X4 / X925, SD8 Gen 4+)
+#
+#                   AMD/Intel scale (1-9):
+#                     1-2 = sub-handheld
+#                     3   = ancient x86 / x86-64-v2 baseline (Sandy Bridge era)
+#                     4   = older mobile APU
+#                     5   = entry handheld   (Haswell baseline / AMD Mendocino, AYN Loki)
+#                     6   = mid handheld     (Steam Deck LCD/OLED — Van Gogh/Sephiroth Zen 2)
+#                     7   = upper-mid        (older Phoenix Z1 non-Extreme, GPD Win)
+#                     8   = current flagship (Phoenix Z1E Zen 4, Hawk Point, Meteor Lake —
+#                                              ROG Ally, Legion Go, MSI Claw, AYANEO Geek/Slide)
+#                     9   = apex             (Strix Point, ROG Ally X, OneXPlayer X1,
+#                                              x86-64-v4 baseline / Ice Lake-SP+ / Zen 4+ desktop)
 #   sources       — List of external package sources to mirror (optional)
 #
 # Source fields:
@@ -90,7 +115,7 @@ build_targets:
 
 devices:
   - id: l4t
-    name: "Nintendo Switch (Tegra X1)"
+    name: "Nintendo Switch (Tegra X1, Cortex-A57 + A53)"
     build_target: arm64-legacy
     power: 4
     sources:
@@ -146,29 +171,135 @@ devices:
   - id: rpi4
     name: "Raspberry Pi 4 (Cortex-A72)"
     build_target: arm64-legacy
-    power: 3
-
-  - id: armv8-2
-    name: "ARMv8.2-A (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
-    build_target: arm64-modern
-    power: 5
-
-  - id: armv9
-    name: "ARMv9.0-A (Snapdragon 8 Gen 1/2/3, Cortex-X2+)"
-    build_target: arm64-modern
-    power: 5
-
-  - id: x86-v2
-    name: "x86-64-v2 (Intel Sandy Bridge+ / AMD Bulldozer+)"
-    build_target: amd64
     power: 4
 
+  - id: armv8-2
+    name: "ARMv8.2-A generic (Raspberry Pi 5 / RK3588 / Snapdragon 845-888)"
+    build_target: arm64-modern
+    power: 6
+
+  - id: armv9
+    name: "ARMv9.0-A generic (Cortex-X2+ baseline, SD 8 Gen 1/2)"
+    build_target: arm64-modern
+    power: 7
+
+  - id: x86-v2
+    name: "x86-64-v2 generic (Intel Sandy Bridge+ / AMD Bulldozer+)"
+    build_target: amd64
+    power: 3
+
   - id: x86-v3
-    name: "x86-64-v3 (Intel Haswell+ / AMD Ryzen / Steam Deck)"
+    name: "x86-64-v3 generic (Intel Haswell+ / AMD Ryzen)"
     build_target: amd64
     power: 5
 
   - id: x86-v4
-    name: "x86-64-v4 (Intel Ice Lake-SP+ / AMD Zen 4+)"
+    name: "x86-64-v4 generic (Intel Ice Lake-SP+ / AMD Zen 4+ desktop)"
+    build_target: amd64
+    power: 9
+
+  # ============================================================================
+  # Named handhelds — concrete hardware units sharing the build_targets above
+  # ============================================================================
+  # These map onto the existing armv8-a / armv8.2-a / x86-64-v3 baselines and
+  # all consume the matching kernel-astralemu-<id> meta-package. SoC + power
+  # rationale is in the name field; scoring legend lives at the top of this
+  # file. Keep entries grouped by build_target for readability.
+
+  # --- arm64-legacy handhelds (armv8-a + crc + simd, mtune=cortex-a72) -------
+  - id: anbernic-rg35xx-orig
+    name: "Anbernic RG35XX original (Rockchip RK3326, Cortex-A35)"
+    build_target: arm64-legacy
+    power: 1
+
+  - id: anbernic-rg35xx-h
+    name: "Anbernic RG35XX H / SP / Plus (Allwinner H700, Cortex-A53)"
+    build_target: arm64-legacy
+    power: 2
+
+  - id: powkiddy-rk3566
+    name: "Powkiddy V90 / X55 (Rockchip RK3566, Cortex-A55)"
+    build_target: arm64-legacy
+    power: 2
+
+  - id: anbernic-rg406
+    name: "Anbernic RG406 series (Rockchip RK3576, Cortex-A72 + A53)"
+    build_target: arm64-legacy
+    power: 4
+
+  - id: anbernic-rg-arc
+    name: "Anbernic RG ARC (Amlogic S922X, Cortex-A73 + A53)"
+    build_target: arm64-legacy
+    power: 5
+
+  - id: odroid-go-super
+    name: "Odroid Go Super (Amlogic S922X, Cortex-A73 + A53)"
+    build_target: arm64-legacy
+    power: 5
+
+  # --- arm64-modern handhelds (armv8.2-a + dotprod, mtune=cortex-a76) --------
+  - id: retroid-pocket-5
+    name: "Retroid Pocket 5 (Qualcomm SM8250, Cortex-A77 prime)"
+    build_target: arm64-modern
+    power: 6
+
+  - id: orange-pi-5
+    name: "Orange Pi 5 / Rock 5 (Rockchip RK3588, Cortex-A76)"
+    build_target: arm64-modern
+    power: 7
+
+  - id: retroid-pocket-6
+    name: "Retroid Pocket 6 (Qualcomm SM8550, Cortex-X3 + A715)"
+    build_target: arm64-modern
+    power: 8
+
+  - id: ayn-thor
+    name: "AYN Thor (Qualcomm SM8550, Cortex-X3 + A715)"
+    build_target: arm64-modern
+    power: 8
+
+  # --- amd64 handhelds (x86-64-v3 baseline) ----------------------------------
+  - id: ayn-loki
+    name: "AYN Loki / Loki Zero (AMD Mendocino, Zen 2 6nm)"
     build_target: amd64
     power: 5
+
+  - id: steam-deck-lcd
+    name: "Steam Deck LCD (AMD Van Gogh, Zen 2 + RDNA 2)"
+    build_target: amd64
+    power: 6
+
+  - id: steam-deck-oled
+    name: "Steam Deck OLED (AMD Sephiroth, Zen 2 6nm refresh + RDNA 2)"
+    build_target: amd64
+    power: 6
+
+  - id: gpd-win
+    name: "GPD Win Mini / Max series (AMD Phoenix Z1, Zen 4 entry)"
+    build_target: amd64
+    power: 7
+
+  - id: rog-ally
+    name: "ASUS ROG Ally / Ally X (AMD Phoenix Z1E, Zen 4 + RDNA 3)"
+    build_target: amd64
+    power: 8
+
+  - id: legion-go
+    name: "Lenovo Legion Go / Legion Go S (AMD Phoenix Z1E, Zen 4)"
+    build_target: amd64
+    power: 8
+
+  - id: msi-claw
+    name: "MSI Claw (Intel Meteor Lake, Core Ultra)"
+    build_target: amd64
+    power: 8
+
+  - id: ayaneo
+    name: "AYANEO 2/Geek/Slide/Kun (AMD Phoenix / Hawk Point, Zen 4)"
+    build_target: amd64
+    power: 8
+
+  - id: onexplayer
+    name: "OneXPlayer X1 / OneXFly (AMD Phoenix / Strix Point, Zen 4/5)"
+    build_target: amd64
+    power: 9

@@ -26,8 +26,8 @@ packages:
   - id: perf-libs
     version_source: hash-only
     build_time: 200
-    power_arm: 3
-    power_amd: 2
+    power_arm: 1
+    power_amd: 3
     true_arm: true
     true_amd: true
 

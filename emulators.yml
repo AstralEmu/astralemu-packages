@@ -17,8 +17,8 @@
 #   version_branch  — Branch to track for commit-based versions (only for github-commit)
 #   tracker_file    — Filename in .trackers/ for version persistence
 #   build_time      — Estimated build time in minutes (for wave scheduling info)
-#   power_arm       — Minimum ARM device power score required to build this emulator (1-5)
-#   power_amd       — Minimum AMD/x86 device power score required (1-5)
+#   power_arm       — Minimum ARM device power score required to build this emulator (1-9)
+#   power_amd       — Minimum AMD/x86 device power score required (1-9)
 #   true_arm        — Whether this emulator supports ARM architecture
 #   true_amd        — Whether this emulator supports x86/AMD architecture
 #   depends_on      — List of emulator ids that must build before this one (optional)
@@ -31,17 +31,32 @@
 #   This prevents building heavy emulators on weak devices.
 #   Device scores account for AstralEmu's 40-60% performance boost over stock distro packages.
 #
-#   ARM hierarchy:
-#     1 — Trivial    : 8/16-bit, DS, frontends (melonDS, ES-DE, libretro-light)
-#     2 — Light      : PS1, PSP, 3DS (duckstation, ppsspp, azahar)
-#     3 — Medium     : GC/Wii, heavy libretro cores (dolphin, libretro-heavy)
-#     4 — Heavy      : Xbox x86→ARM translation (xemu)
-#     5 — Extreme    : reserved for future heavy emulators
+#   The two scales are independent — never compare an ARM threshold to an AMD one.
+#   Source-arch matters: emulators whose source console is ARM (3DS, DS) get a lower
+#   ARM threshold than AMD threshold because the dynarec is direct; symmetrically,
+#   x86-source consoles (Xbox OG) get a higher ARM threshold than AMD threshold.
 #
-#   AMD hierarchy:
-#     1 — Light      : most emulators run natively on x86 (melonDS, ES-DE, azahar, ppsspp, duckstation)
-#     2 — Medium     : heavier x86 builds (dolphin, xemu, libretro-heavy)
-#     3 — Heavy      : reserved for future demanding emulators (Switch, PS3)
+#   ARM hierarchy (1-9):
+#     1 — Trivial    : DS / frontends (melonDS, ES-DE, libretro-light/package)
+#     2 — Light      : PS1, PSP (duckstation, ppsspp)
+#     3 — Light-med  : 3DS — ARM source, dynarec direct (azahar)
+#     4 — Medium     : GC/Wii (PowerPC) + heavy libretro cores; Switch (Tegra X1)
+#                       capable thanks to the AstralEmu perf stack (dolphin, libretro-heavy)
+#     5 — Med-heavy  : reserved
+#     6 — Heavy      : Xbox OG x86→ARM translation via QEMU TCG, NV2A GPU (xemu);
+#                       reachable on SM8250 (Adreno 650 Vulkan) thanks to the perf stack
+#     7 — Very heavy : reserved
+#     8 — Apex       : reserved (SM8550 / Cortex-X3-only emulators)
+#     9 — Future apex: reserved (Cortex-X4 / X925, SD8 Gen 4+)
+#
+#   AMD/Intel hierarchy (1-9):
+#     1 — Light      : most emulators run natively on x86 (melonDS, ES-DE, ppsspp, duckstation)
+#     2 — reserved
+#     3 — Light-med  : GC/Wii + heavy libretro cores (dolphin, libretro-heavy) — PowerPC source
+#                       slightly favours AMD recompile path
+#     4 — Medium     : 3DS (azahar) — ARM source, slight AMD penalty vs ARM hosts
+#     5 — Heavy      : Xbox OG natively (xemu) — AMD hosts the closest ISA match
+#     6-9            : reserved for future demanding emulators
 
 emulators:
   # --- Standalone emulators ---
@@ -51,8 +66,8 @@ emulators:
     version_source: github-release
     tracker_file: azahar-version
     build_time: 25
-    power_arm: 2
-    power_amd: 1
+    power_arm: 3
+    power_amd: 4
     true_arm: true
     true_amd: true
 
@@ -63,8 +78,8 @@ emulators:
     version_branch: master
     tracker_file: dolphin-commit
     build_time: 40
-    power_arm: 3
-    power_amd: 2
+    power_arm: 4
+    power_amd: 3
     true_arm: true
     true_amd: true
 
@@ -142,8 +157,8 @@ emulators:
     version_source: github-release
     tracker_file: xemu-version
     build_time: 40
-    power_arm: 4
-    power_amd: 2
+    power_arm: 6
+    power_amd: 5
     true_arm: true
     true_amd: true
 
@@ -151,8 +166,8 @@ emulators:
   - id: libretro-heavy-1
     version_source: hash-only
     build_time: 60
-    power_arm: 3
-    power_amd: 2
+    power_arm: 4
+    power_amd: 3
     true_arm: true
     true_amd: true
     artifact_type: cores
@@ -160,8 +175,8 @@ emulators:
   - id: libretro-heavy-2
     version_source: hash-only
     build_time: 50
-    power_arm: 3
-    power_amd: 2
+    power_arm: 4
+    power_amd: 3
     true_arm: true
     true_amd: true
     artifact_type: cores
@@ -169,8 +184,8 @@ emulators:
   - id: libretro-heavy-3
     version_source: hash-only
     build_time: 50
-    power_arm: 3
-    power_amd: 2
+    power_arm: 4
+    power_amd: 3
     true_arm: true
     true_amd: true
     artifact_type: cores
