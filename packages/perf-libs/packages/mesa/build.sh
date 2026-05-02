@@ -117,14 +117,19 @@ command -v cbindgen >/dev/null || cargo install cbindgen
 GALLIUM="llvmpipe,softpipe,virgl"
 VULKAN=""
 
+# Nouveau (open-source NVIDIA driver) is intentionally excluded — none of the
+# AstralEmu handhelds run NVIDIA discrete GPUs. Switch (Tegra X1) uses the
+# proprietary nvgpu downstream stack from L4T, not nouveau. Building nouveau
+# also currently breaks Mesa 26.x because its Rust bindgen step doesn't
+# resolve C11 atomic types in nouveau_bo.h ("atomic_uint_fast32_t" not found).
 if $IS_X86; then
-  GALLIUM="$GALLIUM,radeonsi,iris,crocus,nouveau,zink"
-  VULKAN="amd,intel,intel_hasvk,swrast,nouveau"
+  GALLIUM="$GALLIUM,radeonsi,iris,crocus,zink"
+  VULKAN="amd,intel,intel_hasvk,swrast"
 fi
 
 if $IS_ARM; then
-  GALLIUM="$GALLIUM,panfrost,lima,v3d,vc4,freedreno,etnaviv,tegra,nouveau,zink"
-  VULKAN="broadcom,freedreno,panfrost,swrast,nouveau"
+  GALLIUM="$GALLIUM,panfrost,lima,v3d,vc4,freedreno,etnaviv,zink"
+  VULKAN="broadcom,freedreno,panfrost,swrast"
 fi
 
 meson setup build --prefix=/usr --buildtype=release --reconfigure \
