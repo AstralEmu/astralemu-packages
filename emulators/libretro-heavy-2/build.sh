@@ -21,12 +21,22 @@ build_core() {
   local pre_make=${5:-}
   local post_clean=${6:-}
 
-  echo "=== Building $name ==="
+  # Default to the libretro org. A repo arg of "<org>/<name>" overrides the
+  # org — used for cores where the canonical upstream lives outside libretro
+  # (e.g. flycast: libretro/flycast is deprecated, the active fork is at
+  # flyinghead/flycast).
+  local clone_url
+  case "$repo" in
+    */*) clone_url="https://github.com/${repo}.git" ;;
+    *)   clone_url="https://github.com/libretro/${repo}.git" ;;
+  esac
+
+  echo "=== Building $name (from $clone_url) ==="
   if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
     rm -rf "$name"
   fi
   if [[ ! -d "$name" ]]; then
-    if ! git clone --depth 1 --recursive "https://github.com/libretro/$repo.git" "$name"; then
+    if ! git clone --depth 1 --recursive "$clone_url" "$name"; then
       echo "ERROR: Failed to clone $repo, skipping $name..."
       return 1
     fi
@@ -44,7 +54,8 @@ build_core() {
 }
 
 # Batch 2: Flycast, ScummVM
-build_core flycast flycast "" "HAVE_GENERIC_JIT=0"
+# libretro/flycast is deprecated upstream — clone from flyinghead/flycast.
+build_core flyinghead/flycast flycast "" "HAVE_GENERIC_JIT=0"
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
 # deps/libretro-common is managed by configure_submodules.sh (NOT a git submodule).
 # The script runs during Makefile parsing via $(shell) and resets dirty repos with

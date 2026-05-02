@@ -87,7 +87,7 @@ emulators:
     repo: stenzek/duckstation
     repo_host: github
     version_source: github-commit
-    version_branch: latest
+    version_branch: master
     tracker_file: duckstation-commit
     build_time: 30
     power_arm: 2
@@ -104,7 +104,7 @@ emulators:
     repo: stenzek/duckstation
     repo_host: github
     version_source: github-commit
-    version_branch: latest
+    version_branch: master
     tracker_file: duckstation-commit
     build_time: 45
     power_arm: 2
