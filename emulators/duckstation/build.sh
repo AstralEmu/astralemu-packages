@@ -92,7 +92,7 @@ libcurl4t64
 libwayland-client0
 libudev1
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-duck
 tar cf /workspace/duckstation-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

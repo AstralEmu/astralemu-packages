@@ -88,7 +88,7 @@ libboost-serialization1.83.0
 libenet7
 liblz4-1
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-azahar
 tar cf /workspace/azahar-emu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

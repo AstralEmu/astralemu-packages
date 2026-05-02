@@ -75,7 +75,7 @@ libsfml-network2.6
 libxxhash0
 libspng0
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-dolphin
 tar cf /workspace/dolphin-emu-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

@@ -57,7 +57,7 @@ libsamplerate0
 libpcap0.8t64
 libslirp0
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-xemu
 tar cf /workspace/xemu-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

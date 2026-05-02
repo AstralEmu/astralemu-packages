@@ -74,7 +74,7 @@ libswscale7
 libzip4t64
 libpng16-16t64
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-ppsspp
 tar cf /workspace/ppsspp-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s

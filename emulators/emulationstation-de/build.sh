@@ -57,7 +57,7 @@ libpugixml1v5
 libvlc5
 libpoppler-cpp0t64
 DEPS
-bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta
+bash /workspace/scripts/finalize-meta.sh /tmp/pkg/meta /workspace/src-esde
 tar cf /workspace/emulationstation-de-${TARGET_ID}_${VERSION_CLEAN}_${TARGET_ARCH}.pkg.tar -C /tmp/pkg meta root
 
 ccache -s
