@@ -39,10 +39,17 @@ build_core() {
   cd "$CORES_DIR"
 }
 
-# Batch 1: MAME, VICE, DOSBox, Saturn
+# Batch 1: MAME (3 ROMset windows), VICE, DOSBox, Saturn
+# Three MAME forks side by side cover the full timeline of arcade titles
+# without forcing the user to pick a single ROMset:
+#   - mame2003-plus  (ROMset 0.78,  pre-2003)  — embedded-optimised
+#   - mame2010       (ROMset 0.139, 2003-2010) — golden-era handhelds
+#   - mame2016       (ROMset 0.174, 2010-2016) — modern arcade hardware
 build_core mame2003-plus-libretro mame2003-plus
-build_core vice-libretro vice "" "EMUTYPE=x64"
-build_core dosbox-pure dosbox-pure
+build_core mame2010-libretro      mame2010
+build_core mame2016-libretro      mame2016
+build_core vice-libretro          vice "" "EMUTYPE=x64"
+build_core dosbox-pure            dosbox-pure
 build_core beetle-saturn-libretro beetle-saturn
 
 ccache -s

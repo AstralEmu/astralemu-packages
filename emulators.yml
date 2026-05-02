@@ -165,7 +165,7 @@ emulators:
   # --- Libretro batches ---
   - id: libretro-heavy-1
     version_source: hash-only
-    build_time: 60
+    build_time: 90
     power_arm: 4
     power_amd: 3
     true_arm: true
