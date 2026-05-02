@@ -113,17 +113,23 @@ fetch_bore_patches() {
   if [[ ! -d /workspace/src-bore ]]; then
     git clone --depth 1 https://github.com/firelzrd/bore-scheduler.git /workspace/src-bore
   fi
-  # The repo holds patches per kernel major.minor under patches/stable/v<MM>/
-  local bore_dir="/workspace/src-bore/patches/stable/v${kmm}"
+  # As of late 2025 the BORE repo only ships patches for LTS releases (6.6,
+  # 6.12, 6.18) plus the current and previous mainline (7.0, 7.1). Layout is
+  # patches/stable/linux-<X.Y>-bore/. If our kernel version isn't an exact
+  # match, we skip BORE rather than try a near-miss apply that would fail
+  # half-way through (BORE patches the scheduler core, which changes
+  # significantly between point releases). CachyOS portable still ships
+  # MM/VM and core scheduler tweaks, so dropping BORE for non-LTS kernels
+  # is a small loss — not worth blocking the whole kernel build over.
+  local bore_dir="/workspace/src-bore/patches/stable/linux-${kmm}-bore"
   if [[ ! -d "$bore_dir" ]]; then
-    echo "  WARN: no BORE patches for v${kmm}; falling back to closest lower" >&2
-    bore_dir=$(find /workspace/src-bore/patches/stable -maxdepth 1 -type d -name 'v*' \
-      | sort -V | awk -v target="v${kmm}" '$0 <= "/workspace/src-bore/patches/stable/" target' \
-      | tail -n1)
-    [[ -n "$bore_dir" ]] || { echo "ERROR: no BORE patches at all" >&2; exit 1; }
-    echo "  using $bore_dir"
+    echo "  WARN: no BORE patches for linux-${kmm}-bore; available:"
+    ls -1 /workspace/src-bore/patches/stable/ 2>/dev/null | sed 's/^/    /' >&2 || true
+    echo "  -> skipping BORE for this build (kernel will compile without BORE)" >&2
+    return 0
   fi
   cp "$bore_dir"/*.patch "$out/"
+  echo "  applied $(ls "$out"/*.patch 2>/dev/null | wc -l) BORE patches from $bore_dir"
 }
 
 # ----------------------------------------------------------------------------
