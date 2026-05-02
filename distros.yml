@@ -1,6 +1,15 @@
 # AstralEmu - Target distribution definitions
 #
-# Locked versions for stability. Update manually when targeting new releases.
+# Rolling LTS / latest tracking. The IDs below are stable aliases, NOT
+# version-specific codenames — `ubuntu-lts` always points to the current
+# Ubuntu LTS, `fedora-latest` always points to the current Fedora stable,
+# etc. The Docker base images use rolling tags (`ubuntu:latest`,
+# `fedora:latest`, `archlinux:latest`) so a new upstream release is picked
+# up on the next CI run with no manual bump required.
+#
+# We only act on actual ABI breaks (libavcodec60 → libavcodec61 etc.) by
+# rebuilding affected packages — the hash-only versioning + republish
+# auto handles that.
 #
 # The `enabled` flag controls which distros the CI publishes to. Disabled
 # distros stay defined here (the dep-map entries remain valid) but are
@@ -9,26 +18,28 @@
 
 distros:
   apt:
-    - id: resolute
+    - id: ubuntu-lts
       enabled: true
-      name: "Ubuntu 26.04 LTS"
+      name: "Ubuntu LTS (latest)"
       type: ubuntu
-      version: "26.04"
       mirror: http://ports.ubuntu.com/ubuntu-ports
       components: "main universe"
-    - id: trixie
+    - id: debian-stable
       enabled: false
-      name: "Debian 13"
+      name: "Debian stable (latest)"
       type: debian
-      version: "13"
       mirror: http://deb.debian.org/debian
       components: "main contrib"
 
   dnf:
-    - id: ublue
+    - id: fedora-latest
       enabled: true
-      name: "Universal Blue (Fedora 43 base)"
-      version: "43"
+      name: "Fedora (latest stable)"
+      # Literal "latest" as a path segment under dnf/.../<version>/<arch>/.
+      # Not substituted via $releasever — we publish a single rolling tree
+      # rather than per-Fedora-version subdirs. Bump only on actual ABI
+      # break, hash-only versioning + republish handles the rest.
+      version: "latest"
       baseurl: https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
 
   pacman:

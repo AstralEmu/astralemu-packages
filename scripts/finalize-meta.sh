@@ -11,8 +11,8 @@
 #   - source_distro  : value of $SOURCE_DISTRO env var (set by build-chain.yml
 #                       from build_targets[].source_distro in devices.yml)
 #   - source_format  : the native package format of the source distro
-#                       (deb for ubuntu/debian, rpm for fedora/ublue,
-#                        pacman for arch). Derived dynamically from
+#                       (deb for ubuntu-lts/debian-stable, rpm for
+#                        fedora-latest, pacman for arch). Derived dynamically from
 #                        distros.yml so adding a new source distro doesn't
 #                        require touching every build.sh.
 #   - maintainer     : single source of truth (the maintainer string was

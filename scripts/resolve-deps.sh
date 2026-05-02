@@ -4,7 +4,7 @@
 # Checks if dependencies exist in the target distro with compatible versions
 # (same major.minor.patch — bugfix/revision differences are ignored).
 # Missing or incompatible deps are fetched from source, rebuilt with a prefixed
-# package name (e.g. noble-libfoo) and Provides: original_name.
+# package name (e.g. ubuntu-lts-libfoo) and Provides: original_name.
 # The prefix defaults to SOURCE_DISTRO but can be overridden with --prefix.
 # Supports --cache-dir to reuse previously fetched source packages across runs.
 #
@@ -97,6 +97,7 @@ fi
 # ========================================================================
 
 declare -A SYSTEM_DEPS
+declare -a SYSTEM_DEPS_GLOB=()
 if [[ -n "$IGNORE_FILE" && -f "$IGNORE_FILE" ]]; then
   while IFS= read -r line || [[ -n "$line" ]]; do
     [[ "$line" =~ ^[[:space:]]*# || -z "${line// /}" ]] && continue
@@ -122,10 +123,31 @@ if [[ -n "$IGNORE_FILE" && -f "$IGNORE_FILE" ]]; then
         fi
         ;;
     esac
-    [[ -n "$pkg" ]] && SYSTEM_DEPS["$pkg"]=1
+    if [[ -n "$pkg" ]]; then
+      # Names containing a glob '*' (or '?', '[') go into the glob fallback
+      # array — exact lookup is the fast path, glob scan only runs on misses.
+      # Lets entries like `ubuntu-wallpapers-*` match every codename rollover
+      # so we don't have to bump the file at every Ubuntu LTS.
+      if [[ "$pkg" == *[*\?\[]* ]]; then
+        SYSTEM_DEPS_GLOB+=("$pkg")
+      else
+        SYSTEM_DEPS["$pkg"]=1
+      fi
+    fi
   done < "$IGNORE_FILE"
-  echo "Loaded ${#SYSTEM_DEPS[@]} packages to ignore (no fetch, no recursion)"
+  echo "Loaded ${#SYSTEM_DEPS[@]} exact + ${#SYSTEM_DEPS_GLOB[@]} glob packages to ignore (no fetch, no recursion)"
 fi
+
+# Returns 0 if $1 is in SYSTEM_DEPS (exact) or matches one of SYSTEM_DEPS_GLOB.
+is_system_dep() {
+  local dep="$1"
+  [[ -n "${SYSTEM_DEPS[$dep]+x}" ]] && return 0
+  local g
+  for g in "${SYSTEM_DEPS_GLOB[@]}"; do
+    [[ "$dep" == $g ]] && return 0
+  done
+  return 1
+}
 
 # ========================================================================
 # Helpers
@@ -133,20 +155,20 @@ fi
 
 get_docker_image() {
   case "$1" in
-    noble)    echo "ubuntu:24.04" ;;
-    trixie)   echo "debian:trixie" ;;
-    fedora41) echo "fedora:41" ;;
-    arch)     echo "archlinux:latest" ;;
-    *)        echo "ubuntu:24.04" ;;
+    ubuntu-lts)    echo "ubuntu:latest" ;;
+    debian-stable) echo "debian:latest" ;;
+    fedora-latest) echo "fedora:latest" ;;
+    arch)          echo "archlinux:latest" ;;
+    *)             echo "ubuntu:latest" ;;
   esac
 }
 
 get_source_format() {
-  case "${SOURCE_DISTRO:-noble}" in
-    noble|trixie) echo "deb" ;;
-    fedora41)     echo "rpm" ;;
-    arch)         echo "pacman" ;;
-    *)            echo "deb" ;;
+  case "${SOURCE_DISTRO:-ubuntu-lts}" in
+    ubuntu-lts|debian-stable) echo "deb" ;;
+    fedora-latest)            echo "rpm" ;;
+    arch)                     echo "pacman" ;;
+    *)                        echo "deb" ;;
   esac
 }
 
@@ -438,7 +460,7 @@ prefix_and_rebuild() {
 
 PLATFORM=$(get_platform)
 TARGET_IMAGE=$(get_docker_image "$TARGET_DISTRO")
-SOURCE_IMAGE=$(get_docker_image "${SOURCE_DISTRO:-noble}")
+SOURCE_IMAGE=$(get_docker_image "${SOURCE_DISTRO:-ubuntu-lts}")
 SOURCE_FORMAT=$(get_source_format)
 
 declare -A CHECKED_DEPS
@@ -476,7 +498,7 @@ while [[ -n "$(echo "$to_check" | xargs)" ]]; do
   for dep in $to_check; do
     [[ -z "$dep" ]] && continue
     [[ -n "${SKIP_SET[$dep]+x}" ]] && continue
-    if [[ -n "${SYSTEM_DEPS[$dep]+x}" ]]; then
+    if is_system_dep "$dep"; then
       if [[ -z "${CHECKED_DEPS[$dep]+x}" ]]; then
         system_skip_count=$((system_skip_count + 1))
         CHECKED_DEPS["$dep"]=1

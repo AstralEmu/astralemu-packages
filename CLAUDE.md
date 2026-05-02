@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Cross-distro package conversion system that builds emulators and performance-critical libraries once (on a `source_distro`, currently `resolute`/Ubuntu 26.04 LTS) and republishes them as `.deb`, `.rpm`, and Pacman repos — one per device — on the `gh-pages` branch. Served at `https://astralemu.github.io/astralemu-packages/`.
+Cross-distro package conversion system that builds emulators and performance-critical libraries once (on a `source_distro`, currently `ubuntu-lts` — a rolling alias that always points to the latest Ubuntu LTS via the `ubuntu:latest` Docker base image) and republishes them as `.deb`, `.rpm`, and Pacman repos — one per device — on the `gh-pages` branch. Served at `https://astralemu.github.io/astralemu-packages/`.
 
 There are no tests, no linter, no local build. All builds run on GitHub Actions. Local work is config/script editing plus reading recent Actions logs.
 
@@ -44,7 +44,7 @@ All build scripts emit a plain tar with `meta/` and `root/`:
 
 ## Dependency resolution
 
-[scripts/resolve-deps.sh](scripts/resolve-deps.sh) runs per target distro. When a dependency is missing or has an incompatible version on the target, it's fetched from `source_distro`, rebuilt with a `{source_distro}-` prefix (e.g. `resolute-libfoo`), and the `Provides:` field retains the original name. Prefixed packages land in a shared deps repo at `{format}/deps/{source_distro}/` — devices sharing a `source_distro` share this repo.
+[scripts/resolve-deps.sh](scripts/resolve-deps.sh) runs per target distro. When a dependency is missing or has an incompatible version on the target, it's fetched from `source_distro`, rebuilt with a `{source_distro}-` prefix (e.g. `ubuntu-lts-libfoo`), and the `Provides:` field retains the original name. Prefixed packages land in a shared deps repo at `{format}/deps/{source_distro}/` — devices sharing a `source_distro` share this repo.
 
 Two config files gate this behavior:
 - [scripts/dep-map.conf](scripts/dep-map.conf) — cross-distro name mapping for ABI-sensitive libraries (e.g. `libc6` → `glibc` on rpm/pacman).

@@ -13,8 +13,8 @@ on:
         description: 'Pattern for hardware-specific artifacts (e.g. pkg-*-l4t) — setperf and similar'
       source_distro:
         type: string
-        default: 'resolute'
-        description: 'Codename of the source distro the packages were built on'
+        default: 'ubuntu-lts'
+        description: 'Source distro id from distros.yml (rolling alias, e.g. ubuntu-lts)'
       device:
         type: string
         required: true

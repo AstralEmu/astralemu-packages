@@ -44,8 +44,8 @@ build_targets:
     arch: amd64
     platform: linux/amd64
     runner: ubuntu-26.04
-    base_image: ubuntu:26.04
-    source_distro: resolute
+    base_image: ubuntu:latest
+    source_distro: ubuntu-lts
     cflags: "-O3 -march=x86-64-v3"
     cxxflags: "-O3 -march=x86-64-v3"
 
@@ -53,8 +53,8 @@ build_targets:
     arch: arm64
     platform: linux/arm64
     runner: ubuntu-26.04-arm
-    base_image: ubuntu:26.04
-    source_distro: resolute
+    base_image: ubuntu:latest
+    source_distro: ubuntu-lts
     cflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
     cxxflags: "-O3 -march=armv8-a+crc+simd -mtune=cortex-a72"
 
@@ -62,8 +62,8 @@ build_targets:
     arch: arm64
     platform: linux/arm64
     runner: ubuntu-26.04-arm
-    base_image: ubuntu:26.04
-    source_distro: resolute
+    base_image: ubuntu:latest
+    source_distro: ubuntu-lts
     cflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
     cxxflags: "-O3 -march=armv8.2-a+crypto+fp16+rcpc+dotprod -mtune=cortex-a76"
 

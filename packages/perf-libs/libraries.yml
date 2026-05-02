@@ -13,81 +13,81 @@
 libraries:
   - id: llvm
     provides:
-      resolute: [libllvm18]
-      trixie: [libllvm19]
-      ublue: [llvm-libs]
+      ubuntu-lts: [libllvm18]
+      debian-stable: [libllvm19]
+      fedora-latest: [llvm-libs]
       arch: [llvm-libs]
 
   - id: libdrm
     provides:
-      resolute: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
-      trixie: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
-      ublue: [libdrm]
+      ubuntu-lts: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
+      debian-stable: [libdrm2, libdrm-common, libdrm-amdgpu1, libdrm-intel1, libdrm-nouveau2, libdrm-radeon1]
+      fedora-latest: [libdrm]
       arch: [libdrm]
 
   - id: mesa
     depends_on: [llvm, libdrm]
     provides:
-      resolute: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
-      trixie: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
-      ublue: [mesa-dri-drivers, mesa-libGL, mesa-libEGL, mesa-vulkan-drivers, mesa-va-drivers]
+      ubuntu-lts: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
+      debian-stable: [libgl1-mesa-dri, libglx-mesa0, libegl-mesa0, mesa-vulkan-drivers, mesa-va-drivers]
+      fedora-latest: [mesa-dri-drivers, mesa-libGL, mesa-libEGL, mesa-vulkan-drivers, mesa-va-drivers]
       arch: [mesa]
 
   - id: vulkan-loader
     provides:
-      resolute: [libvulkan1]
-      trixie: [libvulkan1]
-      ublue: [vulkan-loader]
+      ubuntu-lts: [libvulkan1]
+      debian-stable: [libvulkan1]
+      fedora-latest: [vulkan-loader]
       arch: [vulkan-icd-loader]
 
   - id: libva
     provides:
-      resolute: [libva2, libva-drm2, libva-x11-2]
-      trixie: [libva2, libva-drm2, libva-x11-2]
-      ublue: [libva]
+      ubuntu-lts: [libva2, libva-drm2, libva-x11-2]
+      debian-stable: [libva2, libva-drm2, libva-x11-2]
+      fedora-latest: [libva]
       arch: [libva]
 
   - id: intel-media-driver
     depends_on: [libva]
     arch: x86
     provides:
-      resolute: [intel-media-va-driver]
-      trixie: [intel-media-va-driver]
-      ublue: [libva-intel-media-driver]
+      ubuntu-lts: [intel-media-va-driver]
+      debian-stable: [intel-media-va-driver]
+      fedora-latest: [libva-intel-media-driver]
       arch: [intel-media-driver]
 
   - id: jemalloc
     provides:
-      resolute: [libjemalloc2]
-      trixie: [libjemalloc2]
-      ublue: [jemalloc]
+      ubuntu-lts: [libjemalloc2]
+      debian-stable: [libjemalloc2]
+      fedora-latest: [jemalloc]
       arch: [jemalloc]
 
   - id: sdl3
     provides:
-      resolute: [libsdl3-0]
-      trixie: [libsdl3-0]
-      ublue: [SDL3]
+      ubuntu-lts: [libsdl3-0]
+      debian-stable: [libsdl3-0]
+      fedora-latest: [SDL3]
       arch: [sdl3]
 
   - id: zlib-ng
     provides:
-      resolute: [zlib1g]
-      trixie: [zlib1g]
-      ublue: [zlib-ng-compat]
+      ubuntu-lts: [zlib1g]
+      debian-stable: [zlib1g]
+      fedora-latest: [zlib-ng-compat]
       arch: [zlib]
 
   - id: zstd
     provides:
-      resolute: [libzstd1]
-      trixie: [libzstd1]
-      ublue: [zstd]
+      ubuntu-lts: [libzstd1]
+      debian-stable: [libzstd1]
+      fedora-latest: [zstd]
       arch: [zstd]
 
   - id: ffmpeg
     depends_on: [zlib-ng, zstd, libva, vulkan-loader, libdrm]
     provides:
-      resolute: [libavcodec60, libavformat60, libavutil58, libavfilter9, libswscale7, libswresample4]
-      trixie: [libavcodec61, libavformat61, libavutil59, libavfilter10, libswscale8, libswresample5]
-      ublue: [ffmpeg-free]
+      ubuntu-lts: [libavcodec60, libavformat60, libavutil58, libavfilter9, libswscale7, libswresample4]
+      debian-stable: [libavcodec61, libavformat61, libavutil59, libavfilter10, libswscale8, libswresample5]
+      fedora-latest: [ffmpeg-free]
       arch: [ffmpeg]

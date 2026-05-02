@@ -71,7 +71,7 @@ apt-get build-dep -y --no-install-recommends mesa || \
 
 # Pick the system LLVM version and install the matching headers/libs that
 # Mesa needs but apt build-dep doesn't pull (CLC path, libclang-cpp, etc.).
-# Probing the version makes this work across noble/resolute/future LTS
+# Probing the version makes this work across rolling Ubuntu LTS bumps
 # without hardcoding -18 / -19 / -20 in every place.
 LLVM_VER=$(apt-cache search '^libllvm[0-9]+$' 2>/dev/null \
   | awk -F'libllvm' '{print $2}' | awk '{print $1}' \
