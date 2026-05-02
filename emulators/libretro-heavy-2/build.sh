@@ -36,9 +36,13 @@ build_core() {
     rm -rf "$name"
   fi
   if [[ ! -d "$name" ]]; then
-    if ! git clone --depth 1 --recursive "$clone_url" "$name"; then
+    if ! git clone --depth 1 "$clone_url" "$name"; then
       echo "ERROR: Failed to clone $repo, skipping $name..."
       return 1
+    fi
+    # Initialize submodules separately (--depth 1 + --recursive can fail silently)
+    if [[ -f "$name/.gitmodules" ]]; then
+      (cd "$name" && git submodule update --init --recursive --depth 1)
     fi
   fi
   cd "$name"

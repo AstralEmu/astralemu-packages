@@ -38,6 +38,8 @@ LATEST=$(git tag -l 'intel-media-[0-9]*' | sort -V | tail -1)
 echo "Using intel-media-driver: $LATEST"
 git checkout "$LATEST"
 
+# The repo switched to a flat layout (no Source/media/ subdir).
+# Build from root with MEDIA_BUILD_FATAL_WARNINGS=OFF to ignore -Werror.
 mkdir -p build && cd build
 cmake .. -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
@@ -48,7 +50,8 @@ cmake .. -G Ninja \
   -DCMAKE_CXX_FLAGS="$TARGET_CXXFLAGS -flto=thin" \
   -DCMAKE_EXE_LINKER_FLAGS="$TARGET_LDFLAGS" \
   -DCMAKE_SHARED_LINKER_FLAGS="$TARGET_LDFLAGS" \
-  -DMEDIA_BUILD_FATAL_WARNINGS=OFF
+  -DMEDIA_BUILD_FATAL_WARNINGS=OFF \
+  -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu
 
 ninja -j"$NPROC"
 DESTDIR="$PREFIX" ninja install
