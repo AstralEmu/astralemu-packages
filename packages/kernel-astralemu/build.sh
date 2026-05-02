@@ -1,40 +1,24 @@
 #!/bin/bash
-# kernel-astralemu — per-device meta-package that pulls in the right
-# kernel + modules + dtbs + firmware + setperf for the target device.
-# Empty payload (root/), only meta/depends.
+# kernel-astralemu — single-build noarch meta-package generator.
 #
-# Resolution rules:
+# Runs ONCE per CI run (regardless of build_target — its arch=all output
+# is identical for every host arch) and emits ONE .pkg.tar per device by
+# iterating devices.yml directly. The build script reads device list from
+# devices.yml rather than relying on TARGET_DEVICES so it doesn't depend on
+# which build_target the orchestrator picked.
+#
+# Resolution rules per device:
 #   - kernel flavor = build_target (kernel-amd64 / kernel-arm64-modern /
 #     kernel-arm64-legacy), with the Switch (l4t) special-cased to
 #     kernel-tegra-x1 because mainline 6.x can't drive its GPU.
 #   - dtbs are arm-only.
-#   - firmware deps come from the firmware_for_device() map below.
-#     A device with no entry simply gets no vendor firmware dep.
+#   - firmware deps come from firmware_for_device() — currently disabled
+#     until astralemu-firmware-* packages are built (see comment below).
 set -euo pipefail
 
 cd /workspace
 
-DEVICE_ID="${TARGET_ID}"
 DEVICES_YML="${ASTRALEMU_DEVICES_YML:-/workspace/devices.yml}"
-
-BUILD_TARGET=$(yq -r ".devices[] | select(.id == \"$DEVICE_ID\") | .build_target" "$DEVICES_YML")
-[[ -n "$BUILD_TARGET" && "$BUILD_TARGET" != "null" ]] || {
-  echo "ERROR: device '$DEVICE_ID' not found in $DEVICES_YML" >&2
-  exit 1
-}
-
-# Switch L4T can't run kernel-arm64-legacy (NVIDIA nvgpu downstream-only,
-# never ported to mainline). Falls back to kernel-tegra-x1 (4.9, NaGaa95).
-case "$DEVICE_ID" in
-  l4t) KFLAVOR="tegra-x1" ;;
-  *)   KFLAVOR="$BUILD_TARGET" ;;
-esac
-
-case "$BUILD_TARGET" in
-  amd64)   HAS_DTBS=false ;;
-  arm64-*) HAS_DTBS=true  ;;
-  *) echo "ERROR: unsupported build_target '$BUILD_TARGET'" >&2; exit 1 ;;
-esac
 
 # Per-device vendor firmware dep. Empty entry / unmatched device = none.
 #
@@ -62,44 +46,71 @@ firmware_for_device() {
   esac
 }
 
-PKG=/tmp/pkg-meta
-rm -rf "$PKG"
-mkdir -p "$PKG/meta" "$PKG/root"
-
-NAME="kernel-astralemu-${DEVICE_ID}"
 HASH_TAG="${SHORT:-${COMMIT:0:7}}"
 HASH_TAG="${HASH_TAG:-0000000}"
 VERSION="1.0.0+${HASH_TAG}"
 
-echo "$NAME"            > "$PKG/meta/name"
-echo "$VERSION"         > "$PKG/meta/version"
-echo "all"              > "$PKG/meta/arch"
-cat > "$PKG/meta/description" <<DESC
+# Iterate every device in devices.yml. Order doesn't matter — each one
+# becomes a self-contained .pkg.tar.
+DEVICE_IDS=$(yq -r '.devices[].id' "$DEVICES_YML")
+emitted=0
+for DEVICE_ID in $DEVICE_IDS; do
+  BUILD_TARGET=$(yq -r ".devices[] | select(.id == \"$DEVICE_ID\") | .build_target" "$DEVICES_YML")
+  [[ -n "$BUILD_TARGET" && "$BUILD_TARGET" != "null" ]] || {
+    echo "WARN: device '$DEVICE_ID' has no build_target, skipping" >&2
+    continue
+  }
+
+  # Switch L4T can't run kernel-arm64-legacy (NVIDIA nvgpu downstream-only,
+  # never ported to mainline). Falls back to kernel-tegra-x1 (4.9, NaGaa95).
+  case "$DEVICE_ID" in
+    l4t) KFLAVOR="tegra-x1" ;;
+    *)   KFLAVOR="$BUILD_TARGET" ;;
+  esac
+
+  case "$BUILD_TARGET" in
+    amd64)   HAS_DTBS=false ;;
+    arm64-*) HAS_DTBS=true  ;;
+    *) echo "WARN: unsupported build_target '$BUILD_TARGET' for $DEVICE_ID, skipping" >&2; continue ;;
+  esac
+
+  PKG=/tmp/pkg-meta-$DEVICE_ID
+  rm -rf "$PKG"
+  mkdir -p "$PKG/meta" "$PKG/root"
+
+  NAME="kernel-astralemu-${DEVICE_ID}"
+
+  echo "$NAME"            > "$PKG/meta/name"
+  echo "$VERSION"         > "$PKG/meta/version"
+  echo "all"              > "$PKG/meta/arch"
+  cat > "$PKG/meta/description" <<DESC
 AstralEmu kernel + modules + dtbs + firmware + setperf bundle for
 ${DEVICE_ID} (kernel flavor ${KFLAVOR}). Single 'apt install' / 'dnf
 install' / 'pacman -S' shortcut that pulls every device-specific piece
 of the AstralEmu stack at once.
 DESC
-echo "kernel"           > "$PKG/meta/section"
-echo "optional"         > "$PKG/meta/priority"
+  echo "kernel"           > "$PKG/meta/section"
+  echo "optional"         > "$PKG/meta/priority"
 
-DEPS="$PKG/meta/depends"
-{
-  echo "kernel-${KFLAVOR}"
-  echo "kernel-modules-${KFLAVOR}"
-  if [[ "$HAS_DTBS" == "true" ]]; then
-    echo "astralemu-dtbs-${KFLAVOR}"
-  fi
-  echo "setperf"
-  echo "astralemu-deps-repo"
-  fw=$(firmware_for_device "$DEVICE_ID")
-  [[ -n "$fw" ]] && echo "$fw"
-} > "$DEPS"
+  DEPS="$PKG/meta/depends"
+  {
+    echo "kernel-${KFLAVOR}"
+    echo "kernel-modules-${KFLAVOR}"
+    if [[ "$HAS_DTBS" == "true" ]]; then
+      echo "astralemu-dtbs-${KFLAVOR}"
+    fi
+    echo "setperf"
+    echo "astralemu-deps-repo"
+    fw=$(firmware_for_device "$DEVICE_ID")
+    [[ -n "$fw" ]] && echo "$fw"
+  } > "$DEPS"
 
-bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
+  bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
 
-tar cf "/workspace/${NAME}_${VERSION}_all.pkg.tar" -C "$PKG" meta root
+  tar cf "/workspace/${NAME}_${VERSION}_all.pkg.tar" -C "$PKG" meta root
+  emitted=$((emitted + 1))
+done
 
-echo "Generated $NAME version $VERSION with deps:"
-sed 's/^/  /' "$DEPS"
+echo "Generated $emitted kernel-astralemu meta-packages (version $VERSION)"
+ls -lh /workspace/kernel-astralemu-*.pkg.tar 2>/dev/null
 echo "completed" > /workspace/build-status

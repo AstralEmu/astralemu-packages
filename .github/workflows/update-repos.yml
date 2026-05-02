@@ -81,6 +81,53 @@ jobs:
           merge-multiple: true
         continue-on-error: true
 
+      - name: Download noarch single-build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # noarch_single_build entries (kernel-astralemu, setperf,
+          # astralemu-deps-repo) emit one arch=all .pkg.tar per device
+          # from a single CI job. We pull them ALL and filter by filename
+          # in the next step so each device repo only keeps its own.
+          pattern: pkg-noarch-*
+          path: noarch-stage/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Filter noarch packages to this device
+        run: |
+          DEVICE="${{ inputs.device }}"
+          shopt -s nullglob
+          if [[ ! -d noarch-stage ]]; then
+            echo "no noarch artifacts pulled, skipping filter"
+            exit 0
+          fi
+          all_devices=$(yq -r '.devices[].id' devices.yml)
+          for f in noarch-stage/*.pkg.tar; do
+            base=$(basename "$f")
+            # Strip _<version>_<arch>.pkg.tar suffix → "<name>"
+            name="${base%_*}"
+            name="${name%_*}"
+            # Keep if name ends with -$DEVICE (device-specific copy for us).
+            if [[ "$name" == *-"$DEVICE" ]]; then
+              cp "$f" .
+              continue
+            fi
+            # Otherwise, drop only if the suffix matches some OTHER device id.
+            # Universal noarch packages (e.g. astralemu-deps-repo) don't
+            # carry a device suffix at all → keep everywhere.
+            is_other_device=false
+            for d in $all_devices; do
+              [[ "$d" == "$DEVICE" ]] && continue
+              if [[ "$name" == *-"$d" ]]; then is_other_device=true; break; fi
+            done
+            if [[ "$is_other_device" == "false" ]]; then
+              cp "$f" .
+            fi
+          done
+          rm -rf noarch-stage
+          echo "After noarch filter, package files in working dir:"
+          ls -lh *.pkg.tar 2>/dev/null | head -30 || true
+
       - name: Check for packages
         id: check
         run: |

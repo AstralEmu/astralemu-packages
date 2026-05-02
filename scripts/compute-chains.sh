@@ -319,6 +319,13 @@ for (( i=0; i<emu_count; i++ )); do
   artifact_type=$(echo "$emu_data" | jq -r '.artifact_type // "pkg"')
   is_aggregator=$(echo "$emu_data" | jq -r '.is_aggregator // false')
   per_device=$(echo "$emu_data" | jq -r '.per_device // false')
+  noarch_single_build=$(echo "$emu_data" | jq -r '.noarch_single_build // false')
+  # noarch_single_build entries iterate devices.yml internally and emit
+  # one arch=all .pkg.tar per device, so they must NOT also be flagged
+  # per_device (which would re-multiply jobs).
+  if [[ "$noarch_single_build" == "true" ]]; then
+    per_device="false"
+  fi
   extra_cache_key=$(echo "$emu_data" | jq -r '.extra_caches[0].key // empty')
   extra_cache_path=$(echo "$emu_data" | jq -r '.extra_caches[0].path // empty')
   extra_cache_mount=$(echo "$emu_data" | jq -r '.extra_caches[0].mount // empty')
@@ -408,7 +415,13 @@ for (( i=0; i<emu_count; i++ )); do
     # entry applies to). Used by kernel-* packages whose recipes are
     # target-specific even though the arch is shared (kernel-arm64-modern
     # only fits arm64-modern, not arm64-legacy). Empty/absent = no filter.
-    target_filter=$(echo "$emu_data" | jq -r '.target_filter // "" | if type=="array" then join(" ") else . end')
+    # noarch_single_build forces a single amd64 build (the host arch is
+    # irrelevant since the produced .pkg.tar is arch=all).
+    if [[ "$noarch_single_build" == "true" ]]; then
+      target_filter="amd64"
+    else
+      target_filter=$(echo "$emu_data" | jq -r '.target_filter // "" | if type=="array" then join(" ") else . end')
+    fi
     if [[ -n "$target_filter" ]]; then
       tf_match=false
       for tf in $target_filter; do
@@ -493,6 +506,7 @@ for (( i=0; i<emu_count; i++ )); do
       --arg level "$level" \
       --arg artifact_type "$artifact_type" \
       --arg is_aggregator "$is_aggregator" \
+      --arg noarch_single_build "$noarch_single_build" \
       --arg extra_cache_key "$resolved_cache_key" \
       --arg extra_cache_path "$extra_cache_path" \
       --arg extra_cache_mount "$extra_cache_mount" \
@@ -516,6 +530,7 @@ for (( i=0; i<emu_count; i++ )); do
         level: $level,
         artifact_type: $artifact_type,
         is_aggregator: $is_aggregator,
+        noarch_single_build: $noarch_single_build,
         extra_cache_key: $extra_cache_key,
         extra_cache_path: $extra_cache_path,
         extra_cache_mount: $extra_cache_mount,

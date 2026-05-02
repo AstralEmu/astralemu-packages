@@ -9,6 +9,9 @@
 #   3. Commit and push — the CI will build it automatically
 
 packages:
+  # setperf — bash script per device (no compilation). Single noarch build
+  # iterates devices.yml internally and emits one arch=all .pkg.tar per
+  # device (26 packages from one job instead of 26 jobs).
   - id: setperf
     version_source: hash-only
     build_time: 1
@@ -16,18 +19,12 @@ packages:
     power_amd: 1
     true_arm: true
     true_amd: true
-    # Hardware-specific: setperf/l4t/, setperf/rpi4/, ... contain per-device
-    # governor/clock rules. Build once per device (not per build_target).
-    per_device: true
-    # Build for every device even if no setperf/<device>/ subdir exists —
-    # the build.sh emits a no-op fallback so kernel-astralemu's hard dep
-    # on `setperf` resolves on devices that don't (yet) have a hand-tuned
-    # governor script.
-    payload_optional: true
+    noarch_single_build: true
 
   # Repo configuration meta-package: drops apt/dnf/pacman config files
   # pointing to the AstralEmu shared deps repo. arch=all, content depends
-  # only on SOURCE_DISTRO. Pulled in by kernel-astralemu-<device>.
+  # only on SOURCE_DISTRO. Pulled in by kernel-astralemu-<device>. Single
+  # build, identical .pkg.tar published to every device repo.
   - id: astralemu-deps-repo
     version_source: hash-only
     build_time: 1
@@ -35,6 +32,7 @@ packages:
     power_amd: 1
     true_arm: true
     true_amd: true
+    noarch_single_build: true
 
   # All performance-critical libraries in one job:
   # LLVM → Mesa (GPU), libdrm, vulkan-loader, libva, intel-media-driver,
@@ -256,8 +254,9 @@ packages:
 
   # --- kernel-astralemu (meta) -----------------------------------------------
   # Per-device meta-package: a single 'apt install kernel-astralemu-<device>'
-  # pulls in kernel + modules + dtbs + firmware + setperf + deps-repo for
-  # the target device. Empty root/, only meta/depends. arch = all.
+  # pulls in kernel + modules + dtbs + setperf + deps-repo for the target
+  # device. Empty root/, only meta/depends. arch=all. Single noarch build
+  # iterates devices.yml internally and emits one .pkg.tar per device.
   - id: kernel-astralemu
     version_source: hash-only
     build_time: 2
@@ -265,4 +264,4 @@ packages:
     power_amd: 1
     true_arm: true
     true_amd: true
-    per_device: true
+    noarch_single_build: true

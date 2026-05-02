@@ -205,7 +205,7 @@ jobs:
           key: ${{ matrix.entry.extra_cache_key }}
 
       - name: Upload pkg artifact
-        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'pkg'
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'pkg' && matrix.entry.noarch_single_build != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pkg-${{ matrix.entry.emulator_id }}-${{ matrix.entry.target_id }}
@@ -214,6 +214,21 @@ jobs:
           overwrite: true
           # Some entries (e.g. duckstation-deps) are helper steps that prep
           # a cache without emitting a .pkg.tar. Don't warn in that case.
+          if-no-files-found: ignore
+
+      - name: Upload pkg artifact (noarch, single build for all devices)
+        if: steps.build.outputs.completed == 'true' && matrix.entry.artifact_type == 'pkg' && matrix.entry.noarch_single_build == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          # noarch_single_build entries iterate every device internally and
+          # emit one arch=all .pkg.tar per device from a single build job.
+          # The 'pkg-noarch-' prefix lets update-repos.yml pick this artifact
+          # up for ALL device repos (any arch), not just the build_target the
+          # job ran on.
+          name: pkg-noarch-${{ matrix.entry.emulator_id }}
+          path: "*.pkg.tar"
+          retention-days: 1
+          overwrite: true
           if-no-files-found: ignore
 
       - name: Upload cores artifact

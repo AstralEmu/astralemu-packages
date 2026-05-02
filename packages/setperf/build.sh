@@ -1,23 +1,22 @@
 #!/bin/bash
-# Build script for setperf package (intermediate format)
-set -e
-
-TARGET_ID="${TARGET_ID}"
-TARGET_ARCH="${TARGET_ARCH}"
+# setperf — single-build noarch package generator.
+#
+# Runs ONCE per CI run and emits ONE arch=all .pkg.tar per device by
+# iterating devices.yml directly. Each .pkg.tar bundles either the
+# device-specific setperf script under packages/setperf/<device>/setperf
+# (when present) or a no-op fallback. Bash scripts have no architecture,
+# so a single build covers all 26 devices regardless of host arch.
+set -euo pipefail
 
 cd /workspace
 
-TARGET_DIR="/workspace/packages/setperf/$TARGET_ID"
-SETPERF_SCRIPT="$TARGET_DIR/setperf"
+DEVICES_YML="${ASTRALEMU_DEVICES_YML:-/workspace/devices.yml}"
 
-# packages.yml flag payload_optional=true means: build for every device
-# even without a hand-tuned setperf script. Devices without one ship a
-# no-op binary so that meta-packages (kernel-astralemu-<device>) can
-# always resolve their hard dep on `setperf`.
-if [[ ! -f "$SETPERF_SCRIPT" ]]; then
-  echo "No setperf script for device $TARGET_ID — emitting no-op fallback"
-  SETPERF_SCRIPT=$(mktemp)
-  cat > "$SETPERF_SCRIPT" <<'NOOP'
+VERSION="1.0.0+${SHORT:-0000000}"
+
+# No-op fallback emitted for devices without a hand-tuned setperf script.
+NOOP_SCRIPT=$(mktemp)
+cat > "$NOOP_SCRIPT" <<'NOOP'
 #!/bin/bash
 # AstralEmu setperf — no-op fallback.
 #
@@ -26,34 +25,46 @@ if [[ ! -f "$SETPERF_SCRIPT" ]]; then
 # packages/setperf/<device-id>/setperf in astralemu-packages.
 exit 0
 NOOP
-  chmod +x "$SETPERF_SCRIPT"
-fi
+chmod +x "$NOOP_SCRIPT"
 
-# Suffix the build hash so the deb version bumps when the script changes
-# (otherwise pkg_exists_in_repo skips republishing).
-VERSION="1.0.0+${SHORT:-0000000}"
-PKG_NAME="setperf"
-PKG_DIR="/tmp/${PKG_NAME}_${VERSION}_${TARGET_ARCH}"
+DEVICE_IDS=$(yq -r '.devices[].id' "$DEVICES_YML")
+emitted=0
+for DEVICE_ID in $DEVICE_IDS; do
+  TARGET_DIR="/workspace/packages/setperf/$DEVICE_ID"
+  SCRIPT="$TARGET_DIR/setperf"
+  if [[ ! -f "$SCRIPT" ]]; then
+    SCRIPT="$NOOP_SCRIPT"
+    label="no-op"
+  else
+    label="hand-tuned"
+  fi
 
-# Create intermediate structure
-rm -rf "$PKG_DIR"
-mkdir -p "$PKG_DIR/root/usr/bin"
-mkdir -p "$PKG_DIR/meta"
+  PKG_NAME="setperf-${DEVICE_ID}"
+  PKG_DIR="/tmp/${PKG_NAME}_${VERSION}"
+  rm -rf "$PKG_DIR"
+  mkdir -p "$PKG_DIR/root/usr/bin" "$PKG_DIR/meta"
 
-# Install binary (either the device-specific script or the no-op fallback)
-cp "$SETPERF_SCRIPT" "$PKG_DIR/root/usr/bin/setperf"
-chmod +x "$PKG_DIR/root/usr/bin/setperf"
+  cp "$SCRIPT" "$PKG_DIR/root/usr/bin/setperf"
+  chmod +x "$PKG_DIR/root/usr/bin/setperf"
 
-# Create metadata
-echo "$PKG_NAME" > "$PKG_DIR/meta/name"
-echo "$VERSION" > "$PKG_DIR/meta/version"
-echo "$TARGET_ARCH" > "$PKG_DIR/meta/arch"
-echo "Performance tuning wrapper for ${TARGET_ID}" > "$PKG_DIR/meta/description"
-echo "utils" > "$PKG_DIR/meta/section"
-echo "optional" > "$PKG_DIR/meta/priority"
-echo "bash" > "$PKG_DIR/meta/depends"
+  echo "$PKG_NAME"           > "$PKG_DIR/meta/name"
+  echo "$VERSION"             > "$PKG_DIR/meta/version"
+  echo "all"                  > "$PKG_DIR/meta/arch"
+  echo "Performance tuning wrapper for ${DEVICE_ID} (${label})" > "$PKG_DIR/meta/description"
+  echo "utils"                > "$PKG_DIR/meta/section"
+  echo "optional"             > "$PKG_DIR/meta/priority"
+  echo "bash"                 > "$PKG_DIR/meta/depends"
 
-# Build intermediate tar
-bash /workspace/scripts/finalize-meta.sh "$PKG_DIR/meta"
-tar cf "/workspace/${PKG_NAME}-${TARGET_ID}_${VERSION}_${TARGET_ARCH}.pkg.tar" -C "$PKG_DIR" meta root
+  # The Provides keep clients querying `setperf` (without device suffix)
+  # resolving correctly — needed by kernel-astralemu's hard dep.
+  echo "setperf" > "$PKG_DIR/meta/provides"
+  echo "setperf" > "$PKG_DIR/meta/replaces"
+
+  bash /workspace/scripts/finalize-meta.sh "$PKG_DIR/meta"
+  tar cf "/workspace/${PKG_NAME}_${VERSION}_all.pkg.tar" -C "$PKG_DIR" meta root
+  emitted=$((emitted + 1))
+done
+
+echo "Generated $emitted setperf packages (version $VERSION)"
+ls -lh /workspace/setperf-*.pkg.tar 2>/dev/null
 echo "completed" > /workspace/build-status
