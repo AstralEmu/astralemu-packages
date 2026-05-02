@@ -171,6 +171,16 @@ fetch_cachyos_patches() {
     esac
     cp "$pat" "$out/"
   done
+
+  # CachyOS also ships a monolithic "handheld" patch under <X.Y>/misc/ that
+  # adds device drivers for ROG Ally, Legion Go, MSI Claw, Zotac Zone, plus
+  # Steam Deck hwmon/LEDs/extcon/mfd, panel quirks, and audio codecs. This
+  # patch is x86-only in practice (handhelds covered are AMD/Intel x86_64),
+  # so we only copy it when the caller is x86. Skipping for arm64.
+  if [[ "$arch_filter" != "arm64" && -f "$cachy_dir/misc/0001-handheld.patch" ]]; then
+    cp "$cachy_dir/misc/0001-handheld.patch" "$out/9999-cachyos-handheld.patch"
+    echo "  add CachyOS handheld patch (covers Steam Deck / ROG Ally / Legion Go / MSI Claw / Zotac drivers)"
+  fi
 }
 
 # ----------------------------------------------------------------------------

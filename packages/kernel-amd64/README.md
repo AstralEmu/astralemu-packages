@@ -7,10 +7,12 @@ ROG Ally, Legion Go, MSI Claw, GPD Win, AYANEO, AYN Loki, …).
 
 | Component | Source |
 |---|---|
-| Linux base | `git.kernel.org/.../stable/linux.git` (LTS pinned in `config/kernel-version`) |
-| BORE scheduler | `firelzrd/bore-scheduler` |
-| CachyOS portable + handheld patches | `CachyOS/kernel-patches` (filtered cherry-picks) |
-| Valve handheld patches | `ValveSoftware/linux-integration` (filtered cherry-picks) |
+| Linux base | `cdn.kernel.org/pub/linux/kernel/v<X>.x/linux-<KVER>.tar.xz` (KVER pinned dynamically from ROCKNIX `package.mk`) |
+| BORE scheduler | [`firelzrd/bore-scheduler`](https://github.com/firelzrd/bore-scheduler) |
+| CachyOS portable patches | [`CachyOS/kernel-patches`](https://github.com/CachyOS/kernel-patches) — `<X.Y>/*.patch` (scheduler / MM / x86 perf tweaks) |
+| CachyOS handheld driver patch | `CachyOS/kernel-patches` — `<X.Y>/misc/0001-handheld.patch` (Steam Deck hwmon/LEDs/extcon/mfd, ROG Ally, Legion Go, MSI Claw, Zotac Zone, AMDGPU display quirks, AW87xxx audio codec) |
+
+**Why no Valve `linux-integration`** — the upstream `ValveSoftware/linux-integration` GitHub repo was deleted (the older `ValveSoftware/linux` is a 2017-era SteamOS 2 / Debian fork, unrelated). The current SteamOS 3 source mirror lives on the Holo `gitlab.steamos.cloud/jupiter/linux-integration.git` GitLab instance which requires authenticated access — not viable for an unattended CI clone. The two unique kernel features Valve still ships (AMD P-State EPP handheld profile, NTSYNC sync primitive) are **upstream as of 6.18-6.19**, so we don't lose anything functional by dropping the Valve source.
 
 ## Build split
 
@@ -27,8 +29,10 @@ each well under the 6h GH Actions limit (cf. `docs/kernel-integration-plan.md`):
    else (net, usb, hid, sound, fs, crypto, …) → artifact
    `kernel-modules-…-generic`
 5. `kernel-amd64` (aggregator) — pull all four artifacts, merge into
-   `.pkg.tar` (kernel + sub-packages `kernel-modules-amd64`,
-   `astralemu-firmware-amd-handheld`).
+   `.pkg.tar` (kernel + sub-package `kernel-modules-amd64`).
+   `astralemu-firmware-amd-handheld` is referenced from `kernel-astralemu`
+   but the firmware package itself is not yet built — see the firmware
+   epic note in `docs/kernel-integration-plan.md`.
 
 ## Layout
 
@@ -41,8 +45,8 @@ packages/kernel-amd64/                    ← aggregator + shared assets
     defconfig                             our overrides on top of x86_64_defconfig
   patches/
     bore/                                 fetched at build time
-    cachyos/                              ditto
-    handheld-extras/                      ditto (Valve + extras)
+    cachyos/                              ditto (portable + misc/handheld)
+    handheld-extras/                      project-specific tweaks (vendored)
 
 packages/kernel-amd64-prep/
   build.sh                                clone + patch + savedefconfig
@@ -62,5 +66,5 @@ sub-builds stay short.
 
 GPL v2. Patches retain their original `Signed-off-by:` lines.
 ROCKNIX is not used here (x86 isn't covered by ROCKNIX); the
-relevant `Based on:` notes for Valve and CachyOS are emitted by
+relevant `Based on:` notes for BORE and CachyOS are emitted by
 `build.sh` into `meta/description`.
