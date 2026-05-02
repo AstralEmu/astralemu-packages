@@ -32,7 +32,8 @@ build_core() {
   esac
 
   echo "=== Building $name (from $clone_url) ==="
-  if [[ -d "$name" ]] && [[ -f "$name/.gitmodules" ]] && [[ -z "$(ls -A "$name/libretro-common" 2>/dev/null)" ]]; then
+  # Force fresh clone if Makefile is missing (happens when cache is corrupted)
+  if [[ ! -f "$name/Makefile" ]]; then
     rm -rf "$name"
   fi
   if [[ ! -d "$name" ]]; then
@@ -40,10 +41,17 @@ build_core() {
       echo "ERROR: Failed to clone $repo, skipping $name..."
       return 1
     fi
-    # Initialize submodules separately (--depth 1 + --recursive can fail silently)
     if [[ -f "$name/.gitmodules" ]]; then
-      (cd "$name" && git submodule update --init --recursive --depth 1)
+      echo "  Initializing submodules for $name..."
+      (cd "$name" && git submodule update --init --recursive --depth 1) || {
+        echo "WARNING: Submodule init failed for $name, continuing anyway"
+      }
     fi
+  fi
+  # Verify Makefile exists before proceeding
+  if [[ ! -f "$name/Makefile" ]]; then
+    echo "ERROR: No Makefile in $name after clone, skipping..."
+    return 1
   fi
   cd "$name"
   [[ -n "$pre_make" ]] && eval "$pre_make"
