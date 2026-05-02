@@ -42,7 +42,7 @@ jobs:
   # PREPARE: Create and cache base image with all dependencies
   # ===========================================================================
   prepare:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     outputs:
       devices: ${{ steps.load-devices.outputs.devices }}
       seed_device: ${{ steps.load-devices.outputs.seed_device }}
@@ -480,7 +480,7 @@ jobs:
   save-trackers:
     needs: [prepare, update-repo-seed, update-repo]
     if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout main
         uses: actions/checkout@v4

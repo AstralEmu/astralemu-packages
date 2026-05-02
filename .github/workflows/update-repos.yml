@@ -50,7 +50,7 @@ jobs:
   # NORMALIZE: Extract all packages to intermediate format (parallel)
   # ==================================================================
   normalize:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     outputs:
       arches: ${{ steps.normalize.outputs.arches }}
       count: ${{ steps.normalize.outputs.count }}
@@ -253,7 +253,7 @@ jobs:
   build-repo-seed:
     needs: normalize
     if: needs.normalize.outputs.count > 0
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -575,7 +575,7 @@ jobs:
   build-repo:
     needs: [normalize, build-repo-seed]
     if: needs.normalize.outputs.count > 0 && fromJson(needs.normalize.outputs.matrix_rest)[0] != null
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -896,7 +896,7 @@ jobs:
   deploy:
     needs: [normalize, build-repo-seed, build-repo]
     if: "!cancelled() && needs.normalize.outputs.count > 0"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
