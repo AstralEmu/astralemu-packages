@@ -46,11 +46,11 @@ if command -v depmod >/dev/null; then
 fi
 
 # ---- meta/ ----------------------------------------------------------------
-echo "kernel-amd64-${TARGET_ID}" > "$PKG/meta/name"
+echo "kernel-amd64" > "$PKG/meta/name"
 echo "$(kernel_pkg_version "$KVER")" > "$PKG/meta/version"
 echo "${TARGET_ARCH}" > "$PKG/meta/arch"
 cat > "$PKG/meta/description" <<DESC
-AstralEmu kernel for x86_64 handhelds (${TARGET_ID} build, kernel ${KVER}).
+AstralEmu kernel for x86_64 handhelds (kernel ${KVER}).
 Based on linux-stable + BORE scheduler + CachyOS portable patches +
 Valve linux-jupiter handheld patches. Targets Steam Deck (Van Gogh),
 ROG Ally / Ally X (Phoenix), Legion Go, MSI Claw, GPD Win, AYANEO,
@@ -59,7 +59,7 @@ DESC
 echo "games" > "$PKG/meta/section"
 echo "optional" > "$PKG/meta/priority"
 cat > "$PKG/meta/depends" <<DEPS
-kernel-modules-amd64-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
+kernel-modules-amd64 (= $(kernel_pkg_version "$KVER"))
 linux-base
 DEPS
 
@@ -91,7 +91,7 @@ bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
 
 # ---- Tar the final intermediate package -----------------------------------
 PKG_VERSION=$(cat "$PKG/meta/version")
-tar cf "/workspace/kernel-amd64-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-amd64_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$PKG" meta root
 
 # Also emit kernel-modules-amd64 as a separate sub-package. Same approach
@@ -101,16 +101,16 @@ SUB=/tmp/pkg-modules
 rm -rf "$SUB"
 mkdir -p "$SUB/meta/scripts" "$SUB/root/lib"
 cp -a "$PKG/root/lib/modules" "$SUB/root/lib/"
-echo "kernel-modules-amd64-${TARGET_ID}" > "$SUB/meta/name"
+echo "kernel-modules-amd64" > "$SUB/meta/name"
 echo "$PKG_VERSION" > "$SUB/meta/version"
 echo "${TARGET_ARCH}" > "$SUB/meta/arch"
-echo "Modules for kernel-amd64-${TARGET_ID} (kernel ${KVER})" > "$SUB/meta/description"
+echo "Modules for kernel-amd64 (kernel ${KVER})" > "$SUB/meta/description"
 echo "games" > "$SUB/meta/section"
 echo "optional" > "$SUB/meta/priority"
 bash /workspace/scripts/emit-aliases.sh kernel-modules-amd64 "$SUB/meta"
 bash /workspace/scripts/emit-aliases.sh kernel-modules        "$SUB/meta"
 bash /workspace/scripts/finalize-meta.sh "$SUB/meta"
-tar cf "/workspace/kernel-modules-amd64-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-modules-amd64_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$SUB" meta root
 
 echo "completed" > /workspace/build-status

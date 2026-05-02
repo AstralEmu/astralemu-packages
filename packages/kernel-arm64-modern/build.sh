@@ -41,11 +41,11 @@ if [[ -d "$DEPS/dtbs" ]]; then
 fi
 
 # ----------- main kernel package meta --------------------------------------
-echo "kernel-arm64-modern-${TARGET_ID}" > "$PKG/meta/name"
+echo "kernel-arm64-modern" > "$PKG/meta/name"
 echo "$(kernel_pkg_version "$KVER")" > "$PKG/meta/version"
 echo "${TARGET_ARCH}" > "$PKG/meta/arch"
 cat > "$PKG/meta/description" <<DESC
-AstralEmu kernel for armv8.2-a+ handhelds (${TARGET_ID} build, kernel ${KVER}).
+AstralEmu kernel for armv8.2-a+ handhelds (kernel ${KVER}).
 Based on linux-stable + BORE scheduler + CachyOS portable patches +
 ROCKNIX SoC downstream patches for RK3588, RK3576, SM6115, SM8250,
 SM8550, SM8650 (Adreno + Mali-G610 + Panfrost). Targets AYN Thor /
@@ -56,8 +56,8 @@ DESC
 echo "games" > "$PKG/meta/section"
 echo "optional" > "$PKG/meta/priority"
 cat > "$PKG/meta/depends" <<DEPS
-kernel-modules-arm64-modern-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
-astralemu-dtbs-arm64-modern-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
+kernel-modules-arm64-modern (= $(kernel_pkg_version "$KVER"))
+astralemu-dtbs-arm64-modern (= $(kernel_pkg_version "$KVER"))
 linux-base
 DEPS
 bash /workspace/scripts/emit-aliases.sh kernel-arm64-modern "$PKG/meta"
@@ -81,7 +81,7 @@ chmod +x "$PKG/meta/scripts/postinst"
 bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
 
 PKG_VERSION=$(cat "$PKG/meta/version")
-tar cf "/workspace/kernel-arm64-modern-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-arm64-modern_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$PKG" meta root
 
 # ----------- kernel-modules sub-package -----------------------------------
@@ -89,31 +89,31 @@ SUB=/tmp/pkg-modules
 rm -rf "$SUB"
 mkdir -p "$SUB/meta" "$SUB/root/lib"
 cp -a "$PKG/root/lib/modules" "$SUB/root/lib/"
-echo "kernel-modules-arm64-modern-${TARGET_ID}" > "$SUB/meta/name"
+echo "kernel-modules-arm64-modern" > "$SUB/meta/name"
 echo "$PKG_VERSION" > "$SUB/meta/version"
 echo "${TARGET_ARCH}" > "$SUB/meta/arch"
-echo "Modules for kernel-arm64-modern-${TARGET_ID} (kernel ${KVER})" \
+echo "Modules for kernel-arm64-modern (kernel ${KVER})" \
   > "$SUB/meta/description"
 echo "games" > "$SUB/meta/section"
 echo "optional" > "$SUB/meta/priority"
 bash /workspace/scripts/emit-aliases.sh kernel-modules-arm64-modern "$SUB/meta"
 bash /workspace/scripts/emit-aliases.sh kernel-modules              "$SUB/meta"
 bash /workspace/scripts/finalize-meta.sh "$SUB/meta"
-tar cf "/workspace/kernel-modules-arm64-modern-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-modules-arm64-modern_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$SUB" meta root
 
 # ----------- dtbs sub-package ---------------------------------------------
-echo "astralemu-dtbs-arm64-modern-${TARGET_ID}" > "$DTB_PKG/meta/name"
+echo "astralemu-dtbs-arm64-modern" > "$DTB_PKG/meta/name"
 echo "$PKG_VERSION" > "$DTB_PKG/meta/version"
 echo "all" > "$DTB_PKG/meta/arch"
-echo "Device-tree blobs for kernel-arm64-modern-${TARGET_ID} (kernel ${KVER})" \
+echo "Device-tree blobs for kernel-arm64-modern (kernel ${KVER})" \
   > "$DTB_PKG/meta/description"
 echo "kernel" > "$DTB_PKG/meta/section"
 echo "optional" > "$DTB_PKG/meta/priority"
 bash /workspace/scripts/emit-aliases.sh astralemu-dtbs-arm64-modern "$DTB_PKG/meta"
 bash /workspace/scripts/emit-aliases.sh astralemu-dtbs              "$DTB_PKG/meta"
 bash /workspace/scripts/finalize-meta.sh "$DTB_PKG/meta"
-tar cf "/workspace/astralemu-dtbs-arm64-modern-${TARGET_ID}_${PKG_VERSION}_all.pkg.tar" \
+tar cf "/workspace/astralemu-dtbs-arm64-modern_${PKG_VERSION}_all.pkg.tar" \
   -C "$DTB_PKG" meta root
 
 echo "completed" > /workspace/build-status

@@ -41,25 +41,25 @@ if [[ -d "$DEPS/dtbs" ]]; then
 fi
 
 # ----------- main kernel package meta --------------------------------------
-echo "kernel-arm64-legacy-${TARGET_ID}" > "$PKG/meta/name"
+echo "kernel-arm64-legacy" > "$PKG/meta/name"
 echo "$(kernel_pkg_version "$KVER")" > "$PKG/meta/version"
 echo "${TARGET_ARCH}" > "$PKG/meta/arch"
 cat > "$PKG/meta/description" <<DESC
 AstralEmu kernel for armv8-a Cortex-A53/A55/A57/A72/A73 handhelds
-(${TARGET_ID} build, kernel ${KVER}). Based on linux-stable + BORE
-scheduler + CachyOS portable patches + ROCKNIX SoC downstream patches
-for H700, RK3326, RK3399, RK3566, S922X (Mali-Bifrost / Midgard /
-Panfrost). Targets Anbernic RG35XX series (H700), RG ARC (S922X),
-Odroid Go Super (S922X), Powkiddy V90/X55 (RK3566), original
-Anbernic RG35XX (RK3326), Pinebook (RK3399).
+(kernel ${KVER}). Based on linux-stable + BORE scheduler + CachyOS
+portable patches + ROCKNIX SoC downstream patches for H700, RK3326,
+RK3399, RK3566, S922X (Mali-Bifrost / Midgard / Panfrost). Targets
+Anbernic RG35XX series (H700), RG ARC (S922X), Odroid Go Super (S922X),
+Powkiddy V90/X55 (RK3566), original Anbernic RG35XX (RK3326), Pinebook
+(RK3399).
 Note: Nintendo Switch (Tegra X1) is not covered here — see
 kernel-tegra-x1 (separate target on kernel 4.9 via NaGaa95).
 DESC
 echo "games" > "$PKG/meta/section"
 echo "optional" > "$PKG/meta/priority"
 cat > "$PKG/meta/depends" <<DEPS
-kernel-modules-arm64-legacy-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
-astralemu-dtbs-arm64-legacy-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
+kernel-modules-arm64-legacy (= $(kernel_pkg_version "$KVER"))
+astralemu-dtbs-arm64-legacy (= $(kernel_pkg_version "$KVER"))
 linux-base
 DEPS
 # l4t (Switch) gets kernel-tegra-x1 instead — drop it from the canonical
@@ -94,7 +94,7 @@ chmod +x "$PKG/meta/scripts/postinst"
 bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
 
 PKG_VERSION=$(cat "$PKG/meta/version")
-tar cf "/workspace/kernel-arm64-legacy-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-arm64-legacy_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$PKG" meta root
 
 # ----------- kernel-modules sub-package -----------------------------------
@@ -102,10 +102,10 @@ SUB=/tmp/pkg-modules
 rm -rf "$SUB"
 mkdir -p "$SUB/meta" "$SUB/root/lib"
 cp -a "$PKG/root/lib/modules" "$SUB/root/lib/"
-echo "kernel-modules-arm64-legacy-${TARGET_ID}" > "$SUB/meta/name"
+echo "kernel-modules-arm64-legacy" > "$SUB/meta/name"
 echo "$PKG_VERSION" > "$SUB/meta/version"
 echo "${TARGET_ARCH}" > "$SUB/meta/arch"
-echo "Modules for kernel-arm64-legacy-${TARGET_ID} (kernel ${KVER})" \
+echo "Modules for kernel-arm64-legacy (kernel ${KVER})" \
   > "$SUB/meta/description"
 echo "games" > "$SUB/meta/section"
 echo "optional" > "$SUB/meta/priority"
@@ -113,14 +113,14 @@ bash /workspace/scripts/emit-aliases.sh kernel-modules-arm64-legacy "$SUB/meta"
 TARGET_DEVICES="$NO_L4T" \
   bash /workspace/scripts/emit-aliases.sh kernel-modules "$SUB/meta"
 bash /workspace/scripts/finalize-meta.sh "$SUB/meta"
-tar cf "/workspace/kernel-modules-arm64-legacy-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-modules-arm64-legacy_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$SUB" meta root
 
 # ----------- dtbs sub-package ---------------------------------------------
-echo "astralemu-dtbs-arm64-legacy-${TARGET_ID}" > "$DTB_PKG/meta/name"
+echo "astralemu-dtbs-arm64-legacy" > "$DTB_PKG/meta/name"
 echo "$PKG_VERSION" > "$DTB_PKG/meta/version"
 echo "all" > "$DTB_PKG/meta/arch"
-echo "Device-tree blobs for kernel-arm64-legacy-${TARGET_ID} (kernel ${KVER})" \
+echo "Device-tree blobs for kernel-arm64-legacy (kernel ${KVER})" \
   > "$DTB_PKG/meta/description"
 echo "kernel" > "$DTB_PKG/meta/section"
 echo "optional" > "$DTB_PKG/meta/priority"
@@ -128,7 +128,7 @@ bash /workspace/scripts/emit-aliases.sh astralemu-dtbs-arm64-legacy "$DTB_PKG/me
 TARGET_DEVICES="$NO_L4T" \
   bash /workspace/scripts/emit-aliases.sh astralemu-dtbs "$DTB_PKG/meta"
 bash /workspace/scripts/finalize-meta.sh "$DTB_PKG/meta"
-tar cf "/workspace/astralemu-dtbs-arm64-legacy-${TARGET_ID}_${PKG_VERSION}_all.pkg.tar" \
+tar cf "/workspace/astralemu-dtbs-arm64-legacy_${PKG_VERSION}_all.pkg.tar" \
   -C "$DTB_PKG" meta root
 
 echo "completed" > /workspace/build-status

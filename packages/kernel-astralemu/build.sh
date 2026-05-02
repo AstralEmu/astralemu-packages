@@ -37,10 +37,27 @@ case "$BUILD_TARGET" in
 esac
 
 # Per-device vendor firmware dep. Empty entry / unmatched device = none.
+#
+# DISABLED until the astralemu-firmware-<vendor> packages are built. None of
+# `astralemu-firmware-tegra` / `-amd-handheld` / `-rockchip` / `-amlogic` /
+# `-allwinner` / `-qualcomm` / `-intel-meteorlake` exist in packages/ yet —
+# referencing them here would make kernel-astralemu unsatisfiable on every
+# device that has a non-empty mapping. Restore the per-device map below
+# (cf. docs/kernel-integration-plan.md "Mapping firmware par vendor")
+# once the firmware packages are committed.
 firmware_for_device() {
   case "$1" in
-    l4t)                       echo "astralemu-firmware-tegra" ;;
-    x86-v3|x86-v4)             echo "astralemu-firmware-amd-handheld" ;;
+    # l4t)                       echo "astralemu-firmware-tegra" ;;
+    # x86-v3|x86-v4|ayn-loki|steam-deck-lcd|steam-deck-oled|gpd-win|rog-ally|legion-go|ayaneo|onexplayer)
+    #                            echo "astralemu-firmware-amd-handheld" ;;
+    # anbernic-rg35xx-h)         echo "astralemu-firmware-allwinner" ;;
+    # anbernic-rg35xx-orig|powkiddy-rk3566|anbernic-rg406|orange-pi-5)
+    #                            echo "astralemu-firmware-rockchip" ;;
+    # anbernic-rg-arc|odroid-go-super)
+    #                            echo "astralemu-firmware-amlogic" ;;
+    # retroid-pocket-5|retroid-pocket-6|ayn-thor)
+    #                            echo "astralemu-firmware-qualcomm" ;;
+    # msi-claw)                  echo "astralemu-firmware-intel-meteorlake" ;;
     *) ;;
   esac
 }

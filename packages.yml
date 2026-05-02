@@ -19,6 +19,22 @@ packages:
     # Hardware-specific: setperf/l4t/, setperf/rpi4/, ... contain per-device
     # governor/clock rules. Build once per device (not per build_target).
     per_device: true
+    # Build for every device even if no setperf/<device>/ subdir exists —
+    # the build.sh emits a no-op fallback so kernel-astralemu's hard dep
+    # on `setperf` resolves on devices that don't (yet) have a hand-tuned
+    # governor script.
+    payload_optional: true
+
+  # Repo configuration meta-package: drops apt/dnf/pacman config files
+  # pointing to the AstralEmu shared deps repo. arch=all, content depends
+  # only on SOURCE_DISTRO. Pulled in by kernel-astralemu-<device>.
+  - id: astralemu-deps-repo
+    version_source: hash-only
+    build_time: 1
+    power_arm: 1
+    power_amd: 1
+    true_arm: true
+    true_amd: true
 
   # All performance-critical libraries in one job:
   # LLVM → Mesa (GPU), libdrm, vulkan-loader, libva, intel-media-driver,

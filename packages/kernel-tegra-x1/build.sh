@@ -76,24 +76,23 @@ if command -v depmod >/dev/null; then
 fi
 
 # --- main package meta ----------------------------------------------------
-echo "kernel-tegra-x1-${TARGET_ID}" > "$PKG/meta/name"
+echo "kernel-tegra-x1" > "$PKG/meta/name"
 echo "$(kernel_pkg_version "$KVER")" > "$PKG/meta/version"
 echo "${TARGET_ARCH}" > "$PKG/meta/arch"
 cat > "$PKG/meta/description" <<DESC
-AstralEmu kernel for Nintendo Switch (Tegra X1, ${TARGET_ID} build,
-kernel ${KVER}). Based on NaGaa95/switch-l4t-kernel-4.9 — the only
-actively maintained 4.9 fork (2026-04 erista support). No BORE /
-CachyOS (kernel 4.9 incompatible). Pair this with the filtered
-theofficialgman/l4t-debs userspace mirror (nvidia-l4t-*, switch-*,
-joycond, xorg-server) for a complete Switch L4T stack. See
-docs/tegra-x1-research.md for the rationale and the deferred plan
-to revisit a mainline 6.x port.
+AstralEmu kernel for Nintendo Switch (Tegra X1, kernel ${KVER}).
+Based on NaGaa95/switch-l4t-kernel-4.9 — the only actively maintained
+4.9 fork (2026-04 erista support). No BORE / CachyOS (kernel 4.9
+incompatible). Pair this with the filtered theofficialgman/l4t-debs
+userspace mirror (nvidia-l4t-*, switch-*, joycond, xorg-server) for a
+complete Switch L4T stack. See docs/tegra-x1-research.md for the
+rationale and the deferred plan to revisit a mainline 6.x port.
 DESC
 echo "games" > "$PKG/meta/section"
 echo "optional" > "$PKG/meta/priority"
 cat > "$PKG/meta/depends" <<DEPS
-kernel-modules-tegra-x1-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
-astralemu-dtbs-tegra-x1-${TARGET_ID} (= $(kernel_pkg_version "$KVER"))
+kernel-modules-tegra-x1 (= $(kernel_pkg_version "$KVER"))
+astralemu-dtbs-tegra-x1 (= $(kernel_pkg_version "$KVER"))
 linux-base
 DEPS
 bash /workspace/scripts/emit-aliases.sh kernel-tegra-x1 "$PKG/meta"
@@ -117,7 +116,7 @@ chmod +x "$PKG/meta/scripts/postinst"
 bash /workspace/scripts/finalize-meta.sh "$PKG/meta"
 
 PKG_VERSION=$(cat "$PKG/meta/version")
-tar cf "/workspace/kernel-tegra-x1-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-tegra-x1_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$PKG" meta root
 
 # --- modules sub-package --------------------------------------------------
@@ -125,30 +124,30 @@ SUB=/tmp/pkg-modules
 rm -rf "$SUB"
 mkdir -p "$SUB/meta" "$SUB/root/lib"
 cp -a "$PKG/root/lib/modules" "$SUB/root/lib/"
-echo "kernel-modules-tegra-x1-${TARGET_ID}" > "$SUB/meta/name"
+echo "kernel-modules-tegra-x1" > "$SUB/meta/name"
 echo "$PKG_VERSION" > "$SUB/meta/version"
 echo "${TARGET_ARCH}" > "$SUB/meta/arch"
-echo "Modules for kernel-tegra-x1-${TARGET_ID} (kernel ${KVER})" > "$SUB/meta/description"
+echo "Modules for kernel-tegra-x1 (kernel ${KVER})" > "$SUB/meta/description"
 echo "games" > "$SUB/meta/section"
 echo "optional" > "$SUB/meta/priority"
 bash /workspace/scripts/emit-aliases.sh kernel-modules-tegra-x1 "$SUB/meta"
 bash /workspace/scripts/emit-aliases.sh kernel-modules          "$SUB/meta"
 bash /workspace/scripts/finalize-meta.sh "$SUB/meta"
-tar cf "/workspace/kernel-modules-tegra-x1-${TARGET_ID}_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
+tar cf "/workspace/kernel-modules-tegra-x1_${PKG_VERSION}_${TARGET_ARCH}.pkg.tar" \
   -C "$SUB" meta root
 
 # --- dtbs sub-package -----------------------------------------------------
-echo "astralemu-dtbs-tegra-x1-${TARGET_ID}" > "$DTB_PKG/meta/name"
+echo "astralemu-dtbs-tegra-x1" > "$DTB_PKG/meta/name"
 echo "$PKG_VERSION" > "$DTB_PKG/meta/version"
 echo "all" > "$DTB_PKG/meta/arch"
-echo "Device-tree blobs for kernel-tegra-x1-${TARGET_ID} (kernel ${KVER})" \
+echo "Device-tree blobs for kernel-tegra-x1 (kernel ${KVER})" \
   > "$DTB_PKG/meta/description"
 echo "kernel" > "$DTB_PKG/meta/section"
 echo "optional" > "$DTB_PKG/meta/priority"
 bash /workspace/scripts/emit-aliases.sh astralemu-dtbs-tegra-x1 "$DTB_PKG/meta"
 bash /workspace/scripts/emit-aliases.sh astralemu-dtbs         "$DTB_PKG/meta"
 bash /workspace/scripts/finalize-meta.sh "$DTB_PKG/meta"
-tar cf "/workspace/astralemu-dtbs-tegra-x1-${TARGET_ID}_${PKG_VERSION}_all.pkg.tar" \
+tar cf "/workspace/astralemu-dtbs-tegra-x1_${PKG_VERSION}_all.pkg.tar" \
   -C "$DTB_PKG" meta root
 
 echo "completed" > /workspace/build-status

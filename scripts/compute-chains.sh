@@ -367,8 +367,16 @@ for (( i=0; i<emu_count; i++ )); do
     # packages/<emu>/<device>/ — running them would just exit 0 from the
     # build script ("No setperf script for device X, skipping") and waste
     # a Docker container per device per run since no marker is uploaded.
+    #
+    # Opt-out: if the entry sets payload_optional=true, ALL devices are
+    # iterated regardless of subdir presence, and the build script is
+    # expected to gracefully fall back to a no-op or generic payload when
+    # a device-specific subdir is missing. Used by setperf so that
+    # kernel-astralemu's hard dep on `setperf` resolves on every device,
+    # not just the ones with a hand-tuned governor script.
+    payload_optional=$(echo "$emu_data" | jq -r '.payload_optional // false')
     base_dir_path="$ROOT_DIR/$base_dir/$emu_id"
-    if [[ -d "$base_dir_path" ]]; then
+    if [[ "$payload_optional" != "true" && -d "$base_dir_path" ]]; then
       available_devs=()
       for d in "$base_dir_path"/*/; do
         [[ -d "$d" ]] && available_devs+=("$(basename "$d")")

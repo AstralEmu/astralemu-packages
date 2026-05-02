@@ -8,10 +8,25 @@ TARGET_ARCH="${TARGET_ARCH}"
 cd /workspace
 
 TARGET_DIR="/workspace/packages/setperf/$TARGET_ID"
+SETPERF_SCRIPT="$TARGET_DIR/setperf"
 
-if [[ ! -f "$TARGET_DIR/setperf" ]]; then
-  echo "No setperf script for device $TARGET_ID, skipping"
-  exit 0
+# packages.yml flag payload_optional=true means: build for every device
+# even without a hand-tuned setperf script. Devices without one ship a
+# no-op binary so that meta-packages (kernel-astralemu-<device>) can
+# always resolve their hard dep on `setperf`.
+if [[ ! -f "$SETPERF_SCRIPT" ]]; then
+  echo "No setperf script for device $TARGET_ID — emitting no-op fallback"
+  SETPERF_SCRIPT=$(mktemp)
+  cat > "$SETPERF_SCRIPT" <<'NOOP'
+#!/bin/bash
+# AstralEmu setperf — no-op fallback.
+#
+# This device does not (yet) have a hand-tuned governor / clock / pinning
+# profile. Calling setperf is a no-op until per-device tuning ships under
+# packages/setperf/<device-id>/setperf in astralemu-packages.
+exit 0
+NOOP
+  chmod +x "$SETPERF_SCRIPT"
 fi
 
 # Suffix the build hash so the deb version bumps when the script changes
@@ -25,8 +40,8 @@ rm -rf "$PKG_DIR"
 mkdir -p "$PKG_DIR/root/usr/bin"
 mkdir -p "$PKG_DIR/meta"
 
-# Install binary
-cp "$TARGET_DIR/setperf" "$PKG_DIR/root/usr/bin/"
+# Install binary (either the device-specific script or the no-op fallback)
+cp "$SETPERF_SCRIPT" "$PKG_DIR/root/usr/bin/setperf"
 chmod +x "$PKG_DIR/root/usr/bin/setperf"
 
 # Create metadata
