@@ -31,6 +31,19 @@ All RetroArch cores are built individually as separate packages, so you only ins
 
 Device-specific packages that provide kernel modules, firmware, and drivers required by embedded targets (RK3588, Snapdragon, Amlogic, etc.).
 
+### Custom kernels
+
+Four kernel flavors covering every supported handheld, with BORE scheduler + CachyOS portable patches + per-SoC downstream cherry-picks (ROCKNIX) where relevant:
+
+| Kernel | Devices | Source |
+|---|---|---|
+| `kernel-amd64` | Steam Deck, ROG Ally, Legion Go, MSI Claw, GPD Win, AYANEO, OneXPlayer, AYN Loki | Linux stable + BORE + CachyOS portable patches + the CachyOS handheld driver patch (Steam Deck hwmon/LEDs, ROG Ally / Legion Go / MSI Claw / Zotac Zone HID drivers, AMDGPU display quirks, AW87xxx audio codec) |
+| `kernel-arm64-modern` | Retroid Pocket 5/6, AYN Thor, Orange Pi 5 (RK3588), generic Snapdragon 845-X3 | Linux stable + BORE + CachyOS portable + ROCKNIX SoC patches (qcom, rockchip, samsung) |
+| `kernel-arm64-legacy` | Anbernic RG35XX H/SP/Plus + original, RG ARC, RG406, Powkiddy V90/X55, Odroid Go Super, Raspberry Pi 4 | Linux stable + BORE + CachyOS portable + ROCKNIX SoC patches (rockchip, amlogic, sunxi) |
+| `kernel-tegra-x1` | Nintendo Switch only | NaGaa95/switch-l4t-kernel-4.9 (only actively maintained 4.9 fork; mainline 6.x can't drive Tegra X1's nvgpu) |
+
+The build is split into 5 sub-jobs (`prep` → `image` + `modules-soc/platform` + `modules-generic` → aggregator) for the three modern kernels so that no single job comes near the GitHub Actions 6h ceiling. The Switch is a mono-job since the 4.9 tree builds in roughly an hour. A per-device meta-package `kernel-astralemu-<device>` pulls in the right kernel flavor + modules + dtbs (ARM only) + setperf + repo config in a single command.
+
 ### Performance Profiles
 
 Per-device packages that contain the dynamic tuning rules for the [Performance Manager](https://github.com/AstralEmu/astralemu#performance-manager) — CPU/GPU/RAM governors, clocks, and pinning configs for every supported emulator.
@@ -52,7 +65,7 @@ Builds run on GitHub Actions and are triggered automatically every 24 hours, or 
 
 ## Repository setup
 
-Each device has its own repository for emulator packages, plus a shared repository for dependencies grouped by source distribution. Replace `<device>` with your device ID (e.g. `l4t`) and `<source_distro>` with the source distribution (e.g. `noble`).
+Each device has its own repository for emulator packages, plus a shared repository for dependencies grouped by source distribution. Replace `<device>` with your device ID (e.g. `l4t`) and `<source_distro>` with the source distribution (e.g. `ubuntu-lts`).
 
 The `astralemu-deps-repo` meta-package (included in the device repo) automatically configures the shared dependency repository.
 
@@ -82,10 +95,40 @@ Server = https://astralemu.github.io/astralemu-packages/pacman/device/<device>/$
 
 ### Available devices
 
+The full list lives in [devices.yml](devices.yml). All devices currently share `ubuntu-lts` as their source distro — a rolling alias that always points to the latest Ubuntu LTS via the `ubuntu:latest` Docker base image. Pick the entry that best matches your hardware — generic baselines (`x86-v3`, `armv8-2`, …) are a fine fallback when your exact handheld isn't named yet.
 
-| Device ID | Name                       | Architecture | Source Distro |
-| --------- | -------------------------- | ------------ | ------------- |
-| `l4t`     | Nintendo Switch (Tegra X1) | arm64        | `noble`       |
+ARM handhelds:
+
+| Device ID | Hardware | build_target |
+|---|---|---|
+| `l4t` | Nintendo Switch (Tegra X1) | arm64-legacy + dedicated `kernel-tegra-x1` |
+| `rpi4` | Raspberry Pi 4 | arm64-legacy |
+| `anbernic-rg35xx-orig` | Anbernic RG35XX original (RK3326) | arm64-legacy |
+| `anbernic-rg35xx-h` | Anbernic RG35XX H/SP/Plus (H700) | arm64-legacy |
+| `powkiddy-rk3566` | Powkiddy V90 / X55 | arm64-legacy |
+| `anbernic-rg406` | Anbernic RG406 series (RK3576) | arm64-legacy |
+| `anbernic-rg-arc` | Anbernic RG ARC (S922X) | arm64-legacy |
+| `odroid-go-super` | Odroid Go Super (S922X) | arm64-legacy |
+| `retroid-pocket-5` | Retroid Pocket 5 (SM8250) | arm64-modern |
+| `orange-pi-5` | Orange Pi 5 / Rock 5 (RK3588) | arm64-modern |
+| `retroid-pocket-6` | Retroid Pocket 6 (SM8550) | arm64-modern |
+| `ayn-thor` | AYN Thor (SM8550) | arm64-modern |
+| `armv8-2`, `armv9` | generic ARMv8.2-A / ARMv9.0-A baselines | arm64-modern |
+
+AMD/Intel handhelds:
+
+| Device ID | Hardware | build_target |
+|---|---|---|
+| `ayn-loki` | AYN Loki / Loki Zero (Mendocino Zen 2) | amd64 |
+| `steam-deck-lcd` | Steam Deck LCD (Van Gogh Zen 2) | amd64 |
+| `steam-deck-oled` | Steam Deck OLED (Sephiroth Zen 2) | amd64 |
+| `gpd-win` | GPD Win Mini / Max (Phoenix Z1 Zen 4) | amd64 |
+| `rog-ally` | ASUS ROG Ally / Ally X (Phoenix Z1E Zen 4) | amd64 |
+| `legion-go` | Lenovo Legion Go / Legion Go S (Phoenix Z1E) | amd64 |
+| `msi-claw` | MSI Claw (Meteor Lake) | amd64 |
+| `ayaneo` | AYANEO Geek/Slide/Kun (Phoenix / Hawk Point) | amd64 |
+| `onexplayer` | OneXPlayer X1 / OneXFly (Phoenix / Strix Point) | amd64 |
+| `x86-v2`, `x86-v3`, `x86-v4` | generic x86-64-v2/v3/v4 baselines | amd64 |
 
 ## Hosting
 
@@ -112,7 +155,13 @@ The CI dynamically generates the build matrix from two config files:
 - **`devices.yml`** — Target devices with architecture, compiler flags, and package sources to mirror
 - **`distros.yml`** — Target distributions (APT, DNF, Pacman) with their versions and mirrors
 
-Every package is cross-built to all target formats (`.deb`, `.rpm`, Pacman) with automatic dependency resolution. Dependencies missing or incompatible on the target distro are fetched from the source distribution, prefixed with its codename (e.g. `noble-libfoo`), and published to a shared dependency repository. Devices with the same source distribution share the same dependencies.
+Every package is cross-built to all target formats (`.deb`, `.rpm`, Pacman) with automatic dependency resolution. Dependencies missing or incompatible on the target distro are fetched from the source distribution, prefixed with its source-distro id (e.g. `ubuntu-lts-libfoo`), and published to a shared dependency repository. Devices with the same source distribution share the same dependencies.
+
+---
+
+## Credits
+
+This repository builds and mirrors a lot of other people's work — the Linux kernel, the BORE scheduler, CachyOS portable + handheld patches, ROCKNIX's per-SoC downstream patch series, NaGaa95's Switch 4.9 fork, every emulator and libretro core listed above, the perf-libs stack (Mesa, Vulkan-Loader, FFmpeg, jemalloc, SDL3, …) and `theofficialgman/l4t-debs`. The full list with upstream URLs and license notes lives in [CREDITS.md](CREDITS.md). If you find a missing or incorrect attribution, open an issue.
 
 ---
 
