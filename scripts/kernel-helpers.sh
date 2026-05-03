@@ -312,11 +312,23 @@ fetch_cachyos_patches() {
   # Allowlist: patches whose names match these patterns are kept across both
   # arches. Architecture-specific (x86 only) patches are filtered out for
   # arm64 callers.
+  #
+  # IMPORTANT: skip the monolithic 0004-cachy.patch — it is a +4000 line
+  # mega-patch that modifies dozens of .c and .h files for scheduler, MM/VM,
+  # GPU, and driver tweaks. It targets the CachyOS fork of the kernel and
+  # does not apply cleanly on vanilla (78+ hunks rejected on 6.15.6).
+  # Instead, we get scheduler optimisations from BORE (sched/0001-bore.patch)
+  # and keep the smaller targeted patches that do apply cleanly.
   local pat
   for pat in "$cachy_dir"/*.patch; do
     [[ -f "$pat" ]] || continue
     local base
     base=$(basename "$pat")
+    case "$base" in
+      *cachy*|*cachyos*)
+        echo "  skip $base (monolithic mega-patch, does not apply on vanilla kernel)"
+        continue ;;
+    esac
     case "$base" in
       *amd-pstate*|*x86*|*intel*|*autofdo*|*propeller*)
         if [[ "$arch_filter" == "arm64" ]]; then

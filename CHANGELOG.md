@@ -10,7 +10,17 @@ ISO 8601 (YYYY-MM-DD).
 - **Docker cache key bumped to v8** — previous v7 cache predates the `zstd`
   CLI package addition, causing `kernel-*-prep` jobs to fail with `zstd: not
   found` when packing the patched source tarball. The new key forces a rebuild
-  of both the amd64 and arm64 images.
+  of both the amd64 and arm64 images. Also fixed `build-chain.yml` which still
+  defaulted to `emu-deps-base-v7`, causing chain jobs to load the stale image.
+- **CachyOS mega-patch skipped** — the monolithic `0004-cachy.patch` (4000+
+  lines targeting the CachyOS kernel fork, 78+ hunks rejected on vanilla
+  6.15.6) is now excluded. BORE scheduler optimisations still come from
+  `sched/0001-bore.patch`; smaller targeted patches (`amd-pstate`, `bbr3`,
+  `asus`, `fixes`, `handheld`) are kept.
+- **Flycast HAVE_CLONEFILE fix** — added `-DHAVE_CLONEFILE=0` to
+  `CMAKE_C_FLAGS` to prevent CMake from incorrectly detecting the macOS-only
+  `clonefile` syscall on Linux, which caused a fatal `sys/attr.h` include
+  error in libzip.
 - **intel-media-driver CMake** — added `-DMEDIA_RUN_TEST_SUITE=OFF` to skip
   the ULT (unit level testing) subdirectory whose CMakeLists.txt has a broken
   `if()` on undefined variables when building in Release mode.
