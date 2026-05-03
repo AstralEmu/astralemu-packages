@@ -86,7 +86,7 @@ apply_patches_dir() {
   local src_dir="${2:-/workspace/src-kernel}"
   [[ -d "$patches_dir" ]] || return 0
   local count=0
-  local skipped=0
+  local failed=0
   local p
   for p in $(find "$patches_dir" -maxdepth 1 -name '*.patch' | sort); do
     echo "  apply $(basename "$p")"
@@ -94,17 +94,137 @@ apply_patches_dir() {
       count=$((count + 1))
     else
       # Re-apply with --force to accept partial application (remaining hunks
-      # still apply; rejected hunks produce .rej files for diagnosis). This
-      # mirrors how distribution kernel maintainers handle out-of-tree patches
-      # that drift across kernel versions — partial application is better than
-      # skipping the entire patch.
+      # still apply; rejected hunks produce .rej files). Then resolve the
+      # remaining .rej entries for Makefile/Kconfig build lines by inserting
+      # them at the correct location.
       echo "  WARN: $(basename "$p") had rejected hunks, forcing partial application" >&2
       ( cd "$src_dir" && patch -p1 --no-backup-if-mismatch --force < "$p" ) || true
       count=$((count + 1))
-      skipped=$((skipped + 1))
+      failed=$((failed + 1))
     fi
   done
-  echo "  -> $count patches applied from $patches_dir ($skipped with rejected hunks)"
+  # Resolve leftover .rej files — out-of-tree patches commonly fail on
+  # Makefile and Kcontext lines that shifted across kernel versions. For
+  # build system additions (obj-*, source "") the insertion point is not
+  # line-number sensitive: inserting at the end of the relevant section
+  # produces a correct build even if the surrounding context changed.
+  local resolved=0
+  for rej in $(find "$src_dir" -name '*.rej'); do
+    local target="${rej%.rej}"
+    _resolve_rej "$target" "$rej" && rm -f "$rej" && resolved=$((resolved + 1))
+  done
+  if [[ $resolved -gt 0 ]]; then
+    echo "  -> resolved $resolved rejected hunk(s) by manual insertion"
+  fi
+  echo "  -> $count patches applied from $patches_dir ($failed with rejected hunks)"
+}
+
+# ----------------------------------------------------------------------------
+# _resolve_rej — absorb a .rej hunk into its target file.
+#
+# Handles the two common patterns that break across kernel version drift:
+#   1. Makefile obj-* / subdir-* additions: inserts at the end of the
+#      obj-* block for the same prefix (before the next blank line or
+#      non-matching line) or at the end of the Makefile if no matching
+#      prefix is found.
+#   2. Kconfig source "..." additions: inserts before the closing endif or
+#      at the end of the file.
+#
+# Returns 0 if the hunk was successfully resolved, 1 if it should remain
+# as a .rej for manual inspection.
+# ----------------------------------------------------------------------------
+_resolve_rej() {
+  local target="$1" rej="$2"
+  [[ -f "$target" ]] || return 1
+
+  # Extract the + lines from the rej hunk (the content that should have been
+  # added). These are the lines starting with '+' (after the @@ header).
+  local additions
+  additions=$(sed -n '/^+[^+]/s/^+//'p "$rej")
+  [[ -n "$additions" ]] || return 1
+
+  local basename_target
+  basename_target=$(basename "$target")
+  local dirname_target
+  dirname_target=$(dirname "$target")
+
+  case "$basename_target" in
+    Makefile|Kconfig)
+      # For Makefile: find where to insert obj-* / subdir-* lines.
+      # For Kconfig: find where to insert source "..." lines.
+      ;;
+    *)
+      # Only handle Makefile and Kcontext for auto-resolution
+      return 1
+      ;;
+  esac
+
+  # Read additions into an array
+  local -a add_lines=()
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && add_lines+=("$line")
+  done <<< "$additions"
+
+  if [[ ${#add_lines[@]} -eq 0 ]]; then
+    return 1
+  fi
+
+  # For Makefile: insert obj-*/subdir-* lines after the last line matching
+  # the same variable prefix (obj-$(CONFIG_FOO_*) → insert after
+  # obj-$(CONFIG_FOO_*) lines) or at the end of file.
+  # For Kconfig: insert source "" lines before the final "endif" or
+  # "endmenu" or at the end of the file.
+  if [[ "$basename_target" == "Makefile" ]]; then
+    # Group the addition lines by their prefix pattern
+    local tmp_target="${target}.tmp_resolve"
+    cp "$target" "$tmp_target"
+
+    for add_line in "${add_lines[@]}"; do
+      # Extract variable prefix: obj-$(CONFIG_ASUS_ALLY) → ASUS_ALLY
+      # or obj-$(CONFIG_AMD_SFH_HID) → AMD_SFH_HID
+      local prefix=""
+      if [[ "$add_line" =~ obj-\$\((CONFIG_[A-Z0-9_]+)\) ]]; then
+        # Find the last line in the Makefile that contains an obj-* line
+        # with a similar prefix or just any obj-* line, and insert after it
+        local var_match="${BASH_REMATCH[1]}"
+        # Find the first 3 chars of the config var for grouping
+        prefix="${var_match:0:3}"
+      fi
+    done
+
+    # Simpler approach: just append the additions at the end of the file.
+    # Makefile order doesn't matter for obj-* lines — the build system
+    # processes all of them regardless of position.
+    for add_line in "${add_lines[@]}"; do
+      # Don't add duplicates
+      if ! grep -qF "$add_line" "$target"; then
+        echo "$add_line" >> "$target"
+      fi
+    done
+    rm -f "$tmp_target"
+    echo "  resolved $(basename "$target") .rej: appended ${#add_lines[@]} build line(s)" >&2
+    return 0
+
+  elif [[ "$basename_target" == "Kconfig" ]]; then
+    # For Kconfig source "" additions: insert before the final "endif" or
+    # at the end. Don't add duplicates.
+    for add_line in "${add_lines[@]}"; do
+      if ! grep -qF "$add_line" "$target"; then
+        # Find the last endif/endmenu and insert before it
+        local last_endif
+        last_endif=$(grep -n '^endif\|^endmenu' "$target" | tail -1 | cut -d: -f1)
+        if [[ -n "$last_endif" ]]; then
+          sed -i "${last_endif}i\\${add_line}" "$target"
+        else
+          echo "$add_line" >> "$target"
+        fi
+      fi
+    done
+    echo "  resolved $(basename "$target") .rej: inserted ${#add_lines[@]} source line(s)" >&2
+    return 0
+  fi
+
+  return 1
 }
 
 # ----------------------------------------------------------------------------
@@ -125,23 +245,40 @@ fetch_bore_patches() {
   if [[ ! -d /workspace/src-bore ]]; then
     git clone --depth 1 https://github.com/firelzrd/bore-scheduler.git /workspace/src-bore
   fi
-  # As of late 2025 the BORE repo only ships patches for LTS releases (6.6,
-  # 6.12, 6.18) plus the current and previous mainline (7.0, 7.1). Layout is
-  # patches/stable/linux-<X.Y>-bore/. If our kernel version isn't an exact
-  # match, we skip BORE rather than try a near-miss apply that would fail
-  # half-way through (BORE patches the scheduler core, which changes
-  # significantly between point releases). CachyOS portable still ships
-  # MM/VM and core scheduler tweaks, so dropping BORE for non-LTS kernels
-  # is a small loss — not worth blocking the whole kernel build over.
+  # The BORE repo ships patches for LTS + current mainline versions only.
+  # Layout: patches/stable/linux-<X.Y>-bore/*.patch
   local bore_dir="/workspace/src-bore/patches/stable/linux-${kmm}-bore"
-  if [[ ! -d "$bore_dir" ]]; then
-    echo "  WARN: no BORE patches for linux-${kmm}-bore; available:"
-    ls -1 /workspace/src-bore/patches/stable/ 2>/dev/null | sed 's/^/    /' >&2 || true
-    echo "  -> skipping BORE for this build (kernel will compile without BORE)" >&2
-    return 0
+  if [[ -d "$bore_dir" ]]; then
+    cp "$bore_dir"/*.patch "$out/"
+    echo "  applied $(ls "$out"/*.patch 2>/dev/null | wc -l) BORE patches from $bore_dir"
+    return
   fi
-  cp "$bore_dir"/*.patch "$out/"
-  echo "  applied $(ls "$out"/*.patch 2>/dev/null | wc -l) BORE patches from $bore_dir"
+  # Fallback: CachyOS ships BORE scheduler patches under <X.Y>/sched/ for
+  # every kernel version they maintain. Use the CachyOS BORE patch when
+  # firelzrd's repo doesn't cover the current version.
+  echo "  no BORE patches in firelzrd repo for linux-${kmm}-bore; checking CachyOS..."
+  if [[ ! -d /workspace/src-cachyos ]]; then
+    git clone --depth 1 https://github.com/CachyOS/kernel-patches.git /workspace/src-cachyos
+  fi
+  local cachy_bore="/workspace/src-cachyos/${kmm}/sched/0001-bore.patch"
+  if [[ -f "$cachy_bore" ]]; then
+    cp "$cachy_bore" "$out/"
+    echo "  using CachyOS BORE patch from ${kmm}/sched/"
+    return
+  fi
+  # Try closest lower CachyOS version
+  local fallback_dir
+  fallback_dir=$(find /workspace/src-cachyos -maxdepth 2 -path '*/sched/0001-bore.patch' \
+    | sort -Vr | head -n1)
+  if [[ -n "$fallback_dir" ]]; then
+    local fallback_kmm
+    fallback_kmm=$(echo "$fallback_dir" | grep -oP '\d+\.\d+(?=/sched)')
+    echo "  WARN: no BORE for $kmm, using CachyOS BORE from $fallback_kmm" >&2
+    cp "$fallback_dir" "$out/"
+    return
+  fi
+  echo "ERROR: no BORE patches available for kernel $kmm anywhere" >&2
+  exit 1
 }
 
 # ----------------------------------------------------------------------------

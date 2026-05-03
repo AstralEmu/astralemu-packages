@@ -17,9 +17,9 @@ else
 fi
 cd "$SRC"
 
-# --- Patches pour équipes manquantes (Tegra X1 / L4T 4.9) ---
-# Le repo NaGaa95/switch-l4t-kernel-4.9 référence eqos/Kconfig mais le fichier
-# n'existe pas. Créer un fichier Kconfig minimal pour éviter l'erreur.
+# --- Missing Kconfig stubs (Tegra X1 / L4T 4.9) ---
+# The NaGaa95/switch-l4t-kernel-4.9 repo sources eqos/Kconfig but the file
+# does not exist. Create a minimal Kconfig to satisfy the parser.
 # source "drivers/net/ethernet/nvidia/eqos/Kconfig"
 if [[ ! -d "drivers/net/ethernet/nvidia/eqos" ]]; then
   mkdir -p drivers/net/ethernet/nvidia/eqos
@@ -29,7 +29,7 @@ config NET_NVIDIA_EQOS
 	depends on ARCH_TEGRA || COMPILE_TEST
 	default y
 	---help---
-	  Support pour le contrôleur Ethernet EQOS de NVIDIA Tegra.
+	  NVIDIA EQOS Ethernet controller support for Tegra.
 EQOS_KCONFIG
   echo "Created missing eqos/Kconfig"
 fi
