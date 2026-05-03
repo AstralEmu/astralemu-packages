@@ -65,11 +65,14 @@ build_core() {
 
 # --- Flycast (CMake-based, not Makefile) ---
 # flyinghead/flycast uses CMake; the deprecated libretro/flycast had a Makefile.
-# Clone separately, build with -DLIBRETRO=ON.
+# Clone with submodules (tinygettext, Vulkan-Headers, VulkanMemoryAllocator,
+# xbyak, etc. are required for the CMake build).
 echo "=== Building flycast (CMake) ==="
-if [[ ! -d flycast ]]; then
-  git clone --depth 1 https://github.com/flyinghead/flycast.git flycast
+if [[ -d flycast ]]; then
+  rm -rf flycast
 fi
+git clone --depth 1 https://github.com/flyinghead/flycast.git flycast
+(cd flycast && git submodule update --init --recursive --depth 1)
 cd flycast
 mkdir -p build && cd build
 cmake .. -G Ninja \
