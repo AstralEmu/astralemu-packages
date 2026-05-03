@@ -230,3 +230,6 @@ Nouveau Maxwell story matures.
 
 - Ajout du fichier `zstd` manquant dans l'image Docker amd64 pour packer les sources kernel
 - Création automatique du fichier Kconfig `drivers/net/ethernet/nvidia/eqos/Kconfig` manquant dans le repo NaGaa95/switch-l4t-kernel-4.9
+- Création automatique du fichier Kconfig `drivers/firmware/tegra/Kconfig` manquant (référencé par `arch/arm64/Kconfig:1236`)
+- Tolerance des hunks rejetés dans `apply_patches_dir` — les patches hors-arbre qui dérivent entre versions kernel appliquent maintenant les hunks valides et créent des `.rej` pour les hunks en conflit, au lieu de tuer tout le build
+- Flycast : initialisation robuste des sous-modules Git avec retry sans `--depth 1` et vérification des répertoires critiques avant CMake

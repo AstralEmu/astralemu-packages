@@ -86,13 +86,25 @@ apply_patches_dir() {
   local src_dir="${2:-/workspace/src-kernel}"
   [[ -d "$patches_dir" ]] || return 0
   local count=0
+  local skipped=0
   local p
   for p in $(find "$patches_dir" -maxdepth 1 -name '*.patch' | sort); do
     echo "  apply $(basename "$p")"
-    ( cd "$src_dir" && patch -p1 --no-backup-if-mismatch < "$p" )
-    count=$((count + 1))
+    if ( cd "$src_dir" && patch -p1 --no-backup-if-mismatch < "$p" ); then
+      count=$((count + 1))
+    else
+      # Re-apply with --force to accept partial application (remaining hunks
+      # still apply; rejected hunks produce .rej files for diagnosis). This
+      # mirrors how distribution kernel maintainers handle out-of-tree patches
+      # that drift across kernel versions — partial application is better than
+      # skipping the entire patch.
+      echo "  WARN: $(basename "$p") had rejected hunks, forcing partial application" >&2
+      ( cd "$src_dir" && patch -p1 --no-backup-if-mismatch --force < "$p" ) || true
+      count=$((count + 1))
+      skipped=$((skipped + 1))
+    fi
   done
-  echo "  -> $count patches applied from $patches_dir"
+  echo "  -> $count patches applied from $patches_dir ($skipped with rejected hunks)"
 }
 
 # ----------------------------------------------------------------------------

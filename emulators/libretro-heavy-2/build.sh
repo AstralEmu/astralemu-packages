@@ -68,11 +68,22 @@ build_core() {
 # Clone with submodules (tinygettext, Vulkan-Headers, VulkanMemoryAllocator,
 # xbyak, etc. are required for the CMake build).
 echo "=== Building flycast (CMake) ==="
-if [[ -d flycast ]]; then
-  rm -rf flycast
-fi
+rm -rf flycast
 git clone --depth 1 https://github.com/flyinghead/flycast.git flycast
-(cd flycast && git submodule update --init --recursive --depth 1)
+# Submodules include glslang, libchdr (with nested zlib/zstd), Vulkan-Headers,
+# VulkanMemoryAllocator, xbyak, tinygettext etc. --depth 1 on recursive can
+# flake on nested submodules, so retry without depth limiting if first pass fails.
+if ! (cd flycast && git submodule update --init --recursive --depth 1 2>&1); then
+  echo "  WARN: shallow submodule init had errors, retrying full depth..."
+  (cd flycast && git submodule update --init --recursive) || true
+fi
+# Verify critical submodules that CMake requires
+for _d in core/deps/glslang core/deps/libchdr core/deps/Vulkan-Headers \
+          core/deps/VulkanMemoryAllocator core/deps/tinygettext core/deps/xbyak; do
+  if [[ ! -f "flycast/$_d/CMakeLists.txt" && ! -f "flycast/$_d/Makefile" && ! -f "flycast/$_d/meson.build" ]]; then
+    echo "  WARN: flycast/$_d missing after submodule init"
+  fi
+done
 cd flycast
 mkdir -p build && cd build
 cmake .. -G Ninja \

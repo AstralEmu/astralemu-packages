@@ -34,6 +34,28 @@ EQOS_KCONFIG
   echo "Created missing eqos/Kconfig"
 fi
 
+# arch/arm64/Kconfig also sources "drivers/firmware/tegra/Kconfig" which
+# does not exist in NaGaa95's fork. Create a minimal stub with the symbols
+# referenced by the mainline kernel (TEGRA_IVC, TEGRA_BPMP) so the Kconfig
+# parser can proceed. The defconfig uses NV_TEGRA_BPMP instead, but the
+# source directive just needs a valid file to parse.
+if [[ ! -d "drivers/firmware/tegra" ]]; then
+  mkdir -p drivers/firmware/tegra
+  cat > drivers/firmware/tegra/Kconfig <<'TEGRA_FW_KCONFIG'
+config TEGRA_IVC
+	bool "Tegra IVC protocol"
+	depends on ARCH_TEGRA
+
+config TEGRA_BPMP
+	bool "Tegra BPMP driver"
+	depends on ARCH_TEGRA
+	select TEGRA_IVC
+	---help---
+	  Tegra Boot and Power Management Processor driver.
+TEGRA_FW_KCONFIG
+  echo "Created missing firmware/tegra/Kconfig"
+fi
+
 KVER=$(make kernelversion)   # e.g. "4.9.337"
 echo "Tegra X1 kernel version: $KVER"
 
