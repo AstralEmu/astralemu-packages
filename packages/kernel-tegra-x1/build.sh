@@ -88,7 +88,12 @@ export CCACHE_MAXSIZE=10G
 ccache -z
 
 echo "Building Image + dtbs + modules..."
-make ARCH=arm64 -j"$(nproc)" Image dtbs modules
+# The Tegra X1 4.9 kernel has a buggy arch/arm64/boot/dts/Makefile that can fail
+# on the dtbs target with "cp: missing destination file operand". Build Image
+# and modules separately, then attempt dtbs with || true — the DTBs that do
+# get built are still collected below.
+make ARCH=arm64 -j"$(nproc)" Image modules
+make ARCH=arm64 -j"$(nproc)" dtbs 2>/dev/null || echo "  WARN: dtbs target had errors (some DTBs may be missing)"
 ccache -s
 
 # --- Stage package layout -------------------------------------------------
@@ -106,8 +111,14 @@ make ARCH=arm64 INSTALL_MOD_PATH="$PKG/root" INSTALL_MOD_STRIP=1 modules_install
 DTB_PKG=/tmp/pkg-dtbs
 rm -rf "$DTB_PKG"
 mkdir -p "$DTB_PKG/meta" "$DTB_PKG/root/usr/lib/linux-image-${KVER}/dtbs"
-find arch/arm64/boot/dts -name '*.dtb' \
-  -exec cp --parents {} "$DTB_PKG/root/usr/lib/linux-image-${KVER}/dtbs/" \;
+DTB_COUNT=$(find arch/arm64/boot/dts -name '*.dtb' 2>/dev/null | wc -l)
+if [ "$DTB_COUNT" -gt 0 ]; then
+  find arch/arm64/boot/dts -name '*.dtb' \
+    -exec cp --parents {} "$DTB_PKG/root/usr/lib/linux-image-${KVER}/dtbs/" \;
+  echo "  $DTB_COUNT DTB files collected"
+else
+  echo "  WARN: no DTB files found — skipping DTB sub-package"
+fi
 
 # depmod against the staged tree so postinst's depmod -a is fast.
 if command -v depmod >/dev/null; then

@@ -91,11 +91,17 @@ cmake .. -G Ninja \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   -DCMAKE_C_FLAGS="$CFLAGS -DHAVE_CLONEFILE=0" \
-  -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+  -DCMAKE_CXX_FLAGS="$CXXFLAGS -DHAVE_CLONEFILE=0" \
   -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
   -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
   -DLIBRETRO=ON \
   -DHAVE_GENERIC_JIT=OFF
+
+# libzip's CMake check_symbol_exists(clonefile) incorrectly detects
+# clonefile on Linux. It writes #define HAVE_CLONEFILE into its own
+# config.h which overrides our -DHAVE_CLONEFILE=0 flag. Remove it
+# from the generated config to prevent the macOS-only sys/attr.h include.
+find . -name 'config.h' -path '*/libzip/*' -exec sed -i '/^#define HAVE_CLONEFILE/d' {} +
 ninja -j"$(nproc)"
 find . -name "flycast_libretro.so" -exec cp {} "$PKG_DIR/" \;
 cd "$CORES_DIR"

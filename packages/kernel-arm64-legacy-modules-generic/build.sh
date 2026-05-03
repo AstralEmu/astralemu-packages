@@ -17,6 +17,8 @@ echo "Building generic modules (arm64-legacy) for kernel $KVER..."
 export PATH="/usr/lib/ccache:$PATH"
 export CCACHE_MAXSIZE=10G
 ccache -z
+# Build vmlinux first — modpost needs vmlinux.o for symbol resolution.
+make ARCH=arm64 -j"$(nproc)" vmlinux
 make ARCH=arm64 -j"$(nproc)" modules
 ccache -s
 

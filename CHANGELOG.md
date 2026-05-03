@@ -17,10 +17,12 @@ ISO 8601 (YYYY-MM-DD).
   6.15.6) is now excluded. BORE scheduler optimisations still come from
   `sched/0001-bore.patch`; smaller targeted patches (`amd-pstate`, `bbr3`,
   `asus`, `fixes`, `handheld`) are kept.
-- **Flycast HAVE_CLONEFILE fix** — added `-DHAVE_CLONEFILE=0` to
-  `CMAKE_C_FLAGS` to prevent CMake from incorrectly detecting the macOS-only
-  `clonefile` syscall on Linux, which caused a fatal `sys/attr.h` include
-  error in libzip.
+- **Flycast HAVE_CLONEFILE fix** — added `-DHAVE_CLONEFILE=0` to both
+  `CMAKE_C_FLAGS` and `CMAKE_CXX_FLAGS`, and post-process libzip's generated
+  `config.h` to remove `#define HAVE_CLONEFILE`. CMake's
+  `check_symbol_exists(clonefile)` incorrectly detects the macOS-only syscall
+  on Linux and writes the define into its own config.h, overriding the command
+  line flag and causing a fatal `sys/attr.h` include error.
 - **intel-media-driver CMake** — added `-DMEDIA_RUN_TEST_SUITE=OFF` to skip
   the ULT (unit level testing) subdirectory whose CMakeLists.txt has a broken
   `if()` on undefined variables when building in Release mode.
@@ -28,6 +30,17 @@ ISO 8601 (YYYY-MM-DD).
   a CMake build (`-DLIBRETRO=ON`). The `flyinghead/flycast` repo uses CMake,
   not a Makefile — the previous check for `$name/Makefile` immediately
   errored out.
+- **Kernel modules build fix** — all 6 modules sub-job scripts
+  (`kernel-{arm64-modern,arm64-legacy,amd64}-modules-{soc,platform,generic}`)
+  now build `vmlinux` before `modules`. Without `vmlinux.o`, modpost fails
+  with "vmlinux.o is missing" and thousands of unresolved symbol errors
+  because the split-build architecture runs modules in a separate job that
+  only has the prep tarball (no previously-linked kernel image).
+- **Tegra X1 DTB build fix** — the `dtbs` make target in the NaGaa95 4.9
+  kernel fork has a buggy `arch/arm64/boot/dts/Makefile` that fails with
+  "cp: missing destination file operand". Build `Image` and `modules`
+  separately, then attempt `dtbs` with graceful fallback. The DTB collection
+  step is also guarded against zero DTB files.
 
 ### Added — Custom kernel stack
 

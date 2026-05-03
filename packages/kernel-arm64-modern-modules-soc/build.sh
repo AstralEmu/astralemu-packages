@@ -18,6 +18,10 @@ echo "Building SoC modules (arm64-modern) for kernel $KVER..."
 export PATH="/usr/lib/ccache:$PATH"
 export CCACHE_MAXSIZE=10G
 ccache -z
+# Build vmlinux first — modpost needs vmlinux.o for symbol resolution.
+# Without it, modules fail with "vmlinux.o is missing" and thousands of
+# unresolved symbol errors.
+make ARCH=arm64 -j"$(nproc)" vmlinux
 make ARCH=arm64 -j"$(nproc)" modules
 ccache -s
 

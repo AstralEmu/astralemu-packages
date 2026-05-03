@@ -19,6 +19,8 @@ export PATH="/usr/lib/ccache:$PATH"
 export CCACHE_MAXSIZE=10G
 ccache -z
 
+# Build vmlinux first — modpost needs vmlinux for symbol resolution.
+make ARCH=x86_64 -j"$(nproc)" vmlinux
 make ARCH=x86_64 -j"$(nproc)" modules
 ccache -s
 
