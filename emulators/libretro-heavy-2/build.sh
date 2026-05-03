@@ -97,13 +97,14 @@ cmake .. -G Ninja \
   -DLIBRETRO=ON \
   -DHAVE_GENERIC_JIT=OFF
 
-# libzip's CMake check_symbol_exists(clonefile) incorrectly detects the
-# macOS-only clonefile syscall on Linux and writes #define HAVE_CLONEFILE
-# into its generated config.h. The #ifdef HAVE_CLONEFILE guard in
-# zip_source_file_stdio_named.c includes <sys/attr.h> (macOS-only) when
-# this symbol is defined, even if set to 0. Remove it from config.h and
-# also undef it in C/CXX flags to prevent the fatal sys/attr.h error.
-find . -name 'config.h' -path '*/libzip/*' -exec sed -i '/^#define HAVE_CLONEFILE/d' {} +
+# libzip's CMake check_symbol_exists() incorrectly detects macOS/Windows-only
+# symbols on Linux and writes #define HAVE_CLONEFILE and #define HAVE_MEMCPY_S
+# into its generated config.h.
+#   - #ifdef HAVE_CLONEFILE includes <sys/attr.h> (macOS-only) → fatal error
+#   - #ifdef HAVE_MEMCPY_S replaces memcpy() with memcpy_s() (Windows-only) →
+#     undefined reference at link time
+# Both must be stripped from config.h after CMake runs.
+find . -name 'config.h' -path '*/libzip/*' -exec sed -i '/^#define HAVE_CLONEFILE/d; /^#define HAVE_MEMCPY_S/d' {} +
 ninja -j"$(nproc)"
 find . -name "flycast_libretro.so" -exec cp {} "$PKG_DIR/" \;
 cd "$CORES_DIR"
