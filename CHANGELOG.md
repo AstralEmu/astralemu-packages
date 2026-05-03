@@ -211,3 +211,8 @@ not viable today (`nvgpu` upstream gap), why Linux 4.9 is the only
 realistic target, why BORE/CachyOS don't apply, and a deferred PoC
 plan to revisit a mainline 6.x port once the upstream Tegra DRM /
 Nouveau Maxwell story matures.
+
+### Fixed — `kernel-tegra-x1` et `build-emulators.yml`
+
+- Ajout du fichier `zstd` manquant dans l'image Docker amd64 pour packer les sources kernel
+- Création automatique du fichier Kconfig `drivers/net/ethernet/nvidia/eqos/Kconfig` manquant dans le repo NaGaa95/switch-l4t-kernel-4.9
