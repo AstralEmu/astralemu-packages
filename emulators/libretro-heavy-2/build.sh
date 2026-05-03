@@ -22,9 +22,7 @@ build_core() {
   local post_clean=${6:-}
 
   # Default to the libretro org. A repo arg of "<org>/<name>" overrides the
-  # org — used for cores where the canonical upstream lives outside libretro
-  # (e.g. flycast: libretro/flycast is deprecated, the active fork is at
-  # flyinghead/flycast).
+  # org for cores where the canonical upstream lives outside libretro.
   local clone_url
   case "$repo" in
     */*) clone_url="https://github.com/${repo}.git" ;;
@@ -65,9 +63,29 @@ build_core() {
   cd "$CORES_DIR"
 }
 
-# Batch 2: Flycast, ScummVM
-# libretro/flycast is deprecated upstream — clone from flyinghead/flycast.
-build_core flyinghead/flycast flycast "" "HAVE_GENERIC_JIT=0"
+# --- Flycast (CMake-based, not Makefile) ---
+# flyinghead/flycast uses CMake; the deprecated libretro/flycast had a Makefile.
+# Clone separately, build with -DLIBRETRO=ON.
+echo "=== Building flycast (CMake) ==="
+if [[ ! -d flycast ]]; then
+  git clone --depth 1 https://github.com/flyinghead/flycast.git flycast
+fi
+cd flycast
+mkdir -p build && cd build
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+  -DCMAKE_C_FLAGS="$CFLAGS" \
+  -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+  -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+  -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+  -DLIBRETRO=ON \
+  -DHAVE_GENERIC_JIT=OFF
+ninja -j"$(nproc)"
+find . -name "flycast_libretro.so" -exec cp {} "$PKG_DIR/" \;
+cd "$CORES_DIR"
+
 # scummvm on x86: disable libco inline asm (LTO + RIP-relative TLS = wrong relocations)
 # deps/libretro-common is managed by configure_submodules.sh (NOT a git submodule).
 # The script runs during Makefile parsing via $(shell) and resets dirty repos with

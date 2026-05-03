@@ -5,6 +5,20 @@ ISO 8601 (YYYY-MM-DD).
 
 ## Unreleased
 
+### Fixed
+
+- **Docker cache key bumped to v8** — previous v7 cache predates the `zstd`
+  CLI package addition, causing `kernel-*-prep` jobs to fail with `zstd: not
+  found` when packing the patched source tarball. The new key forces a rebuild
+  of both the amd64 and arm64 images.
+- **intel-media-driver CMake** — added `-DMEDIA_RUN_TEST_SUITE=OFF` to skip
+  the ULT (unit level testing) subdirectory whose CMakeLists.txt has a broken
+  `if()` on undefined variables when building in Release mode.
+- **Flycast libretro core** — replaced the Makefile-based `build_core` call with
+  a CMake build (`-DLIBRETRO=ON`). The `flyinghead/flycast` repo uses CMake,
+  not a Makefile — the previous check for `$name/Makefile` immediately
+  errored out.
+
 ### Added — Custom kernel stack
 
 A complete kernel build pipeline covering every supported handheld:
