@@ -341,13 +341,24 @@ fetch_cachyos_patches() {
 
   # CachyOS also ships a monolithic "handheld" patch under <X.Y>/misc/ that
   # adds device drivers for ROG Ally, Legion Go, MSI Claw, Zotac Zone, plus
-  # Steam Deck hwmon/LEDs/extcon/mfd, panel quirks, and audio codecs. This
-  # patch is x86-only in practice (handhelds covered are AMD/Intel x86_64),
-  # so we only copy it when the caller is x86. Skipping for arm64.
-  if [[ "$arch_filter" != "arm64" && -f "$cachy_dir/misc/0001-handheld.patch" ]]; then
-    cp "$cachy_dir/misc/0001-handheld.patch" "$out/9999-cachyos-handheld.patch"
-    echo "  add CachyOS handheld patch (covers Steam Deck / ROG Ally / Legion Go / MSI Claw / Zotac drivers)"
-  fi
+  # Steam Deck hwmon/LEDs/extcon/mfd, panel quirks, and audio codecs.
+  #
+  # SKIP for now: the 6.15 handheld patch references kernel APIs that don't
+  # exist in mainline 6.15.x (hdev->firmware_version, hdev->uevent in
+  # hid-core.c). These are CachyOS-specific additions to struct hid_device
+  # that mainline doesn't have. The patch also adds ~12K lines of new driver
+  # code (zotac-zone-hid, lenovo-legos-hid, hid-msi-claw, steamdeck-hwmon,
+  # etc.) that depends on those APIs and won't compile on vanilla. Until
+  # CachyOS ships a version that applies cleanly on mainline, we skip it
+  # entirely and rely on the project-local handheld-extras patches instead.
+  #
+  # Previously: the patch was x86-only and copied when arch_filter != arm64.
+  # That code is preserved below (commented out) for when CachyOS fixes it.
+  :  # do nothing — handheld patch skipped
+  # if [[ "$arch_filter" != "arm64" && -f "$cachy_dir/misc/0001-handheld.patch" ]]; then
+  #   cp "$cachy_dir/misc/0001-handheld.patch" "$out/9999-cachyos-handheld.patch"
+  #   echo "  add CachyOS handheld patch (covers Steam Deck / ROG Ally / Legion Go / MSI Claw / Zotac drivers)"
+  # fi
 }
 
 # ----------------------------------------------------------------------------

@@ -7,6 +7,21 @@ ISO 8601 (YYYY-MM-DD).
 
 ### Fixed
 
+- **CachyOS handheld patch skipped** — the `misc/0001-handheld.patch` from
+  CachyOS (Steam Deck hwmon/LEDs, ROG Ally, Legion Go, MSI Claw, Zotac Zone
+  drivers) references `hdev->firmware_version` and `hdev->uevent` in
+  `drivers/hid/hid-core.c`, which are CachyOS-specific additions to
+  `struct hid_device` that don't exist in mainline 6.15.x. The ~12K line
+  patch also adds full driver subsystems (zotac-zone-hid, lenovo-legos-hid,
+  hid-msi-claw, steamdeck-hwmon/extcon/mfd/LEDs, AMDGPU display quirks)
+  that depend on these non-standard APIs and won't compile on vanilla.
+  Skipped entirely until CachyOS ships a version that applies on mainline.
+  The project-local `handheld-extras/` patch directory remains available
+  for future per-device driver additions that are mainline-compatible.
+- **Tegra X1 profiler.h stub** — `kernel/fork.c:81` includes
+  `<linux/tegra_profiler.h>` which is missing from NaGaa95's 4.9 fork.
+  Created a minimal stub header with `tegra_profiler_is_enabled()` returning
+  0, allowing the Tegra kernel build to proceed.
 - **Docker cache key bumped to v8** — previous v7 cache predates the `zstd`
   CLI package addition, causing `kernel-*-prep` jobs to fail with `zstd: not
   found` when packing the patched source tarball. The new key forces a rebuild
@@ -17,12 +32,12 @@ ISO 8601 (YYYY-MM-DD).
   6.15.6) is now excluded. BORE scheduler optimisations still come from
   `sched/0001-bore.patch`; smaller targeted patches (`amd-pstate`, `bbr3`,
   `asus`, `fixes`, `handheld`) are kept.
-- **Flycast HAVE_CLONEFILE fix** — added `-DHAVE_CLONEFILE=0` to both
-  `CMAKE_C_FLAGS` and `CMAKE_CXX_FLAGS`, and post-process libzip's generated
-  `config.h` to remove `#define HAVE_CLONEFILE`. CMake's
-  `check_symbol_exists(clonefile)` incorrectly detects the macOS-only syscall
-  on Linux and writes the define into its own config.h, overriding the command
-  line flag and causing a fatal `sys/attr.h` include error.
+- **Flycast HAVE_CLONEFILE fix** — the `-DHAVE_CLONEFILE=0` CMake flag does
+  not work because `#ifdef HAVE_CLONEFILE` evaluates to true even when the
+  macro is defined as 0, causing `zip_source_file_stdio_named.c` to include
+  the macOS-only `<sys/attr.h>`. Removed the `-D` flags entirely and rely
+  solely on sed to strip `#define HAVE_CLONEFILE` from libzip's generated
+  `config.h` after CMake runs.
 - **intel-media-driver CMake** — added `-DMEDIA_RUN_TEST_SUITE=OFF` to skip
   the ULT (unit level testing) subdirectory whose CMakeLists.txt has a broken
   `if()` on undefined variables when building in Release mode.
@@ -48,11 +63,10 @@ A complete kernel build pipeline covering every supported handheld:
 
 - **`kernel-amd64`** — Linux stable for x86 handhelds (Steam Deck, ROG Ally,
   Legion Go, MSI Claw, GPD Win, AYANEO, OneXPlayer, AYN Loki). BORE
-  scheduler + CachyOS portable patches + the CachyOS handheld driver
-  patch (`<X.Y>/misc/0001-handheld.patch`) which provides the
-  Steam Deck `hwmon` / LEDs / `extcon` / `mfd` stack, ROG Ally / Legion
-  Go / MSI Claw / Zotac Zone HID drivers, AMDGPU display panel quirks
-  and AW87xxx audio codec.
+  scheduler + CachyOS portable patches (amd-pstate, asus, bbr3, fixes).
+  The CachyOS handheld driver patch is temporarily skipped (references
+  CachyOS-specific kernel APIs not in mainline 6.15.x); driver support
+  will be restored when a mainline-compatible version is available.
 - **`kernel-arm64-modern`** — Linux stable for armv8.2-a flagships
   (Retroid Pocket 5/6, AYN Thor, Orange Pi 5, Snapdragon 845-X3 generic).
   BORE + CachyOS portable + ROCKNIX downstream patches per-SoC
