@@ -34,6 +34,26 @@ EQOS_KCONFIG
   echo "Created missing eqos/Kconfig"
 fi
 
+# kernel/fork.c includes <linux/tegra_profiler.h> but the NaGaa95 fork does
+# not ship this header. Create a minimal stub so the build can proceed.
+if [[ ! -f "include/linux/tegra_profiler.h" ]]; then
+  mkdir -p include/linux
+  cat > include/linux/tegra_profiler.h <<'TPROF_H'
+/* Minimal stub for missing tegra_profiler.h in NaGaa95's 4.9 fork.
+ * The real header provides profiler IOCTL and telemetry definitions that
+ * the downstream kernel references from fork.c but are not needed for
+ * the Switch L4T build. */
+#ifndef _LINUX_TEGRA_PROFILER_H
+#define _LINUX_TEGRA_PROFILER_H
+
+struct tegra_profiler;
+static inline int tegra_profiler_is_enabled(void) { return 0; }
+
+#endif
+TPROF_H
+  echo "Created missing include/linux/tegra_profiler.h"
+fi
+
 # arch/arm64/Kconfig also sources "drivers/firmware/tegra/Kconfig" which
 # does not exist in NaGaa95's fork. Create a minimal stub with the symbols
 # referenced by the mainline kernel (TEGRA_IVC, TEGRA_BPMP) so the Kconfig

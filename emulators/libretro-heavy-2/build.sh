@@ -90,17 +90,19 @@ cmake .. -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-  -DCMAKE_C_FLAGS="$CFLAGS -DHAVE_CLONEFILE=0" \
-  -DCMAKE_CXX_FLAGS="$CXXFLAGS -DHAVE_CLONEFILE=0" \
+  -DCMAKE_C_FLAGS="$CFLAGS" \
+  -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
   -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
   -DLIBRETRO=ON \
   -DHAVE_GENERIC_JIT=OFF
 
-# libzip's CMake check_symbol_exists(clonefile) incorrectly detects
-# clonefile on Linux. It writes #define HAVE_CLONEFILE into its own
-# config.h which overrides our -DHAVE_CLONEFILE=0 flag. Remove it
-# from the generated config to prevent the macOS-only sys/attr.h include.
+# libzip's CMake check_symbol_exists(clonefile) incorrectly detects the
+# macOS-only clonefile syscall on Linux and writes #define HAVE_CLONEFILE
+# into its generated config.h. The #ifdef HAVE_CLONEFILE guard in
+# zip_source_file_stdio_named.c includes <sys/attr.h> (macOS-only) when
+# this symbol is defined, even if set to 0. Remove it from config.h and
+# also undef it in C/CXX flags to prevent the fatal sys/attr.h error.
 find . -name 'config.h' -path '*/libzip/*' -exec sed -i '/^#define HAVE_CLONEFILE/d' {} +
 ninja -j"$(nproc)"
 find . -name "flycast_libretro.so" -exec cp {} "$PKG_DIR/" \;
