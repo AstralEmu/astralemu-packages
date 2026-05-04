@@ -1,0 +1,6 @@
+[astralemu-deps-ubuntu-lts]
+name=AstralEmu Packages (deps-ubuntu-lts)
+baseurl=https://astralemu.github.io/astralemu-packages/dnf/deps/ubuntu-lts/$releasever/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=https://astralemu.github.io/astralemu-packages/dnf/deps/ubuntu-lts/astralemu.gpg
