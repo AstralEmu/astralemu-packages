@@ -459,7 +459,7 @@ jobs:
        needs.aggregators.result == 'success')
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 5
       matrix:
         device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
     uses: ./.github/workflows/update-repos.yml

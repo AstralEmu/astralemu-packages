@@ -34,13 +34,11 @@ on:
 permissions:
   contents: write
 
-# Serialize every invocation that pushes to gh-pages. Prevents add/add
-# conflicts on binary packages and metadata when multiple devices (or a
-# mirror-devices run overlapping a build-emulators run) land pushes in
-# quick succession. cancel-in-progress:false queues instead of dropping.
-concurrency:
-  group: gh-pages-push
-  cancel-in-progress: false
+# Serialize only the deploy step that pushes to gh-pages. Previous versions
+# serialized the entire workflow, which blocked normalize/build-repo steps from
+# running in parallel (making 26 devices × ~55min = ~24h). Now only the git
+# push is serialized — package builds and conversions run freely in parallel.
+# cancel-in-progress:false queues instead of dropping.
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -944,6 +942,9 @@ jobs:
     needs: [normalize, build-repo-seed, build-repo]
     if: "!cancelled() && needs.normalize.outputs.count > 0"
     runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-push
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
