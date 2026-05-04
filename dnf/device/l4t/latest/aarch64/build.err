@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.HRnJ9b0VwU/BUILD
++ /bin/rm -rf /tmp/tmp.HRnJ9b0VwU/BUILDROOT/nvidia-l4t-3d-core-32.7.4.20230608212426-1.aarch64
++ /bin/mkdir -p /tmp/tmp.HRnJ9b0VwU/BUILDROOT
++ /bin/mkdir /tmp/tmp.HRnJ9b0VwU/BUILDROOT/nvidia-l4t-3d-core-32.7.4.20230608212426-1.aarch64
++ ls /tmp/tmp.Fpz5W4LLYq/root/usr
++ cp -a /tmp/tmp.Fpz5W4LLYq/root/usr /tmp/tmp.HRnJ9b0VwU/BUILDROOT/nvidia-l4t-3d-core-32.7.4.20230608212426-1.aarch64/
++ umask 022
++ cd /tmp/tmp.HRnJ9b0VwU/BUILD
++ /bin/rm -rf /tmp/tmp.HRnJ9b0VwU/BUILDROOT/nvidia-l4t-3d-core-32.7.4.20230608212426-1.aarch64
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.HRnJ9b0VwU/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0

@@ -1,0 +1,115 @@
+Package: nvidia-bsp-32-3
+Version: 1.0-6
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Depends: nvidia-l4t-configs, nvidia-l4t-init, nvidia-l4t-firmware, nvidia-l4t-core, nvidia-l4t-3d-core, nvidia-l4t-cuda, nvidia-l4t-multimedia, nvidia-l4t-multimedia-utils, nvidia-l4t-oem-config, notify-osd
+Filename: pool/ubuntu-lts/nvidia-bsp-32-3_1.0-6_all.deb
+Size: 1862
+MD5sum: 4c1067e9f00e04f759b97e9e185b84bb
+SHA1: bbb3cef220c868d95a24c44e91b3c0177c60efad
+SHA256: 1c9beeeefed2a6fea3a62302ffec2f60b78a03c3a336ed2e4cda2f187acca66d
+Description: L4T BSP 32.3.1 Meta Package
+
+Package: nvidia-bsp-32-7
+Version: 1.0-10
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 36
+Depends: nvidia-l4t-configs, nvidia-l4t-init, nvidia-l4t-firmware, nvidia-l4t-core, nvidia-l4t-3d-core, nvidia-l4t-libvulkan, nvidia-l4t-cuda, nvidia-l4t-multimedia, nvidia-l4t-multimedia-utils, nvidia-l4t-oem-config, notify-osd
+Filename: pool/ubuntu-lts/nvidia-bsp-32-7_1.0-10_all.deb
+Size: 1956
+MD5sum: 0b7e27aa0e0a5a1b29c4c8188422e23d
+SHA1: 991a0fec9c3fc84e325c9f0f277f2a81a9a2577d
+SHA256: e8483bed2258c068c063a45c8daf854ebb312d89a9db9e065e45956481d4345d
+Description: L4T BSP 32.7.4 Meta Package
+
+Package: switch-dconf-customizations
+Version: 1.0-5
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 80
+Depends: dconf-cli
+Filename: pool/ubuntu-lts/switch-dconf-customizations_1.0-5_all.deb
+Size: 2482
+MD5sum: e4d604722f6d97014be3e541a0866a65
+SHA1: 28e491295cea743f5061e8b80f62aea9ffb93adc
+SHA256: 217d77c616f491fce1d605cd590a790b6ef8ba78c659357de0b43f71fc14f104
+Description: Application configs for the Nintendo Switch
+
+Package: switch-dock-handler
+Version: 3.0-2
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 176
+Depends: x11-xserver-utils, pulseaudio-utils, v4l-utils
+Filename: pool/ubuntu-lts/switch-dock-handler_3.0-2_all.deb
+Size: 5048
+MD5sum: d4c88bcb244fa6379edf6babf47f0044
+SHA1: e17e043eec7da45cca4c323282e723ceb6b5e533
+SHA256: b97078cd5e28b2844c90f3f696eb84eef7ffcf2ace5ce0a293c54dd5693205ea
+Description: Scripts to switch display and audio source when docked
+
+Package: switch-joystick-mouse
+Version: 1.2-1
+Architecture: all
+Maintainer: CTCaer <ctcaer@gmail.com>
+Installed-Size: 44
+Filename: pool/ubuntu-lts/switch-joystick-mouse_1.2-1_all.deb
+Size: 2164
+MD5sum: 66201d7362711bae42295063ab18e7e3
+SHA1: 0357985a0e950c6f1886619afe0e33b2344dc543
+SHA256: f94c3de609226fb2c265527e252d8f29fea3049c11a07ee5e22c5dd98cad19f6
+Description: Mouse/Keyboard mappings for Nintendo Switch
+
+Package: switch-sddm-rule
+Version: 1.0-1
+Architecture: all
+Maintainer: theofficialgman <dofficialgman@gmail.com>
+Installed-Size: 48
+Filename: pool/ubuntu-lts/switch-sddm-rule_1.0-1_all.deb
+Size: 1578
+MD5sum: c940534f649b146050471f321cb966d0
+SHA1: 7dc785f111ce94f1cb3a112d15060e879b3cf5d4
+SHA256: a0ad976c63881ef512b686e4d28255455f11b6c3cf3a35b3276aafbbc56e47e9
+Description: Udev rules to allow sddm to initialize on Tegra Drivers
+
+Package: xserver-xorg-core
+Version: 2:1.20.13-1ubuntu1~20.04.8
+Architecture: armhf
+Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
+Installed-Size: 2520
+Depends: xserver-common, keyboard-configuration, udev, libegl1, libaudit1, libbsd0, libc6, libdbus-1-3, libdrm2, libepoxy0, libgbm1, libgcrypt20, libgl1, libpciaccess0, libpixman-1-0, libselinux1, libsystemd0, libudev1, libunwind8, libxau6, libxdmcp6, libxfont2, libxshmfence1
+Filename: pool/ubuntu-lts/xserver-xorg-core_1.20.13-1ubuntu1~20.04.8_armhf.deb
+Size: 1238000
+MD5sum: 29aac02a293b63a4bb326bece693f8a3
+SHA1: 428e9ef2d5c46e20da171f03965d00c5110716f0
+SHA256: 8dfc10314146ec9352813dab77baebff06329ac17323fbd62b2e512bf6968a83
+Description: Xorg X server - core server
+
+Package: xserver-xorg-input-libinput
+Version: 1.2.1-1
+Architecture: armhf
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 136
+Depends: libc6, libinput10, xorg-input-abi-24, xserver-xorg-core
+Filename: pool/ubuntu-lts/xserver-xorg-input-libinput_1.2.1-1_armhf.deb
+Size: 34298
+MD5sum: 4fece1e4638ee97e94f9b3d09831a5b3
+SHA1: 8ad4262ddafcaeda9c38c1516613668defddf421
+SHA256: a1506da568633d77e3437018d48a41823ea8a6300d4188b8480be35d00d89962
+Description: X.Org X server -- libinput input driver
+
+Package: xserver-xorg-video-fbdev
+Version: 1:0.5.0-1ubuntu1
+Architecture: armhf
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Installed-Size: 84
+Depends: libc6, xorg-video-abi-24, xserver-xorg-core
+Filename: pool/ubuntu-lts/xserver-xorg-video-fbdev_0.5.0-1ubuntu1_armhf.deb
+Size: 11372
+MD5sum: df0b1da6760d5cba0885e6d292a5d7f8
+SHA1: 0bd63aa4baaf6b5f283f133120deebb6d8202923
+SHA256: d8405b9e211a9ee920e165792877a73061baf50e27d167a54eedf390067ce369
+Description: X.Org X server -- fbdev display driver
+

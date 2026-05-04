@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.UffvFWFAkQ/BUILD
++ /bin/rm -rf /tmp/tmp.UffvFWFAkQ/BUILDROOT/nvidia-bsp-32-7-1.0.10-1.noarch
++ /bin/mkdir -p /tmp/tmp.UffvFWFAkQ/BUILDROOT
++ /bin/mkdir /tmp/tmp.UffvFWFAkQ/BUILDROOT/nvidia-bsp-32-7-1.0.10-1.noarch
++ ls /tmp/tmp.SWsoqBw3QK/root/usr
++ cp -a /tmp/tmp.SWsoqBw3QK/root/usr /tmp/tmp.UffvFWFAkQ/BUILDROOT/nvidia-bsp-32-7-1.0.10-1.noarch/
++ umask 022
++ cd /tmp/tmp.UffvFWFAkQ/BUILD
++ /bin/rm -rf /tmp/tmp.UffvFWFAkQ/BUILDROOT/nvidia-bsp-32-7-1.0.10-1.noarch
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.UffvFWFAkQ/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0

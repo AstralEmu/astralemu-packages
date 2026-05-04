@@ -1,0 +1,6 @@
+[astralemu-l4t]
+name=AstralEmu Packages (l4t)
+baseurl=https://astralemu.github.io/astralemu-packages/dnf/device/l4t/$releasever/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=https://astralemu.github.io/astralemu-packages/dnf/device/l4t/astralemu.gpg

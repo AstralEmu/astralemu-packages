@@ -1,0 +1,18 @@
++ umask 022
++ cd /tmp/tmp.MFDzYrfcS0/BUILD
++ /bin/rm -rf /tmp/tmp.MFDzYrfcS0/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ /bin/mkdir -p /tmp/tmp.MFDzYrfcS0/BUILDROOT
++ /bin/mkdir /tmp/tmp.MFDzYrfcS0/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ ls /tmp/tmp.asPmbT736D/root/lib /tmp/tmp.asPmbT736D/root/usr
++ cp -a /tmp/tmp.asPmbT736D/root/lib /tmp/tmp.asPmbT736D/root/usr /tmp/tmp.MFDzYrfcS0/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl/
++ umask 022
++ cd /tmp/tmp.MFDzYrfcS0/BUILD
++ /bin/rm -rf /tmp/tmp.MFDzYrfcS0/BUILDROOT/xserver-xorg-core-2.1.20.13.1ubuntu1.20.04.8-1.armv7hl
++ RPM_EC=0
++ jobs -p
++ exit 0
++ umask 022
++ cd /tmp/tmp.MFDzYrfcS0/BUILD
++ RPM_EC=0
++ jobs -p
++ exit 0
