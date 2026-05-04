@@ -27,6 +27,10 @@ on:
         type: boolean
         default: false
         description: 'Skip all existing-package checks — rebuild everything from scratch'
+      devices:
+        type: string
+        default: '[]'
+        description: 'JSON array of device IDs to deploy for. When set, normalize/convert runs once per build_target then deploys for each device in the list. If empty, deploys for the single device in the "device" input.'
     secrets:
       GPG_PRIVATE_KEY:
         required: true
@@ -79,6 +83,21 @@ jobs:
           merge-multiple: true
         continue-on-error: true
 
+      # When running per-build-target (devices list is set), also download
+      # per-device artifacts for every device on this target so they're
+      # available for the deploy loop. Per-device artifacts are named
+      # pkg-<pkg>-<device_id> (e.g. pkg-setperf-odin, pkg-setperf-l4t).
+      # The broad pkg-*-* pattern is needed because download-artifact doesn't
+      # support OR patterns. Extra artifacts (wrong arch) are harmlessly
+      # filtered out by the normalize step.
+      - name: Download per-device artifacts for all target devices
+        if: inputs.devices != '[]' && inputs.devices != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*-*
+          merge-multiple: true
+        continue-on-error: true
+
       - name: Download noarch single-build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -91,10 +110,17 @@ jobs:
           merge-multiple: true
         continue-on-error: true
 
-      - name: Filter noarch packages to this device
+      - name: Filter noarch packages to target devices
         run: |
-          DEVICE="${{ inputs.device }}"
           shopt -s nullglob
+          # When running per-build-target, filter for ALL devices on this
+          # target. Otherwise (single-device, e.g. mirror-devices), filter
+          # for just the one device.
+          if [[ -n "${{ inputs.devices }}" ]] && [[ "${{ inputs.devices }}" != "[]" ]]; then
+            DEVICES='${{ inputs.devices }}'
+          else
+            DEVICES='["${{ inputs.device }}"]'
+          fi
           if [[ ! -d noarch-stage ]]; then
             echo "no noarch artifacts pulled, skipping filter"
             exit 0
@@ -105,17 +131,21 @@ jobs:
             # Strip _<version>_<arch>.pkg.tar suffix → "<name>"
             name="${base%_*}"
             name="${name%_*}"
-            # Keep if name ends with -$DEVICE (device-specific copy for us).
-            if [[ "$name" == *-"$DEVICE" ]]; then
-              cp "$f" .
+            KEEP=false
+            for d in $(echo "$DEVICES" | jq -r '.[]'); do
+              if [[ "$name" == *-"$d" ]]; then
+                cp "$f" .
+                KEEP=true
+                break
+              fi
+            done
+            if [[ "$KEEP" == "true" ]]; then
               continue
             fi
-            # Otherwise, drop only if the suffix matches some OTHER device id.
             # Universal noarch packages (e.g. astralemu-deps-repo) don't
             # carry a device suffix at all → keep everywhere.
             is_other_device=false
             for d in $all_devices; do
-              [[ "$d" == "$DEVICE" ]] && continue
               if [[ "$name" == *-"$d" ]]; then is_other_device=true; break; fi
             done
             if [[ "$is_other_device" == "false" ]]; then
@@ -979,8 +1009,19 @@ jobs:
             git rm -rf . 2>/dev/null || true
             cd ..
           }
-          DEVICE="${{ inputs.device }}"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
+
+          # Determine the list of device IDs to deploy for.
+          # In per-target mode, iterate all devices on this build_target.
+          # In single-device mode (mirror-devices), just the one device.
+          if [[ -n "${{ inputs.devices }}" ]] && [[ "${{ inputs.devices }}" != "[]" ]]; then
+            DEPLOY_DEVICES=$(echo '${{ inputs.devices }}' | jq -r '.[]')
+          else
+            DEPLOY_DEVICES="${{ inputs.device }}"
+          fi
+          echo "DEPLOY_DEVICES=$DEPLOY_DEVICES" >> "$GITHUB_ENV"
+          echo "Deploying for devices: $DEPLOY_DEVICES"
+
           # Force rebuild: wipe ONLY the packages this invocation is about to
           # publish (those listed in own-packages.txt). The previous logic
           # wiped the whole device repo, which clobbered packages published
@@ -989,40 +1030,40 @@ jobs:
           # earlier, since build-emulators doesn't see those mirror packages.
           if [[ "${{ inputs.force_rebuild }}" == "true" ]] && [[ -s intermediates-data/own-packages.txt ]]; then
             echo "FORCE REBUILD: wiping only packages listed in own-packages.txt"
-            while IFS= read -r pkg; do
-              [[ -z "$pkg" ]] && continue
-              # apt: <name>_<version>_<arch>.deb
-              find "gh-pages-dir/apt/device/${DEVICE}" -type f -name "${pkg}_*.deb" -delete 2>/dev/null || true
-              # rpm: <name>-<version>-<release>.<arch>.rpm
-              find "gh-pages-dir/dnf/device/${DEVICE}" -type f -name "${pkg}-*.rpm" -delete 2>/dev/null || true
-              # pacman: <name>-<version>-<release>-<arch>.pkg.tar.zst
-              find "gh-pages-dir/pacman/device/${DEVICE}" -type f -name "${pkg}-*.pkg.tar.zst" -delete 2>/dev/null || true
-            done < intermediates-data/own-packages.txt
-            # Also wipe shared deps for this source_distro — they're regenerated
-            # too on force, and they're scoped per source_distro so this is safe.
+            for DEVICE in $DEPLOY_DEVICES; do
+              while IFS= read -r pkg; do
+                [[ -z "$pkg" ]] && continue
+                find "gh-pages-dir/apt/device/${DEVICE}" -type f -name "${pkg}_*.deb" -delete 2>/dev/null || true
+                find "gh-pages-dir/dnf/device/${DEVICE}" -type f -name "${pkg}-*.rpm" -delete 2>/dev/null || true
+                find "gh-pages-dir/pacman/device/${DEVICE}" -type f -name "${pkg}-*.pkg.tar.zst" -delete 2>/dev/null || true
+              done < intermediates-data/own-packages.txt
+            done
             for fmt in apt dnf pacman; do
               rm -rf "gh-pages-dir/${fmt}/deps/${SOURCE_DISTRO}"
             done
           fi
-          # Device repos
-          mkdir -p "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/pacman/device/${DEVICE}"
+
+          # Device repos — create dirs for every device we'll deploy
+          for DEVICE in $DEPLOY_DEVICES; do
+            mkdir -p "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/pacman/device/${DEVICE}"
+          done
           # Shared deps repos
           mkdir -p "gh-pages-dir/apt/deps/${SOURCE_DISTRO}" "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}" "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"
           # Migration: copy ALL package files from old flat paths to new device/ subdirs
-          # Uses cp -n (no-clobber) so existing files in new paths are not overwritten
-          for fmt in apt dnf pacman; do
-            if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" ]]; then
-              echo "Migrating gh-pages-dir/${fmt}/${DEVICE}/ → gh-pages-dir/${fmt}/device/${DEVICE}/"
-              cp -a --no-clobber "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
-              echo "Removing old path: ${fmt}/${DEVICE}/"
-              rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
+          for DEVICE in $DEPLOY_DEVICES; do
+            for fmt in apt dnf pacman; do
+              if [[ -d "gh-pages-dir/${fmt}/${DEVICE}" ]]; then
+                echo "Migrating gh-pages-dir/${fmt}/${DEVICE}/ → gh-pages-dir/${fmt}/device/${DEVICE}/"
+                cp -a --no-clobber "gh-pages-dir/${fmt}/${DEVICE}"/* "gh-pages-dir/${fmt}/device/${DEVICE}/" 2>/dev/null || true
+                echo "Removing old path: ${fmt}/${DEVICE}/"
+                rm -rf "gh-pages-dir/${fmt}/${DEVICE}"
+              fi
+            done
+            if [[ -d "gh-pages-dir/pacman/device/${DEVICE}/arm64" ]]; then
+              echo "Removing non-standard arch dir: pacman/device/${DEVICE}/arm64/"
+              rm -rf "gh-pages-dir/pacman/device/${DEVICE}/arm64"
             fi
           done
-          # Clean up non-standard pacman arm64 dir (should be aarch64)
-          if [[ -d "gh-pages-dir/pacman/device/${DEVICE}/arm64" ]]; then
-            echo "Removing non-standard arch dir: pacman/device/${DEVICE}/arm64/"
-            rm -rf "gh-pages-dir/pacman/device/${DEVICE}/arm64"
-          fi
 
       - name: Merge repo artifacts
         run: |
@@ -1034,10 +1075,29 @@ jobs:
           echo "=== Merged structure ==="
           find gh-pages-dir -type f | head -50
 
+      # In per-target mode, the build-repo steps wrote packages into
+      # device/{target_id}/ (e.g. device/amd64/). We need to replicate
+      # those packages for every actual device on this target so each
+      # device gets its own directory. The shareable deps are already
+      # in deps/{source_distro}/ — no replication needed for those.
+      - name: Replicate packages for target devices
+        if: inputs.devices != '[]' && inputs.devices != ''
+        run: |
+          TARGET_ID="${{ inputs.device }}"
+          for DEVICE in $DEPLOY_DEVICES; do
+            [[ "$DEVICE" == "$TARGET_ID" ]] && continue
+            echo "Replicating device/$TARGET_ID/ → device/$DEVICE/"
+            for fmt in apt dnf pacman; do
+              SRC="gh-pages-dir/${fmt}/device/${TARGET_ID}"
+              DST="gh-pages-dir/${fmt}/device/${DEVICE}"
+              [[ -d "$SRC" ]] || continue
+              mkdir -p "$DST"
+              cp -a --no-clobber "$SRC"/* "$DST/" 2>/dev/null || true
+            done
+          done
+
       - name: Cleanup old package versions
         run: |
-          DEVICE="${{ inputs.device }}"
-
           # Keep only 3 latest major versions per package, delete older ones
           cleanup_old_versions() {
             local dir="$1" format="$2"
@@ -1093,19 +1153,20 @@ jobs:
             done
           }
 
-          echo "=== Cleaning old package versions ==="
+          for DEVICE in $DEPLOY_DEVICES; do
+            echo "=== Cleaning old package versions for $DEVICE ==="
+            for pool_dir in gh-pages-dir/apt/device/${DEVICE}/pool/*/; do
+              cleanup_old_versions "$pool_dir" "deb"
+            done
+            for rpm_dir in gh-pages-dir/dnf/device/${DEVICE}/*/*/; do
+              cleanup_old_versions "$rpm_dir" "rpm"
+            done
+            for pac_dir in gh-pages-dir/pacman/device/${DEVICE}/*/; do
+              cleanup_old_versions "$pac_dir" "pacman"
+            done
+          done
+          # Deps repos (shared, only once)
           SOURCE_DISTRO="${{ inputs.source_distro }}"
-          # Device repos
-          for pool_dir in gh-pages-dir/apt/device/${DEVICE}/pool/*/; do
-            cleanup_old_versions "$pool_dir" "deb"
-          done
-          for rpm_dir in gh-pages-dir/dnf/device/${DEVICE}/*/*/; do
-            cleanup_old_versions "$rpm_dir" "rpm"
-          done
-          for pac_dir in gh-pages-dir/pacman/device/${DEVICE}/*/; do
-            cleanup_old_versions "$pac_dir" "pacman"
-          done
-          # Deps repos
           for pool_dir in gh-pages-dir/apt/deps/${SOURCE_DISTRO}/pool/*/; do
             cleanup_old_versions "$pool_dir" "deb"
           done
@@ -1126,16 +1187,31 @@ jobs:
 
       - name: Generate repo metadata
         run: |
-          DEVICE="${{ inputs.device }}"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
 
           echo "=== Generating APT metadata ==="
           APT_DISTROS=$(yq -r '.distros.apt[].id' distros.yml)
-          for repo_base in "gh-pages-dir/apt/device/${DEVICE}" "gh-pages-dir/apt/deps/${SOURCE_DISTRO}"; do
+          for DEVICE in $DEPLOY_DEVICES; do
+            for repo_base in "gh-pages-dir/apt/device/${DEVICE}"; do
+              [[ -d "$repo_base" ]] || continue
+              for distro in $APT_DISTROS; do
+                [[ -d "$repo_base/pool/$distro" ]] || continue
+                POOL_ARCHES=$(ls "$repo_base/pool/$distro/"*.deb 2>/dev/null | sed 's/.*_\([^_]*\)\.deb$/\1/' | sort -u)
+                [[ -z "$POOL_ARCHES" ]] && continue
+                for deb_arch in $POOL_ARCHES; do
+                  mkdir -p "$repo_base/dists/$distro/main/binary-$deb_arch"
+                  (cd "$repo_base" && dpkg-scanpackages --arch "$deb_arch" "pool/$distro" > "dists/$distro/main/binary-$deb_arch/Packages" 2>/dev/null || true)
+                  gzip -k -f "$repo_base/dists/$distro/main/binary-$deb_arch/Packages"
+                  echo "  $(basename "$repo_base") $distro/$deb_arch: $(grep -c '^Package:' "$repo_base/dists/$distro/main/binary-$deb_arch/Packages" 2>/dev/null || echo 0) packages"
+                done
+              done
+            done
+          done
+          # Shared deps APT metadata (once)
+          for repo_base in "gh-pages-dir/apt/deps/${SOURCE_DISTRO}"; do
             [[ -d "$repo_base" ]] || continue
             for distro in $APT_DISTROS; do
               [[ -d "$repo_base/pool/$distro" ]] || continue
-              # Extract unique architectures from deb filenames
               POOL_ARCHES=$(ls "$repo_base/pool/$distro/"*.deb 2>/dev/null | sed 's/.*_\([^_]*\)\.deb$/\1/' | sort -u)
               [[ -z "$POOL_ARCHES" ]] && continue
               for deb_arch in $POOL_ARCHES; do
@@ -1148,7 +1224,16 @@ jobs:
           done
 
           echo "=== Generating RPM metadata ==="
-          for rpm_root in "gh-pages-dir/dnf/device/${DEVICE}" "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}"; do
+          for DEVICE in $DEPLOY_DEVICES; do
+            for rpm_root in "gh-pages-dir/dnf/device/${DEVICE}"; do
+              [[ -d "$rpm_root" ]] || continue
+              find "$rpm_root" -name '*.rpm' -printf '%h\n' 2>/dev/null | sort -u | while read -r rpm_dir; do
+                echo "  createrepo_c $rpm_dir"
+                createrepo_c "$rpm_dir/"
+              done
+            done
+          done
+          for rpm_root in "gh-pages-dir/dnf/deps/${SOURCE_DISTRO}"; do
             [[ -d "$rpm_root" ]] || continue
             find "$rpm_root" -name '*.rpm' -printf '%h\n' 2>/dev/null | sort -u | while read -r rpm_dir; do
               echo "  createrepo_c $rpm_dir"
@@ -1157,15 +1242,28 @@ jobs:
           done
 
           echo "=== Generating Pacman metadata ==="
-          for pac_root in "gh-pages-dir/pacman/device/${DEVICE}" "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"; do
+          for DEVICE in $DEPLOY_DEVICES; do
+            for pac_root in "gh-pages-dir/pacman/device/${DEVICE}"; do
+              [[ -d "$pac_root" ]] || continue
+              for pac_dir in "$pac_root"/*/; do
+                [[ -d "$pac_dir" ]] || continue
+                ls "$pac_dir"/*.pkg.tar.zst 1>/dev/null 2>&1 || continue
+                db_name="astralemu"
+                rm -f "$pac_dir"/${db_name}.db* "$pac_dir"/${db_name}.files*
+                echo "  repo-add $pac_dir${db_name}.db.tar.gz ($DEVICE)"
+                docker run --rm -v "$(realpath "$pac_dir"):/repo" archlinux:latest \
+                  bash -c "cd /repo && repo-add ${db_name}.db.tar.gz *.pkg.tar.zst"
+              done
+            done
+          done
+          for pac_root in "gh-pages-dir/pacman/deps/${SOURCE_DISTRO}"; do
             [[ -d "$pac_root" ]] || continue
             for pac_dir in "$pac_root"/*/; do
               [[ -d "$pac_dir" ]] || continue
               ls "$pac_dir"/*.pkg.tar.zst 1>/dev/null 2>&1 || continue
-              db_name="astralemu"
-              echo "$pac_dir" | grep -q "/deps/" && db_name="astralemu-deps"
+              db_name="astralemu-deps"
               rm -f "$pac_dir"/${db_name}.db* "$pac_dir"/${db_name}.files*
-              echo "  repo-add $pac_dir${db_name}.db.tar.gz"
+              echo "  repo-add $pac_dir${db_name}.db.tar.gz (deps)"
               docker run --rm -v "$(realpath "$pac_dir"):/repo" archlinux:latest \
                 bash -c "cd /repo && repo-add ${db_name}.db.tar.gz *.pkg.tar.zst"
             done
@@ -1173,7 +1271,6 @@ jobs:
 
       - name: Sign APT releases
         run: |
-          DEVICE="${{ inputs.device }}"
           SOURCE_DISTRO="${{ inputs.source_distro }}"
           APT_IDS=$(yq -r '.distros.apt[].id' distros.yml)
 
@@ -1207,7 +1304,9 @@ jobs:
             done
           }
 
-          sign_apt_repo "gh-pages-dir/apt/device/${DEVICE}" "${DEVICE}" "AstralEmu ${DEVICE}"
+          for DEVICE in $DEPLOY_DEVICES; do
+            sign_apt_repo "gh-pages-dir/apt/device/${DEVICE}" "${DEVICE}" "AstralEmu ${DEVICE}"
+          done
           sign_apt_repo "gh-pages-dir/apt/deps/${SOURCE_DISTRO}" "deps-${SOURCE_DISTRO}" "AstralEmu shared dependencies (${SOURCE_DISTRO})"
 
       - name: Sign DNF repos
@@ -1330,15 +1429,25 @@ jobs:
 
           # Build up commits locally first, then push once at the end.
           # Fewer pushes -> smaller conflict window if concurrency briefly fails.
-          for fmt in apt dnf pacman; do
-            git add "${fmt}/" || true
+          # Build one commit per device (plus deps) so git history is clear.
+          for DEVICE in $DEPLOY_DEVICES; do
+            for fmt in apt dnf pacman; do
+              git add "${fmt}/device/${DEVICE}/" || true
+            done
             if ! git diff --cached --quiet; then
-              git commit -m "Update ${{ inputs.device }} ${fmt} repository"
+              git commit -m "Update ${DEVICE} repositories"
             fi
           done
+          # Shared deps — one commit for all source_distro deps
+          for fmt in apt dnf pacman; do
+            git add "${fmt}/deps/" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m "Update deps/${SOURCE_DISTRO} repositories"
+          fi
           git add -A
           if ! git diff --cached --quiet; then
-            git commit -m "Update ${{ inputs.device }} index"
+            git commit -m "Update index pages"
           fi
 
           # Single push with retry. In rebase, "-X theirs" means "prefer the

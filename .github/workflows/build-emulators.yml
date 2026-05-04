@@ -44,9 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       devices: ${{ steps.load-devices.outputs.devices }}
-      seed_device: ${{ steps.load-devices.outputs.seed_device }}
-      devices_rest: ${{ steps.load-devices.outputs.devices_rest }}
-      seed_target: ${{ steps.load-devices.outputs.seed_target }}
+      unique_targets: ${{ steps.load-devices.outputs.unique_targets }}
+      devices_by_target: ${{ steps.load-devices.outputs.devices_by_target }}
       targets_by_id: ${{ steps.load-devices.outputs.targets_by_id }}
       build_archs: ${{ steps.load-devices.outputs.build_archs }}
       chain_1_ind: ${{ steps.chains.outputs.chain_1_ind }}
@@ -73,20 +72,20 @@ jobs:
           TARGETS=$(yq -o=json -I=0 '.build_targets' devices.yml)
           echo "devices=$DEVICES" >> $GITHUB_OUTPUT
 
-          SEED=$(echo "$DEVICES" | jq -c '.[0]')
-          REST=$(echo "$DEVICES" | jq -c 'if length > 1 then .[1:] else [] end')
-          echo "seed_device=$SEED" >> $GITHUB_OUTPUT
-          echo "devices_rest=$REST" >> $GITHUB_OUTPUT
+          # Unique build_targets with source_distro — drives the per-target
+          # update-repo matrix (3 jobs instead of 26).
+          UNIQUE_TARGETS=$(echo "$DEVICES" | jq -c --argjson targets "$TARGETS" \
+            '[.[].build_target] | unique | map(. as $id | {id: $id, source_distro: ($targets[] | select(.id == $id) | .source_distro)})')
+          echo "unique_targets=$UNIQUE_TARGETS" >> $GITHUB_OUTPUT
 
-          # Build a { "<target_id>": { ... }, ... } map for easy lookup from
-          # update-repo matrix entries (they only carry build_target by name).
+          # Devices grouped by build_target — needed by the deploy phase
+          # to loop over all devices sharing a target without re-running
+          # the heavy normalize/convert work.
+          DEVICES_BY_TARGET=$(echo "$DEVICES" | jq -c 'group_by(.build_target) | map({key: .[0].build_target, value: map(.id)}) | from_entries')
+          echo "devices_by_target=$DEVICES_BY_TARGET" >> $GITHUB_OUTPUT
+
           TARGETS_BY_ID=$(echo "$TARGETS" | jq -c 'map({(.id): .}) | add')
           echo "targets_by_id=$TARGETS_BY_ID" >> $GITHUB_OUTPUT
-
-          # Resolve the seed device's build_target for the seed update-repo job.
-          SEED_TARGET_ID=$(echo "$SEED" | jq -r '.build_target')
-          SEED_TARGET=$(echo "$TARGETS_BY_ID" | jq -c ".\"$SEED_TARGET_ID\"")
-          echo "seed_target=$SEED_TARGET" >> $GITHUB_OUTPUT
 
           # Unique arches across all build_targets (drives base image builds).
           BUILD_ARCHS=$(echo "$TARGETS" | jq -c '[.[].arch] | unique')
@@ -424,34 +423,17 @@ jobs:
       chain_matrix: ${{ needs.prepare.outputs.aggregators }}
 
   # ===========================================================================
-  # UPDATE REPO: Convert and publish to all distro formats (reusable workflow)
-  # Seed device first (builds+deploys shared deps), then rest serialized
+  # UPDATE REPO: Convert and publish to all distro formats.
+  # One job per build_target (3 total) does the heavy work (normalize,
+  # resolve-deps, convert deb/rpm/pacman), then deploys for every device on
+  # that target. This eliminates the 26× duplication — devices sharing a
+  # build_target receive identical packages, so we convert once and copy.
   # ===========================================================================
-  update-repo-seed:
+  update-repo-target:
     needs: [prepare, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators]
     if: >-
       !cancelled() &&
-      (needs.chain-1-ind.result == 'success' ||
-       needs.chain-2-ind.result == 'success' ||
-       needs.chain-3-ind.result == 'success' ||
-       needs.chain-4-ind.result == 'success' ||
-       needs.aggregators.result == 'success')
-    uses: ./.github/workflows/update-repos.yml
-    with:
-      shared_artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).build_target }}'
-      device_artifact_pattern: 'pkg-*-${{ fromJson(needs.prepare.outputs.seed_device).id }}'
-      source_distro: ${{ fromJson(needs.prepare.outputs.seed_target).source_distro }}
-      device: ${{ fromJson(needs.prepare.outputs.seed_device).id }}
-      build_target: ${{ fromJson(needs.prepare.outputs.seed_device).build_target }}
-      force_rebuild: ${{ inputs.force == true }}
-    secrets:
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
-  update-repo:
-    needs: [prepare, update-repo-seed, chain-1-ind, chain-1-dep, chain-2-ind, chain-2-dep, chain-3-ind, chain-3-dep, chain-4-ind, chain-4-dep, aggregators]
-    if: >-
-      !cancelled() &&
-      fromJson(needs.prepare.outputs.devices_rest)[0] != null &&
+      fromJson(needs.prepare.outputs.unique_targets)[0] != null &&
       (needs.chain-1-ind.result == 'success' ||
        needs.chain-2-ind.result == 'success' ||
        needs.chain-3-ind.result == 'success' ||
@@ -459,17 +441,18 @@ jobs:
        needs.aggregators.result == 'success')
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 3
       matrix:
-        device: ${{ fromJson(needs.prepare.outputs.devices_rest) }}
+        target: ${{ fromJson(needs.prepare.outputs.unique_targets) }}
     uses: ./.github/workflows/update-repos.yml
     with:
-      shared_artifact_pattern: 'pkg-*-${{ matrix.device.build_target }}'
-      device_artifact_pattern: 'pkg-*-${{ matrix.device.id }}'
-      source_distro: ${{ fromJson(needs.prepare.outputs.targets_by_id)[matrix.device.build_target].source_distro }}
-      device: ${{ matrix.device.id }}
-      build_target: ${{ matrix.device.build_target }}
+      shared_artifact_pattern: 'pkg-*-${{ matrix.target.id }}'
+      device_artifact_pattern: 'pkg-noarch-*'
+      source_distro: ${{ matrix.target.source_distro }}
+      device: ${{ matrix.target.id }}
+      build_target: ${{ matrix.target.id }}
       force_rebuild: ${{ inputs.force == true }}
+      devices: ${{ fromJson(needs.prepare.outputs.devices_by_target)[matrix.target.id] }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
@@ -477,8 +460,8 @@ jobs:
   # SAVE TRACKERS: Update version trackers on main branch
   # ===========================================================================
   save-trackers:
-    needs: [prepare, update-repo-seed, update-repo]
-    if: "!cancelled() && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
+    needs: [prepare, update-repo-target]
+    if: "!cancelled() && needs.update-repo-target.result == 'success'"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -519,6 +502,6 @@ jobs:
   # See .github/workflows/deploy-pages.yml for the rationale.
   # ===========================================================================
   deploy-pages:
-    needs: [update-repo-seed, update-repo]
-    if: "!cancelled() && !inputs.skip_deploy && (needs.update-repo-seed.result == 'success' || needs.update-repo.result == 'success')"
+    needs: [update-repo-target]
+    if: "!cancelled() && !inputs.skip_deploy && needs.update-repo-target.result == 'success'"
     uses: ./.github/workflows/deploy-pages.yml
