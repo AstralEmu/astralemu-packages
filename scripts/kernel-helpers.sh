@@ -15,10 +15,9 @@ set -euo pipefail
 # ----------------------------------------------------------------------------
 # Resolve the kernel version pin dynamically from ROCKNIX upstream.
 #
-# ROCKNIX is the project we follow for the upstream kernel base (it carries
-# the SoC patches we cherry-pick for arm64 anyway, and pinning all our
-# kernels on the same upstream base is the cleanest way to keep BORE +
-# CachyOS patches applying cleanly across targets).
+# ROCKNIX is the project we follow for the arm64 upstream kernel base (it
+# carries the SoC patches we cherry-pick for arm64). For x86 we use the
+# CachyOS kernel directly (see clone_cachyos_kernel).
 #
 # package.mk has multiple PKG_VERSION lines (mainline / raspberrypi /
 # default) — we pick the "default" one (kernel.org tarball, e.g. "6.15.6").
@@ -30,8 +29,6 @@ resolve_kernel_version() {
     return
   fi
   local pkg_mk_url="https://raw.githubusercontent.com/ROCKNIX/distribution/next/packages/linux/package.mk"
-  # Look for the line ending in a kernel.org tarball pattern (vN.x/linux-N.M.K.tar.xz)
-  # and extract its PKG_VERSION value.
   local kver
   kver=$(curl -fsSL "$pkg_mk_url" \
     | awk '
@@ -48,9 +45,62 @@ resolve_kernel_version() {
 }
 
 # ----------------------------------------------------------------------------
+# Resolve the latest CachyOS kernel branch.
+#
+# CachyOS/linux uses topic branches like <X.Y>/cachy (e.g. 7.1/cachy).
+# We pick the highest <X.Y>/cachy branch available. This gives us a full
+# kernel source tree with all CachyOS patches (BORE, handheld, amd-pstate,
+# fixes, etc.) already merged — no patch juggling needed.
+# ----------------------------------------------------------------------------
+resolve_cachyos_branch() {
+  local branches
+  branches=$(git ls-remote --refs --heads \
+    https://github.com/CachyOS/linux.git 'refs/heads/*/cachy' 2>/dev/null \
+    | sed 's|.*/\([0-9]*\.[0-9]*\)/cachy|\1|' \
+    | sort -V)
+  local latest
+  latest=$(echo "$branches" | tail -n1)
+  if [[ -z "$latest" ]]; then
+    echo "ERROR: no CachyOS cachy branch found" >&2
+    exit 1
+  fi
+  echo "$latest/cachy"
+}
+
+# ----------------------------------------------------------------------------
+# Clone the CachyOS kernel source tree for x86 builds.
+#
+# CachyOS/linux ships a complete kernel source with all their patches
+# (scheduler, handheld drivers, amd-pstate, fixes, BORE, etc.) already
+# merged on <X.Y>/cachy branches. This replaces the fragile approach of
+# downloading vanilla mainline + applying individual patches that may
+# reference CachyOS-internal APIs.
+#
+# Optionally pass a specific branch (e.g. "7.1/cachy") to override the
+# auto-detected latest. Set CACHYOS_BRANCH_OVERRIDE for testing.
+# ----------------------------------------------------------------------------
+clone_cachyos_kernel() {
+  local dest="${1:-/workspace/src-kernel}"
+  local branch="${2:-${CACHYOS_BRANCH_OVERRIDE:-}}"
+
+  if [[ -z "$branch" ]]; then
+    branch=$(resolve_cachyos_branch)
+  fi
+  echo "Cloning CachyOS kernel (branch $branch)..."
+
+  rm -rf "$dest"
+  git clone --depth 1 --branch "$branch" \
+    https://github.com/CachyOS/linux.git "$dest"
+
+  local kver
+  kver=$(awk '/^VERSION = / {v=$3} /^PATCHLEVEL = / {p=$3} /^SUBLEVEL = / {s=$3} END {print v"."p"."s}' "$dest/Makefile")
+  echo "CachyOS kernel source at $dest (base version $kver, branch $branch)"
+}
+
+# ----------------------------------------------------------------------------
 # Clone a stable Linux source tree at the given version into /workspace/src-kernel.
-# Skip the clone if it's already there at the right version (CI ccache reuses
-# the workspace between sub-jobs of the same chain).
+# Used by arm64 builds (ROCKNIX-based). Skip the clone if already present at
+# the right version (CI ccache reuses the workspace between sub-jobs).
 # ----------------------------------------------------------------------------
 clone_linux_stable() {
   local kver="$1"

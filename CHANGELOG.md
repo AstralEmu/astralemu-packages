@@ -5,6 +5,20 @@ ISO 8601 (YYYY-MM-DD).
 
 ## Unreleased
 
+### Changed
+
+- **kernel-amd64 source switched to CachyOS/linux** — instead of downloading
+  vanilla mainline + applying individual patches (BORE, handheld, amd-pstate,
+  fixes) that frequently break due to CachyOS-internal kernel APIs, we now
+  clone `CachyOS/linux` `<X.Y>/cachy` branch which has all patches pre-merged.
+  The latest `<X.Y>/cachy` branch is auto-detected via `git ls-remote`.
+  This eliminates the fragile patch juggling (`.rej` resolution, skipped
+  mega-patches, handheld API mismatches) and ensures handheld driver support
+  (Steam Deck, ROG Ally, Legion Go, MSI Claw, Zotac Zone) is always included.
+  `fetch_bore_patches` and `fetch_cachyos_patches` are no longer called for
+  amd64 builds; they remain available for arm64 targets that still use
+  mainline + ROCKNIX patches.
+
 ### Fixed
 
 - **CachyOS handheld patch skipped** — the `misc/0001-handheld.patch` from
@@ -61,12 +75,11 @@ ISO 8601 (YYYY-MM-DD).
 
 A complete kernel build pipeline covering every supported handheld:
 
-- **`kernel-amd64`** — Linux stable for x86 handhelds (Steam Deck, ROG Ally,
-  Legion Go, MSI Claw, GPD Win, AYANEO, OneXPlayer, AYN Loki). BORE
-  scheduler + CachyOS portable patches (amd-pstate, asus, bbr3, fixes).
-  The CachyOS handheld driver patch is temporarily skipped (references
-  CachyOS-specific kernel APIs not in mainline 6.15.x); driver support
-  will be restored when a mainline-compatible version is available.
+- **`kernel-amd64`** — CachyOS/linux `<X.Y>/cachy` branch for x86 handhelds
+  (Steam Deck, ROG Ally, Legion Go, MSI Claw, GPD Win, AYANEO, OneXPlayer,
+  AYN Loki). All CachyOS patches (BORE scheduler, handheld drivers, amd-pstate,
+  fixes, performance tweaks) are pre-merged in the CachyOS kernel source tree
+  — no individual patch application needed.
 - **`kernel-arm64-modern`** — Linux stable for armv8.2-a flagships
   (Retroid Pocket 5/6, AYN Thor, Orange Pi 5, Snapdragon 845-X3 generic).
   BORE + CachyOS portable + ROCKNIX downstream patches per-SoC
@@ -186,19 +199,14 @@ short name `kernel-astralemu` actually depends on existed nowhere. The
 device-specific Provides aliases (`kernel-arm64-legacy-l4t`, etc.) are
 still emitted by `emit-aliases.sh` so legacy lookups keep working.
 
-### Changed — `kernel-amd64` patch source: Valve → CachyOS handheld
+### Changed — `kernel-amd64` patch source: Valve → CachyOS handheld → CachyOS/linux
 
-The `kernel-amd64-prep` build was cloning
-`github.com/ValveSoftware/linux-integration` which returns 404 — Valve
-removed the GitHub mirror. The current SteamOS 3 source mirror lives
-on the Holo `gitlab.steamos.cloud/jupiter/linux-integration.git` GitLab
-instance which requires authenticated access, so it's not viable for
-an unattended CI clone either. Switched the AMD handheld driver / display
-quirk / audio codec coverage to CachyOS/kernel-patches'
-`<X.Y>/misc/0001-handheld.patch`. The two unique kernel features Valve
-still ships that CachyOS doesn't — AMD P-State EPP handheld profile and
-NTSYNC sync primitive — have both been upstream since 6.18-6.19, so on
-the kernel versions ROCKNIX pins us to nothing functional regresses.
+The `kernel-amd64-prep` build was originally cloning
+`github.com/ValveSoftware/linux-integration` which returned 404 (Valve
+removed the GitHub mirror). Then it switched to applying individual
+CachyOS patches onto vanilla mainline, which broke whenever CachyOS
+patches referenced CachyOS-internal kernel APIs. Now it simply clones
+the `CachyOS/linux` `<X.Y>/cachy` branch which has everything pre-merged.
 
 ### Added — Triple MAME ROMset windows in `libretro-heavy-1`
 

@@ -51,9 +51,10 @@ echo "$(kernel_pkg_version "$KVER")" > "$PKG/meta/version"
 echo "${TARGET_ARCH}" > "$PKG/meta/arch"
 cat > "$PKG/meta/description" <<DESC
 AstralEmu kernel for x86_64 handhelds (kernel ${KVER}).
-Based on linux-stable + BORE scheduler + CachyOS portable patches +
-Valve linux-jupiter handheld patches. Targets Steam Deck (Van Gogh),
-ROG Ally / Ally X (Phoenix), Legion Go, MSI Claw, GPD Win, AYANEO,
+Based on CachyOS/linux (<X.Y>/cachy branch) with BORE scheduler,
+handheld drivers, amd-pstate, fixes and performance tweaks
+pre-merged. Targets Steam Deck (Van Gogh/Sephiroth), ROG Ally /
+Ally X (Phoenix), Legion Go, MSI Claw, GPD Win, AYANEO,
 AYN Loki and similar AMD/Intel handheld devices.
 DESC
 echo "games" > "$PKG/meta/section"
