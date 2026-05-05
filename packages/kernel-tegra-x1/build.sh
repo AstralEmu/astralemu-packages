@@ -49,8 +49,12 @@ if [[ ! -f "include/linux/tegra_profiler.h" ]]; then
 
 struct tegra_profiler;
 struct task_struct;
+struct vm_area_struct;
 static inline int tegra_profiler_is_enabled(void) { return 0; }
 static inline void quadd_event_fork(struct task_struct *p) {}
+static inline void quadd_event_exit(struct task_struct *p) {}
+static inline void quadd_event_comm(struct task_struct *p, const char *comm) {}
+static inline void quadd_event_mmap(struct vm_area_struct *vma) {}
 
 #endif
 TPROF_H
