@@ -34,7 +34,7 @@ fi
 
 cd /workspace/src-intel-media
 git fetch --tags
-LATEST=$(git tag -l 'intel-media-[0-9]*' | sort -V | tail -1)
+LATEST=$(git tag -l 'intel-media-[0-9]*' | grep -v '^intel-media-600\.' | sort -V | tail -1)
 echo "Using intel-media-driver: $LATEST"
 git checkout "$LATEST"
 
