@@ -53,7 +53,7 @@ struct vm_area_struct;
 static inline int tegra_profiler_is_enabled(void) { return 0; }
 static inline void quadd_event_fork(struct task_struct *p) {}
 static inline void quadd_event_exit(struct task_struct *p) {}
-static inline void quadd_event_comm(struct task_struct *p, const char *comm) {}
+static inline void quadd_event_comm(struct task_struct *p, bool exec) {}
 static inline void quadd_event_mmap(struct vm_area_struct *vma) {}
 static inline void quadd_task_sched_out(struct task_struct *prev, struct task_struct *next) {}
 static inline void quadd_task_sched_in(struct task_struct *prev, struct task_struct *curr) {}

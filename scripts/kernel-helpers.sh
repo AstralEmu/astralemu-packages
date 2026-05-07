@@ -59,9 +59,9 @@ resolve_cachyos_branch() {
     | sed 's|.*/\([0-9]*\.[0-9]*\)/cachy|\1|' \
     | sort -V)
   local latest
-  # Prefer the latest stable branch (even minor = stable, odd = development/RC).
-  # E.g. 6.15 and 6.12 are stable, 7.1 and 6.19 are development.
-  latest=$(echo "$branches" | awk -F. '{if ($2 % 2 == 0) print}' | tail -n1)
+  # Prefer the latest stable branch (even minor > 0 = stable, odd or 0 = merge window/RC).
+  # E.g. 6.18 and 6.12 are stable, 7.0 and 6.19 are merge windows, 7.1 is RC.
+  latest=$(echo "$branches" | awk -F. '{if ($2 % 2 == 0 && $2 > 0) print}' | tail -n1)
   # If no even minor found, fall back to absolute latest (odd minors only exist).
   if [[ -z "$latest" ]]; then
     latest=$(echo "$branches" | tail -n1)
