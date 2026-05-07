@@ -105,25 +105,35 @@ jobs:
           github-token: ${{ github.token }}
         continue-on-error: true
 
-      # Kernel image and module sub-jobs (kernel-<target>-image,
-      # kernel-<target>-modules-soc, kernel-<target>-modules-generic) need
-      # the patched source produced by kernel-<target>-prep. The aggregator
-      # depends_on chain guarantees prep ran first; we just pull the tarball
-      # and let the sub-job's build.sh extract it.
+      # Kernel image and module sub-jobs need the patched source tree produced
+      # by kernel-<target>-prep. When prep is cache-skipped, the artifact
+      # doesn't exist in this run — fall back to the latest successful run.
       - name: Download kernel-prep tarball
-        if: matrix.entry.is_aggregator != 'true' && contains(matrix.entry.emulator_id, '-image') == false && contains(matrix.entry.emulator_id, '-modules-') == false
+        if: matrix.entry.is_aggregator != 'true' && contains(matrix.entry.emulator_id, '-modules-') == false && contains(matrix.entry.emulator_id, '-image') == false
         run: echo "Not a kernel sub-job that needs prep"
       - name: Pull kernel-prep into the workspace
         if: matrix.entry.is_aggregator != 'true' && (contains(matrix.entry.emulator_id, '-image') || contains(matrix.entry.emulator_id, '-modules-'))
+        id: kernel_prep_dl
         uses: actions/download-artifact@v4
         with:
-          # Strip the trailing -image / -modules-soc / -modules-generic to get
-          # the matching prep artifact name (kernel-prep-kernel-<target>-prep-<target_id>).
-          # The convention is documented in docs/kernel-integration-plan.md.
           pattern: "kernel-prep-*-${{ matrix.entry.target_id }}"
           path: kernel-prep-in/
           merge-multiple: true
         continue-on-error: true
+      - name: Pull kernel-prep from previous run (fallback)
+        if: matrix.entry.is_aggregator != 'true' && (contains(matrix.entry.emulator_id, '-image') || contains(matrix.entry.emulator_id, '-modules-')) && steps.kernel_prep_dl.outcome == 'failure'
+        run: |
+          LATEST=$(gh api "/repos/${{ github.repository }}/actions/workflows/build-emulators.yml/runs?status=success&per_page=5" \
+            --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})] | .[0].id" 2>/dev/null) || true
+          if [[ -z "$LATEST" ]]; then
+            echo "::warning::No previous successful run found for kernel-prep fallback"
+            exit 0
+          fi
+          echo "Pulling kernel-prep from run $LATEST (fallback)"
+          gh run download "$LATEST" \
+            --repo "${{ github.repository }}" \
+            -p "kernel-prep-*-${{ matrix.entry.target_id }}*" \
+            -D kernel-prep-in/ 2>/dev/null || true
 
       - name: Build
         id: build

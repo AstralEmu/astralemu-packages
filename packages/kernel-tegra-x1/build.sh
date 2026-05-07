@@ -41,9 +41,9 @@ if [[ ! -f "include/linux/tegra_profiler.h" ]]; then
   cat > include/linux/tegra_profiler.h <<'TPROF_H'
 /* Minimal stub for missing tegra_profiler.h in NaGaa95's 4.9 fork.
  * The real header provides profiler IOCTL and telemetry definitions that
- * the downstream kernel references from fork.c but are not needed for
- * the Switch L4T build. quadd_event_fork() is called from copy_process()
- * to propagate profiler context to child tasks — a no-op stub is safe. */
+ * the downstream kernel references from fork.c, sched/core.c, etc. but
+ * are not needed for the Switch L4T build. All quadd_* functions are
+ * safe as no-ops — the profiler hardware is not used. */
 #ifndef _LINUX_TEGRA_PROFILER_H
 #define _LINUX_TEGRA_PROFILER_H
 
@@ -55,6 +55,8 @@ static inline void quadd_event_fork(struct task_struct *p) {}
 static inline void quadd_event_exit(struct task_struct *p) {}
 static inline void quadd_event_comm(struct task_struct *p, const char *comm) {}
 static inline void quadd_event_mmap(struct vm_area_struct *vma) {}
+static inline void quadd_task_sched_out(struct task_struct *prev, struct task_struct *next) {}
+static inline void quadd_task_sched_in(struct task_struct *prev, struct task_struct *curr) {}
 
 #endif
 TPROF_H
