@@ -106,8 +106,11 @@ jobs:
         continue-on-error: true
 
       # Kernel image and module sub-jobs need the patched source tree produced
+      # Kernel image and module sub-jobs need the patched source tree produced
       # by kernel-<target>-prep. When prep is cache-skipped, the artifact
       # doesn't exist in this run — fall back to the latest successful run.
+      # download-artifact@v4 succeeds even when 0 artifacts match (with
+      # continue-on-error), so the fallback checks for the actual file instead.
       - name: Download kernel-prep tarball
         if: matrix.entry.is_aggregator != 'true' && contains(matrix.entry.emulator_id, '-modules-') == false && contains(matrix.entry.emulator_id, '-image') == false
         run: echo "Not a kernel sub-job that needs prep"
@@ -121,8 +124,13 @@ jobs:
           merge-multiple: true
         continue-on-error: true
       - name: Pull kernel-prep from previous run (fallback)
-        if: matrix.entry.is_aggregator != 'true' && (contains(matrix.entry.emulator_id, '-image') || contains(matrix.entry.emulator_id, '-modules-')) && steps.kernel_prep_dl.outcome == 'failure'
+        if: matrix.entry.is_aggregator != 'true' && (contains(matrix.entry.emulator_id, '-image') || contains(matrix.entry.emulator_id, '-modules-'))
         run: |
+          if [[ -f kernel-prep-in/kernel-prep.tar.zst ]]; then
+            echo "kernel-prep artifact found in current run, skipping fallback"
+            exit 0
+          fi
+          echo "kernel-prep artifact not found in current run, probing fallback..."
           LATEST=$(gh api "/repos/${{ github.repository }}/actions/workflows/build-emulators.yml/runs?status=success&per_page=5" \
             --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})] | .[0].id" 2>/dev/null) || true
           if [[ -z "$LATEST" ]]; then

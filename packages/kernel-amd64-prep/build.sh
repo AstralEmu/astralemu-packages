@@ -11,6 +11,11 @@
 # Handheld driver coverage (Steam Deck hwmon/LEDs/extcon/mfd, ROG Ally,
 # Legion Go, MSI Claw, Zotac Zone, AMDGPU display quirks, AW87xxx audio
 # codec) is included in the CachyOS kernel source automatically.
+#
+# NOTE: Any change to scripts/kernel-helpers.sh must bump this comment to
+# invalidate the cache marker, since compute-chains.sh only hashes build.sh
+# + YAML entry (not sourced scripts).
+# v2: resolve_cachyos_branch excludes merge-window branches (Y==0).
 set -euo pipefail
 . /workspace/scripts/kernel-helpers.sh
 

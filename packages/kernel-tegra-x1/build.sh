@@ -117,10 +117,10 @@ export CCACHE_MAXSIZE=10G
 ccache -z
 
 echo "Building Image + dtbs + modules..."
-# The Tegra X1 4.9 kernel has a buggy arch/arm64/boot/dts/Makefile that can fail
-# on the dtbs target with "cp: missing destination file operand". Build Image
-# and modules separately, then attempt dtbs with || true — the DTBs that do
-# get built are still collected below.
+# The Tegra X1 4.9 kernel enables -Werror which causes false positives
+# (regcache-rbtree.c: 'new_base_reg' may be used uninitialized). Suppress
+# maybe-uninitialized as an error; it's a known GCC overzealous warning.
+KCFLAGS="-Wno-error=maybe-uninitialized" \
 make ARCH=arm64 -j"$(nproc)" Image modules
 make ARCH=arm64 -j"$(nproc)" dtbs 2>/dev/null || echo "  WARN: dtbs target had errors (some DTBs may be missing)"
 ccache -s
