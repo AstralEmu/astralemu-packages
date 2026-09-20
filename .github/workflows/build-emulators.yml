@@ -1,8 +1,8 @@
 name: Build All Emulators
 
 on:
-  schedule:
-    - cron: '0 4 * * 0'
+  #schedule:
+  #  - cron: '0 4 * * 0'
   workflow_dispatch:
     inputs:
       force:
